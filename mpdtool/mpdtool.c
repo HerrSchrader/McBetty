@@ -129,26 +129,30 @@ int min(int x, int y){
 	return y;
 };
 
-/* Time when init_time was called last */
-double t0;
-
-void init_time(){
-	struct timeval start_time;
-	gettimeofday(&start_time, NULL);
-	t0 = (double) start_time.tv_sec +  ((double) start_time.tv_usec) / 1000000;
+int max(int x, int y){
+	if (x >= y)
+		return x;
+	return y;
 };
 
-/* time since last call of init_time */
-double time_diff(){
+/* Initialize a timer variable with the current time */
+void init_timer(double *tmr){
+	struct timeval start_time;
+	gettimeofday(&start_time, NULL);
+	*tmr = (double) start_time.tv_sec +  ((double) start_time.tv_usec) / 1000000;
+};
+
+/* time difference since last call of init_timer(&tmr) in seconds */
+double timer_diff(double tmr){
 	struct timeval t1;
 	
 	gettimeofday(&t1, NULL);
-	return ((double) t1.tv_sec) + ((double) t1.tv_usec) / 1000000 - t0;
+	return ((double) t1.tv_sec) + ((double) t1.tv_usec) / 1000000 - tmr;
 };
 
-/* Print time since start of program to stderr */
-void prt_time(){
-	fprintf (stderr,"[%.1lf ] ", time_diff() );
+/* Print time difference since init of tmr to stderr */
+void prt_timer(double tmr){
+	fprintf (stderr,"[%.1lf ] ", timer_diff(tmr) );
 };
 
 /* General routine to send a buffer with bytes_to_send bytes to the given file descriptor.
@@ -540,13 +544,12 @@ wait_for_input(int serialfd, int socketfd, int milliseconds){
 	tv.tv_usec = (milliseconds % 1000) * 1000;
 
 	FD_ZERO(&readfds);
-	FD_SET(serialfd, &readfds);
+	if (serialfd != -1)
+		FD_SET(serialfd, &readfds);
 	if (socketfd != -1)
 		FD_SET(socketfd, &readfds);
 
-	numfds = serialfd + 1;
-	if (socketfd > serialfd)
-		numfds = socketfd + 1;
+	numfds = max (serialfd + 1, socketfd + 1);
 	
 	// don't care about writefds and exceptfds:
 	res = select(numfds, &readfds, NULL, NULL, &tv);
@@ -560,88 +563,110 @@ wait_for_input(int serialfd, int socketfd, int milliseconds){
 		return 0;
 	};
 	
-	if (FD_ISSET(serialfd, &readfds))
+	if ( (serialfd != -1) && FD_ISSET(serialfd, &readfds) )
         read_from_serial(serialfd);
 	
-	if ((socketfd != -1) && FD_ISSET(socketfd, &readfds) )
+	if ( (socketfd != -1) && FD_ISSET(socketfd, &readfds) )
         read_from_mpd(socketfd);
 
     return 1;
 } 
 
+/*
+	Close the connection to MPD 
+*/
+void
+close_mpd_socket(int *mpd_socket){
+	if (*mpd_socket != -1) 
+		close(*mpd_socket);
+	*mpd_socket = -1;
+};
+
+
 /* 
-	This routine checks if there is already a valid client_socket established.
-	It then returns immediately.
-	If the socket is still == -1, it tries to connect to mpd.
+	Creates a new connection to MPD if there was no previous one.
+	Connects to MPD, sets the variable *client_socket to the established socket if successful,
+	else *client_socket is set to -1.
+	If a successful new connection was established, mpd_line_buf contains the initial answer from MPD
+	Returns 0 if connection could not be made.
+	If serial_fd is <> -1, a complete command from serial line aborts this routine
+	and no connection to MPD is made.
+*/
+int
+open_mpd_connection(int *mpd_socket,  struct sockaddr_in *pserverName, int serial_fd){
+	int res;
+	
+	if (-1 != *mpd_socket)
+		return 1;
+		
+	*mpd_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (-1 == *mpd_socket)	{
+		perror("socket()");
+		return 0;
+	};
+	
+	res = connect(*mpd_socket, (struct sockaddr*) pserverName, sizeof(*pserverName));
+	if (-1 == res){
+		perror("connect() to mpd failed");
+		fprintf(stderr,"Please check that MPD is running and is accepting connections from another computer!\n");
+		fprintf(stderr,"Maybe restarting MPD helps.\n");
+		close_mpd_socket(mpd_socket);
+		return 0;
+	}
+ 
+	// The mpd server responds to a new connection with a version line beginning with "OK"
+	reset_mpd_line();
+
+	while (! response_line_complete){
+		// Wait 1 second for next MPD response character(s) or maybe another command from serial
+		res = wait_for_input(serial_fd, *mpd_socket, 1000);
+
+		// Maybe we were too slow and Betty sent another command
+		if (cmd_complete){
+			fprintf(stderr, "  Betty sent new command. Sending to MPD cancelled.\n");
+			close_mpd_socket(mpd_socket);
+			return 0;
+		};
+		
+		if (res == 0){
+			fprintf(stderr, "  No answer when connecting to MPD. Sending to MPD cancelled.\n");
+			close_mpd_socket(mpd_socket);
+			return 0;
+		};	
+	};	
+	
+	if (strncmp(mpd_line_buf, "OK", 2) != 0) {
+		fprintf(stderr,"  Bad initial response from mpd: %s\n", mpd_line_buf);	
+		fprintf(stderr, "  Sending to MPD cancelled.\n");
+		close_mpd_socket(mpd_socket);
+		return 0;
+	};	
+	fprintf(stderr," MPD: %s\n", mpd_line_buf);
+	return 1;
+};
+
+/* 
+	This routine sends a command from serial_in_buf to mpd.
+	If the socket is -1, it tries to connect to mpd.
 	When the connection is successful, the variable *client_socket is set to the connection.
 	The content of the serial input buffer is sent to mpd.
 	The serial input buffer is reset to allow more input from Betty.
+	Returns TRUE iff successful, else 0.
 */
 int
 send_to_mpd (int *client_socket, struct sockaddr_in *pserverName){
 	int i, status, buf_len;
 	char buf[BUFFER_SIZE + 1];
 	
+	/* Copy the command in ser_in_buf() to local buf() to free ser_in_buf */
 	buf_len = ser_in_len;
 	for (i=0; i < ser_in_len; i++)
 		buf[i] = ser_in_buf[i];
 	
 	reset_ser_in();		// reset the serial input buffer, ready to get next command
-
-	while (-1 == *client_socket){
-			
-		*client_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (-1 == *client_socket)	{
-			perror("socket()");
-			return 0;
-		};
-	
-		status = connect(*client_socket, (struct sockaddr*) pserverName, sizeof(*pserverName));
-		if (-1 == status){
-			perror("connect() to mpd failed");
-			fprintf(stderr,"Please check that MPD is running and is accepting connections from another computer!\n");
-			fprintf(stderr,"Maybe restarting MPD helps.\n");
-			close(*client_socket);
-			*client_socket = -1;
-			return 0;
-		}
- 
-		// The mpd server responds to a new connection with a version line beginning with "OK"
-		reset_mpd_line();
-
-		while (! response_line_complete){
-			// Wait 1 second for next MPD response or maybe another command from serial
-			status = wait_for_input(serial_fd, *client_socket, 1000);
-
-			// Maybe we were too slow and Betty sent another command
-			if (cmd_complete){
-				fprintf(stderr, "  Betty sent new command. Sending to MPD cancelled.\n");
-				close(*client_socket);
-				*client_socket = -1;
-				return 0;
-			};
-			if (status == 0){
-				fprintf(stderr, "  No answer when connecting to MPD. Sending to MPD cancelled.\n");
-				close(*client_socket);
-				*client_socket = -1;
-				return 0;
-			};	
-		};	
-		if (strncmp(mpd_line_buf, "OK", 2) != 0) {
-			fprintf(stderr,"  Bad initial response from mpd: %s\n", mpd_line_buf);	
-			fprintf(stderr, "  Sending to MPD cancelled.\n");
-			close(*client_socket);
-			*client_socket = -1;
-			return 0;
-		};
-#if 0		
-	TODO maybe MPD is waiting for a missing "command_line_end" line.
-		Check how that disturbs MPD
-		and send this line ourself if necessary
-//			sprintf(buffer2, "command_list_end\n");
-//			write_all(*client_socket, buffer2, strlen(buffer2));
-#endif
-	};
+	status = open_mpd_connection(client_socket, pserverName, serial_fd);
+	if (0 == status) 
+		return 0;
 
 	reset_mpd_line();			
 	return (write_all(*client_socket, buf, buf_len));
@@ -668,7 +693,8 @@ int main(int argc, char *argv[])
 	char *serial_device;
 	struct termios oldtio,newtio;
 	int time_out_lim = 1, time_out_cnt = 0;
-	
+	double total_tmr;
+	double response_tmr;
 	
 	if (4 != argc)
  	{
@@ -676,17 +702,17 @@ int main(int argc, char *argv[])
 		exit(1);
 	};
 	
+	/* Initialize total program run time */
+	init_timer(&total_tmr);
+	
 	serial_device = argv[1];
 	remote_host = argv[2];
 	remote_port = atoi(argv[3]);
 
-	/* Initialize time keeping */
-	init_time();
-	
-      /* 
+/*
 	Open modem device for reading and writing and not as controlling tty
 	because we don't want to get killed if linenoise sends CTRL-C.
-       */	
+*/
 	serial_fd = open(serial_device, O_RDWR | O_NOCTTY ); 
 	if (serial_fd <0) {perror(serial_device); exit(-1); }
 	
@@ -804,6 +830,7 @@ int main(int argc, char *argv[])
 		// read more bytes until command is complete
 		if (!cmd_complete) continue;
 		
+		prt_timer(total_tmr);
 		fprintf(stderr, "BETTY: %s", ser_in_buf);
 		
 		// got a complete input via serial line
@@ -828,16 +855,18 @@ int main(int argc, char *argv[])
 	
 		// The response is not finished yet. 
 		response_finished = 0;
-		init_time();
+		init_timer(&response_tmr);
 		
 		/* We will break out of this loop if another command from serial is detected */
 		while (! response_finished){
 			// Poll for MPD response or maybe another command from serial
 			res = wait_for_input(serial_fd, client_socket, 0);
 
-			// Maybe we were to slow and Betty sent another command
+			// Maybe we were too slow and Betty sent another command
 			if (cmd_complete){
+				prt_timer(total_tmr);
 				fprintf(stderr, "  Time out. MPD response cancelled.\n");
+				close_mpd_socket(&client_socket);
 				break;
 			};
 				
@@ -845,8 +874,11 @@ int main(int argc, char *argv[])
 			send_to_serial(serial_fd);
 			
 			if (!res){
-				if (time_diff() > 10.0)
+				if (timer_diff(response_tmr) > 10.0){
+					prt_timer(total_tmr);
 					fprintf(stderr,"MPD response is too late\n");
+					close_mpd_socket(&client_socket);
+				}
 			};
 			
 			if (response_line_complete){
