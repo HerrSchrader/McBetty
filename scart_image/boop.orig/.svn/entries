@@ -1,0 +1,251 @@
+8
+
+dir
+251
+svn://svn.mamalala.org/boop/trunk
+svn://svn.mamalala.org/boop
+
+
+
+2008-11-30T14:02:15.607028Z
+251
+telekatz
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+69021b5a-c43b-0410-8b05-b58be53b1a6f
+
+serial
+dir
+
+timer
+dir
+
+global.c
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+eb8092fd4bcf7ce3d565703b7961bd9b
+2008-11-17T17:48:56.705112Z
+247
+telekatz
+
+LICENSE
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+d32239bcb673463ab874e80d47fae504
+2007-12-06T10:55:57.137602Z
+133
+chris
+
+boop_rom.bin
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+f9bf53cb5ba3386c14a1e34c8b6fdca7
+2008-11-30T14:02:15.607028Z
+251
+telekatz
+has-props
+
+gui
+dir
+
+global.h
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+819c5c2ab6c34fc505124c2f4f736fe4
+2008-11-17T17:48:56.705112Z
+247
+telekatz
+
+adc
+dir
+
+cc1100
+dir
+
+CHANGELOG
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+7a13806570d7b0d595050c7fe4a687d8
+2007-12-06T10:55:57.137602Z
+133
+chris
+
+rtc
+dir
+
+crt.s
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+c5fe10363680f4b98f62c1de99fec67d
+2008-04-20T11:01:58.209264Z
+233
+telekatz
+
+infrared
+dir
+
+interrupt
+dir
+
+games
+dir
+
+flash
+dir
+
+README
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+770c56366aef904e651c1dbf6388304a
+2007-12-06T10:55:57.137602Z
+133
+chris
+
+lpc2220_rom.ld
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+e191770aac1bd9902b9593f2136c73a1
+2008-04-20T11:01:58.209264Z
+233
+telekatz
+
+tools
+dir
+
+keyboard
+dir
+
+audio
+dir
+
+sound3.h
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+b7eb2aa7282fec3266a0dd5c751453fa
+2007-12-10T21:11:13.758312Z
+178
+chris
+
+Make.conf
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+a76cbfad364ac48d3f7b6dc516366ab3
+2008-11-17T17:48:56.705112Z
+247
+telekatz
+
+Makefile.local.WinARM
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+4c19324498dfebcf174f4da87dc10d63
+2008-04-16T21:42:57.909318Z
+231
+tobias
+
+Makefile.local.linuxARM
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+3adfbf15c7aba6cd46594a1c2d91c2d9
+2008-04-16T21:42:57.909318Z
+231
+tobias
+
+display
+dir
+
+main.c
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+67581cdfc3954a9f3ac8044c8062fd1c
+2008-11-30T14:02:15.607028Z
+251
+telekatz
+
+lpc2220.h
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+b94ed3e4e3af20fb768a4add3d1bddff
+2007-12-18T22:07:18.756868Z
+212
+chris
+
+Makefile
+file
+
+
+
+
+2008-12-04T00:27:04.000000Z
+5a2b07e001026971533156312ccc7d85
+2008-06-20T17:37:35.962577Z
+238
+telekatz
+

@@ -1,0 +1,17 @@
+=========================== mpdtool - a program to communicate with MPD and with Betty ===========================
+
+1. Copy this directory to a computer on which you want to have the scart adapter installed.
+	
+2. call "make clean && make all" to create the program "mpdtool"
+
+3. call ./mpdtool <serial_device> <serverHost> <serverPort>
+	where serial device is the device where your scart adapter is connected
+	serverHost is the computer on which MPD is running
+	and serverPort is the TCP/IP port of MPD
+	Example: "./mpdtool /dev/ttyS0 localhost 6600"
+
+mpdtool now gets commands from Betty via scart adapter, sends them to MPD via TCP/IP and 
+	returns the answers of MPD to Betty via scart.
+
+mpdtool should give meaningful error messages if something goes wrong. 
+	

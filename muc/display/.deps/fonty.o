@@ -1,0 +1,4 @@
+display/fonty.o: display/fonty.c global.h kernel/pt.h kernel/lc.h \
+  kernel/lc-addrlabels.h serial/serial.h kernel/kernel.h kernel/pt.h \
+  display/lcd.h display/fonty.h display/fonts/pearl_font.h \
+  display/fonts/smooth_font.h display/fonts/misc_font.h

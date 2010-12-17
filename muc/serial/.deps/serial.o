@@ -1,0 +1,3 @@
+serial/serial.o: serial/serial.c lpc2220.h kernel/kernel.h kernel/pt.h \
+  kernel/lc.h kernel/lc-switch.h display/fonty.h global.h kernel/pt.h \
+  serial/serial.h

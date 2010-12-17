@@ -1,0 +1,3 @@
+mpd/model.o: mpd/model.c global.h kernel/pt.h kernel/lc.h \
+  kernel/lc-addrlabels.h serial/serial.h display/fonty.h mpd/mpd.h \
+  display/screen.h kernel/kernel.h kernel/pt.h mpd/mpd.h mpd/model.h

@@ -1,0 +1,5 @@
+infrared/ir_capture.thumb.o: infrared/ir_capture.c display/lcd.h \
+  display/fonty.h keyboard/keyboard.h lpc2220.h interrupt/irq.h \
+  display/backlight.h infrared/ir_capture.h global.h infrared/ir_raw.h \
+  infrared/infrared.h infrared/ir_selector.h flash/flash.h gui/controls.h \
+  flash/bfs.h

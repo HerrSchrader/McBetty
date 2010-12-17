@@ -1,0 +1,62 @@
+/*
+    infrared codes for RECS80 seleco 020
+    Copyright (C) 2007  Ch. Klippel <ck@mamalala.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+{
+	0x0000, // A		->
+	0x0000, // B		->
+	0x0000, // C		->
+	0x0000, // D		->
+	0x0000, // Betty	->
+	0x0000, // Exit		->
+	0x05DC, // Up		->
+	0x05DE, // Down		->
+	0x05DA, // Left		->
+	0x05DB, // Right	->
+	0x05EC, // OK		->	Enter
+	0x05D0, // Vol+		->	Vol+
+	0x05D1, // Vol-		->	Vol-
+	0x05E9, // Mute		->	Muting
+	0x05CA, // Prog+	->	Prog+
+	0x05CB, // Prog-	->	Prog-
+	0x05C1, // 1		->	1
+	0x05C2, // 2		->	2
+	0x05C3, // 3		->	3
+	0x05C4, // 4		->	4
+	0x05C5, // 5		->	5
+	0x05C6, // 6		->	6
+	0x05C7, // 7		->	7
+	0x05C8, // 8		->	8
+	0x05C9, // 9		->	9
+	0x05C0, // 0		->	0
+	0x0000, // -/--		->
+	0x0000, // AV		->
+	0x0000, // Menu		->
+	0x0000, // PiP		->
+	0x05EE, // A/B		->	A/B
+	0x0000, // 16:9		->
+	0x05EE, // Info		->	Info
+	0x05F6, // VTX1		->	VTX1
+	0x05F0, // VTX2		->	VTX3
+	0x05F7, // VTX3		->	VTX4
+	0x0000, // Blue		->
+	0x0000, // Yello	->
+	0x0000, // Green	->
+	0x0000, // Red		->
+	0x0000, // TV		->
+	0x05CC  // Power	->	Power
+},

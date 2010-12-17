@@ -1,0 +1,3 @@
+games/sokoban.thumb.o: games/sokoban.c display/lcd.h display/fonty.h \
+  keyboard/keyboard.h games/sokoban.h games/../global.h \
+  games/sokoban_levels.h

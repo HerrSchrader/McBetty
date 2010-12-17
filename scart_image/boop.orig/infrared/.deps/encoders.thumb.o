@@ -1,0 +1,5 @@
+infrared/encoders.thumb.o: infrared/encoders.c infrared/ir_itt.h \
+  infrared/ir_nrc17.h infrared/ir_rc5.h infrared/ir_rc6.h \
+  infrared/ir_rca.h infrared/ir_rcmm.h infrared/ir_rec80.h \
+  infrared/ir_recs80.h infrared/ir_sirc.h infrared/ir_spaceenc.h \
+  infrared/ir_rf.h infrared/ir_raw.h infrared/encoders.h infrared/codes.h

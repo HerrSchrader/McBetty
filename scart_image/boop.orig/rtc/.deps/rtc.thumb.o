@@ -1,0 +1,3 @@
+rtc/rtc.thumb.o: rtc/rtc.c lpc2220.h rtc/rtc.h rtc/i2c.h display/lcd.h \
+  display/fonty.h interrupt/irq.h adc/adc.h keyboard/keyboard.h \
+  cc1100/rf.h global.h

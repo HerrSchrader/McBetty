@@ -1,0 +1,6 @@
+
+SUBDIRS := fonts 
+
+SRCS := lcd.c fonty.c window.c screen.c screen_playing.c screen_tracklist.c screen_playlist.c
+
+

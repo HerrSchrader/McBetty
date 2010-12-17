@@ -1,0 +1,17 @@
+9.11.2007:
+
+- serial console:
+	115200 baud, 8N1, no handshake
+
+- serial commands:
+	0 - backlight off
+	1 - dimmed backlight
+	2 - full backlight
+	. - prints "HELO"
+	S - prints RCA_Encode status (hex value)
+	I - prints irIRQ status (hex value)
+	K - prints keyIRQ status (hex value)
+	all other inputs are echoed
+
+- flash boop_rom.bin:
+	lpctool -i -e -a ./boop_rom.bin -d /dev/<serial_device>

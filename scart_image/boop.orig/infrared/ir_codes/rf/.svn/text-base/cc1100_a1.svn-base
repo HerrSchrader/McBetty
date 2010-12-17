@@ -1,0 +1,62 @@
+/*
+    RF codes for cc1100 Adress 1
+    Copyright (C) 2008  <telekatz@gmx.de>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+{
+	0x0000, // A		->
+	0x0000, // B		->
+	0x0000, // C		->
+	0x0000, // D		->
+	0x0000, // Betty	->
+	0x0000, // Exit		->
+	0x010b, // Up		->	Brightness+
+	0x010c, // Down		->	Brightness-
+	0x010d, // Left		->	Left
+	0x010e, // Right	->	Right
+	0x010f, // OK		->	OK
+	0x0110, // Vol+		->	Vol+
+	0x0111, // Vol-		->	Vol-
+	0x0112, // Mute		->	Mute
+	0x0113, // Prog+	->	Prog+
+	0x0114, // Prog-	->	Prog-
+	0x0101, // 1		->	1
+	0x0102, // 2		->	2
+	0x0103, // 3		->	3
+	0x0104, // 4		->	4
+	0x0105, // 5		->	5
+	0x0106, // 6		->	6
+	0x0107, // 7		->	7
+	0x0108, // 8		->	8
+	0x0109, // 9		->	9
+	0x010a, // 0		->	0
+	0x0115, // -/--		-> -/--
+	0x0116, // AV		->	AV
+	0x0117, // Menu		->	Menu
+	0x0118, // PiP		->	PiP
+	0x0119, // A/B		-> 	A/B
+	0x011a, // 16:9		->	16:9
+	0x011b, // Info		->	Info
+	0x011c, // VTX1		->	VTX1
+	0x011d, // VTX2		->	VTX2
+	0x011e, // VTX3		->	VTX3
+	0x011f, // Blue		->	Blue
+	0x0120, // Yello	->	Yello
+	0x0121, // Green	->	Green
+	0x0122, // Red		->	Red
+	0x0123, // TV		->	TV
+	0x0124  // Power	->	Standby
+},

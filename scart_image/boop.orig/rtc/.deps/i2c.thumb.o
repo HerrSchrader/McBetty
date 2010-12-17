@@ -1,0 +1,1 @@
+rtc/i2c.thumb.o: rtc/i2c.c lpc2220.h rtc/i2c.h

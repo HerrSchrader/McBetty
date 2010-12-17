@@ -1,0 +1,22 @@
+================= McBetty (Music Client for Betty) =====================
+
+Binaries and source code. Everything under GPL.
+
+HOWTO:
+
+1. Set up a computer wich runs MPD.
+	Test it with a normal client (mpc works fine).
+
+2. Flash the scart adapter with a new firmware.
+	See the README in "scart_image" directory.
+
+3. Flash Betty with the McBetty firmware.
+	See the README in "muc" directory.
+
+4. Install the program "mpdtool" on a computer on which you have network access  
+	to MPD and to which you want to connect the scart adapter.
+	See README in "mpdtool" directory.
+
+5. Start up Betty and enjoy the music.
+
+

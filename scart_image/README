@@ -1,0 +1,39 @@
+####################################################
+Source code to produce the scart image firmware for McBetty.
+
+There are 2 ways to flash the scart adapter with the required firmware for McBetty:
+1. 
+	When there is already a boot loader in the scart adapter
+	This is probably only the case if you have already flashed a previous version of McBetty firmware to scart adapter.
+	But it does no harm to try anyway.
+	
+	Use "cd scart_image && make clean && make all" to generate scart_image.h and scart_image.bin and the necessary tools.
+	Connect the scart adapter over serial line to the computer.
+	Power up the scart adapter.
+
+	Just call "flashtool /dev/ttyS0" if the scart adapter is connected to the serial port directly
+	or call "flashtool /dev/ttyUSB0" if the scart adapter is connected over a serial-to-usb converter. 
+ 
+	In doubt, just try it. Will do nothing if the boot loader is not already in scart firmware.
+----------------
+
+2.
+	The program flashtool does not work with a brand new scart adapter or one where a version of the boop firmware has been flashed to.
+
+	In thoses cases there is no serial boot loader in the scart adapter firmware, so you have to follow these steps:
+	Build a cable to connect Betty with the scart adapter. Do NOT connect it now.
+	Connect Betty to the computer.
+	Use "cd scart_image && make clean && make all" 
+	Use "cd boop.orig && make resident" to flash a special version of boop to Betty
+	Disconnect Betty from computer.
+	Start up Betty.
+	In the main menu of Betty, select "tools" and then "Scart_ICP"
+	Follow the instructions given by Betty.
+	The new image is flahsed to scart adapter.
+
+	The boot loader is included in the image, so these steps need to be done only once.
+	(When the boot loader (i.e. flashtool) does not work, try flashing from Betty again).
+
+	Then flash Betty with the McBetty firmware!
+
+ 

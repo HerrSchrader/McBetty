@@ -1,0 +1,18 @@
+###############################################################
+#####
+##### Makefile.local.linuxARM for boop
+##### Created in the early morninghours
+#####
+##### Copy this to Makefile.local and modify for your Linux
+##### installation
+#####
+###############################################################
+
+ARMBASE = /home/raap/CodeSourcery/Sourcery_G++_Lite
+INCLUDEPATH = $(ARMBASE)/include
+LIBPATH = $(ARMBASE)/lib/gcc/arm-uclinuxeabi/4.3.2
+ARMPATH = $(ARMBASE)/bin
+TOOLPREFIX = arm-uclinuxeabi-
+LPCTOOL = lpctool -d /dev/ttyUSB0
+
+######################## EOF ##################################

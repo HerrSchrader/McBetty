@@ -1,0 +1,6 @@
+main.o: main.c global.h kernel/pt.h kernel/lc.h kernel/lc-addrlabels.h \
+  serial/serial.h lpc2220.h kernel/kernel.h kernel/pt.h display/lcd.h \
+  global.h interrupt/irq.h keyboard/keyboard.h display/fonty.h \
+  timer/timerirq.h pwm/pwmirq.h cc1100/rf.h cc1100/cc1100.h isr.h \
+  arm_exc.h mpd/mpd.h display/window.h display/fonty.h display/lcd.h \
+  display/screen.h

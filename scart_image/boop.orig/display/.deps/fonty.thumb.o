@@ -1,0 +1,3 @@
+display/fonty.thumb.o: display/fonty.c display/lcd.h display/fonty.h \
+  global.h display/fonts/charset.info display/fonts/charset.bits \
+  display/fonts/smooth.info display/fonts/smooth.bits

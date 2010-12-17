@@ -1,0 +1,22 @@
+###############################################################
+#####
+##### Makefile.local.linuxSDCC for betty_scart
+#####
+##### Makefile.local.linuxARM
+#####
+###############################################################
+
+###############################################################
+#####
+##### PATHS (default installation)
+#####
+##### You can put your path-config into Makefile.local 
+##### to override these defaults
+#####
+###############################################################
+
+SDCCBASE=
+INCLUDEPATH=$(SDCCBASE)/include
+SDCCPATH=$(SDCCBASE)/bin
+
+######################## EOF ##################################

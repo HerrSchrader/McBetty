@@ -1,0 +1,931 @@
+                              1 ;--------------------------------------------------------
+                              2 ; File Created by SDCC : free open source ANSI-C Compiler
+                              3 ; Version 2.9.7 #5820 (May  6 2010) (Linux)
+                              4 ; This file was generated Fri Dec 17 01:43:32 2010
+                              5 ;--------------------------------------------------------
+                              6 	.module cc1100
+                              7 	.optsdcc -mmcs51 --model-small
+                              8 	
+                              9 ;--------------------------------------------------------
+                             10 ; Public variables in this module
+                             11 ;--------------------------------------------------------
+                             12 	.globl _conf
+                             13 	.globl _TCR20_0
+                             14 	.globl _TCR20_1
+                             15 	.globl _TCR20_2
+                             16 	.globl _TCR20_3
+                             17 	.globl _TCR20_4
+                             18 	.globl _TCR20_5
+                             19 	.globl _TCR20_6
+                             20 	.globl _TCR20_7
+                             21 	.globl _P3_0
+                             22 	.globl _P3_1
+                             23 	.globl _P2_0
+                             24 	.globl _P2_1
+                             25 	.globl _P2_2
+                             26 	.globl _P2_3
+                             27 	.globl _P2_4
+                             28 	.globl _P2_5
+                             29 	.globl _P2_6
+                             30 	.globl _P2_7
+                             31 	.globl _P1_0
+                             32 	.globl _P1_1
+                             33 	.globl _P1_2
+                             34 	.globl _P1_3
+                             35 	.globl _P1_4
+                             36 	.globl _P1_5
+                             37 	.globl _P1_6
+                             38 	.globl _P1_7
+                             39 	.globl _P0_0
+                             40 	.globl _P0_1
+                             41 	.globl _P0_2
+                             42 	.globl _P0_3
+                             43 	.globl _P0_4
+                             44 	.globl _P0_5
+                             45 	.globl _P0_6
+                             46 	.globl _P0_7
+                             47 	.globl _I2CON_0
+                             48 	.globl _I2CON_2
+                             49 	.globl _I2CON_3
+                             50 	.globl _I2CON_4
+                             51 	.globl _I2CON_5
+                             52 	.globl _I2CON_6
+                             53 	.globl _SCON_0
+                             54 	.globl _SCON_1
+                             55 	.globl _SCON_2
+                             56 	.globl _SCON_3
+                             57 	.globl _SCON_4
+                             58 	.globl _SCON_5
+                             59 	.globl _SCON_6
+                             60 	.globl _SCON_7
+                             61 	.globl _IP0_0
+                             62 	.globl _IP0_1
+                             63 	.globl _IP0_2
+                             64 	.globl _IP0_3
+                             65 	.globl _IP0_4
+                             66 	.globl _IP0_5
+                             67 	.globl _IP0_6
+                             68 	.globl _IEN1_0
+                             69 	.globl _IEN1_1
+                             70 	.globl _IEN1_2
+                             71 	.globl _IEN1_3
+                             72 	.globl _IEN1_4
+                             73 	.globl _IEN1_6
+                             74 	.globl _IEN1_7
+                             75 	.globl _IEN0_0
+                             76 	.globl _IEN0_1
+                             77 	.globl _IEN0_2
+                             78 	.globl _IEN0_3
+                             79 	.globl _IEN0_4
+                             80 	.globl _IEN0_5
+                             81 	.globl _IEN0_6
+                             82 	.globl _IEN0_7
+                             83 	.globl _TCON_0
+                             84 	.globl _TCON_1
+                             85 	.globl _TCON_2
+                             86 	.globl _TCON_3
+                             87 	.globl _TCON_4
+                             88 	.globl _TCON_5
+                             89 	.globl _TCON_6
+                             90 	.globl _TCON_7
+                             91 	.globl _PSW_0
+                             92 	.globl _PSW_1
+                             93 	.globl _PSW_2
+                             94 	.globl _PSW_3
+                             95 	.globl _PSW_4
+                             96 	.globl _PSW_5
+                             97 	.globl _PSW_6
+                             98 	.globl _PSW_7
+                             99 	.globl _IP0H
+                            100 	.globl _WFEED2
+                            101 	.globl _WFEED1
+                            102 	.globl _WDL
+                            103 	.globl _WDCON
+                            104 	.globl _TRIM
+                            105 	.globl _TPCR2L
+                            106 	.globl _TPCR2H
+                            107 	.globl _TOR2L
+                            108 	.globl _TOR2H
+                            109 	.globl _TISE2
+                            110 	.globl _TIFR2
+                            111 	.globl _TICR2
+                            112 	.globl _TCR21
+                            113 	.globl _TCR20
+                            114 	.globl _TAMOD
+                            115 	.globl _SPDAT
+                            116 	.globl _SPSTAT
+                            117 	.globl _SPCTL
+                            118 	.globl _SSTAT
+                            119 	.globl _RTCL
+                            120 	.globl _RTCH
+                            121 	.globl _RTCCON
+                            122 	.globl _RSTSRC
+                            123 	.globl _PT0AD
+                            124 	.globl _PCONA
+                            125 	.globl _P3M2
+                            126 	.globl _P3M1
+                            127 	.globl _P2M2
+                            128 	.globl _P2M1
+                            129 	.globl _P1M2
+                            130 	.globl _P1M1
+                            131 	.globl _P0M2
+                            132 	.globl _P0M1
+                            133 	.globl _OCRDL
+                            134 	.globl _OCRDH
+                            135 	.globl _OCRCL
+                            136 	.globl _OCRCH
+                            137 	.globl _OCRBL
+                            138 	.globl _OCRBH
+                            139 	.globl _OCRAL
+                            140 	.globl _OCRAH
+                            141 	.globl _KBPATN
+                            142 	.globl _KBMASK
+                            143 	.globl _KBCON
+                            144 	.globl _IP1H
+                            145 	.globl _IP1
+                            146 	.globl _IEN1
+                            147 	.globl _ICRBL
+                            148 	.globl _ICRBH
+                            149 	.globl _ICRAL
+                            150 	.globl _ICRAH
+                            151 	.globl _I2STAT
+                            152 	.globl _I2SCLL
+                            153 	.globl _I2SCLH
+                            154 	.globl _I2DAT
+                            155 	.globl _I2CON
+                            156 	.globl _I2ADR
+                            157 	.globl _DIVM
+                            158 	.globl _DEEADR
+                            159 	.globl _DEEDAT
+                            160 	.globl _DEECON
+                            161 	.globl _CMP2
+                            162 	.globl _CMP1
+                            163 	.globl _CCCRD
+                            164 	.globl _CCCRC
+                            165 	.globl _CCCRB
+                            166 	.globl _CCCRA
+                            167 	.globl _BRGCON
+                            168 	.globl _BRGR1
+                            169 	.globl _BRGR0
+                            170 	.globl _TH2
+                            171 	.globl _TL2
+                            172 	.globl _SADEN
+                            173 	.globl _SADDR
+                            174 	.globl _AUXR1
+                            175 	.globl _SBUF
+                            176 	.globl _SCON
+                            177 	.globl _IP0
+                            178 	.globl _IEN0
+                            179 	.globl _TH1
+                            180 	.globl _TH0
+                            181 	.globl _TL1
+                            182 	.globl _TL0
+                            183 	.globl _TMOD
+                            184 	.globl _TCON
+                            185 	.globl _PCON
+                            186 	.globl _DPH
+                            187 	.globl _DPL
+                            188 	.globl _SP
+                            189 	.globl _B
+                            190 	.globl _ACC
+                            191 	.globl _PSW
+                            192 	.globl _P3
+                            193 	.globl _P2
+                            194 	.globl _P1
+                            195 	.globl _P0
+                            196 	.globl _cc1100_read_PARM_3
+                            197 	.globl _cc1100_read_PARM_2
+                            198 	.globl _cc1100_write1_PARM_2
+                            199 	.globl _cc1100_write_PARM_3
+                            200 	.globl _cc1100_write_PARM_2
+                            201 	.globl _spi_rw
+                            202 	.globl _cc1100_init
+                            203 	.globl _cc1100_write
+                            204 	.globl _cc1100_write1
+                            205 	.globl _cc1100_read
+                            206 	.globl _cc1100_read1
+                            207 	.globl _cc1100_strobe
+                            208 	.globl _cc1100_read_status_reg_otf
+                            209 	.globl _switch_to_idle
+                            210 ;--------------------------------------------------------
+                            211 ; special function registers
+                            212 ;--------------------------------------------------------
+                            213 	.area RSEG    (ABS,DATA)
+   0000                     214 	.org 0x0000
+                    0080    215 _P0	=	0x0080
+                    0090    216 _P1	=	0x0090
+                    00A0    217 _P2	=	0x00a0
+                    00B0    218 _P3	=	0x00b0
+                    00D0    219 _PSW	=	0x00d0
+                    00E0    220 _ACC	=	0x00e0
+                    00F0    221 _B	=	0x00f0
+                    0081    222 _SP	=	0x0081
+                    0082    223 _DPL	=	0x0082
+                    0083    224 _DPH	=	0x0083
+                    0087    225 _PCON	=	0x0087
+                    0088    226 _TCON	=	0x0088
+                    0089    227 _TMOD	=	0x0089
+                    008A    228 _TL0	=	0x008a
+                    008B    229 _TL1	=	0x008b
+                    008C    230 _TH0	=	0x008c
+                    008D    231 _TH1	=	0x008d
+                    00A8    232 _IEN0	=	0x00a8
+                    00B8    233 _IP0	=	0x00b8
+                    0098    234 _SCON	=	0x0098
+                    0099    235 _SBUF	=	0x0099
+                    00A2    236 _AUXR1	=	0x00a2
+                    00A9    237 _SADDR	=	0x00a9
+                    00B9    238 _SADEN	=	0x00b9
+                    00CC    239 _TL2	=	0x00cc
+                    00CD    240 _TH2	=	0x00cd
+                    00BE    241 _BRGR0	=	0x00be
+                    00BF    242 _BRGR1	=	0x00bf
+                    00BD    243 _BRGCON	=	0x00bd
+                    00EA    244 _CCCRA	=	0x00ea
+                    00EB    245 _CCCRB	=	0x00eb
+                    00EC    246 _CCCRC	=	0x00ec
+                    00ED    247 _CCCRD	=	0x00ed
+                    00AC    248 _CMP1	=	0x00ac
+                    00AD    249 _CMP2	=	0x00ad
+                    00F1    250 _DEECON	=	0x00f1
+                    00F2    251 _DEEDAT	=	0x00f2
+                    00F3    252 _DEEADR	=	0x00f3
+                    0095    253 _DIVM	=	0x0095
+                    00DB    254 _I2ADR	=	0x00db
+                    00D8    255 _I2CON	=	0x00d8
+                    00DA    256 _I2DAT	=	0x00da
+                    00DD    257 _I2SCLH	=	0x00dd
+                    00DC    258 _I2SCLL	=	0x00dc
+                    00D9    259 _I2STAT	=	0x00d9
+                    00AB    260 _ICRAH	=	0x00ab
+                    00AA    261 _ICRAL	=	0x00aa
+                    00AF    262 _ICRBH	=	0x00af
+                    00AE    263 _ICRBL	=	0x00ae
+                    00E8    264 _IEN1	=	0x00e8
+                    00F8    265 _IP1	=	0x00f8
+                    00F7    266 _IP1H	=	0x00f7
+                    0094    267 _KBCON	=	0x0094
+                    0086    268 _KBMASK	=	0x0086
+                    0093    269 _KBPATN	=	0x0093
+                    00EF    270 _OCRAH	=	0x00ef
+                    00EE    271 _OCRAL	=	0x00ee
+                    00FB    272 _OCRBH	=	0x00fb
+                    00FA    273 _OCRBL	=	0x00fa
+                    00FD    274 _OCRCH	=	0x00fd
+                    00FC    275 _OCRCL	=	0x00fc
+                    00FF    276 _OCRDH	=	0x00ff
+                    00FE    277 _OCRDL	=	0x00fe
+                    0084    278 _P0M1	=	0x0084
+                    0085    279 _P0M2	=	0x0085
+                    0091    280 _P1M1	=	0x0091
+                    0092    281 _P1M2	=	0x0092
+                    00A4    282 _P2M1	=	0x00a4
+                    00A5    283 _P2M2	=	0x00a5
+                    00B1    284 _P3M1	=	0x00b1
+                    00B2    285 _P3M2	=	0x00b2
+                    00B5    286 _PCONA	=	0x00b5
+                    00F6    287 _PT0AD	=	0x00f6
+                    00DF    288 _RSTSRC	=	0x00df
+                    00D1    289 _RTCCON	=	0x00d1
+                    00D2    290 _RTCH	=	0x00d2
+                    00D3    291 _RTCL	=	0x00d3
+                    00BA    292 _SSTAT	=	0x00ba
+                    00E2    293 _SPCTL	=	0x00e2
+                    00E1    294 _SPSTAT	=	0x00e1
+                    00E3    295 _SPDAT	=	0x00e3
+                    008F    296 _TAMOD	=	0x008f
+                    00C8    297 _TCR20	=	0x00c8
+                    00F9    298 _TCR21	=	0x00f9
+                    00C9    299 _TICR2	=	0x00c9
+                    00E9    300 _TIFR2	=	0x00e9
+                    00DE    301 _TISE2	=	0x00de
+                    00CF    302 _TOR2H	=	0x00cf
+                    00CE    303 _TOR2L	=	0x00ce
+                    00CB    304 _TPCR2H	=	0x00cb
+                    00CA    305 _TPCR2L	=	0x00ca
+                    0096    306 _TRIM	=	0x0096
+                    00A7    307 _WDCON	=	0x00a7
+                    00C1    308 _WDL	=	0x00c1
+                    00C2    309 _WFEED1	=	0x00c2
+                    00C3    310 _WFEED2	=	0x00c3
+                    00B7    311 _IP0H	=	0x00b7
+                            312 ;--------------------------------------------------------
+                            313 ; special function bits
+                            314 ;--------------------------------------------------------
+                            315 	.area RSEG    (ABS,DATA)
+   0000                     316 	.org 0x0000
+                    00D7    317 _PSW_7	=	0x00d7
+                    00D6    318 _PSW_6	=	0x00d6
+                    00D5    319 _PSW_5	=	0x00d5
+                    00D4    320 _PSW_4	=	0x00d4
+                    00D3    321 _PSW_3	=	0x00d3
+                    00D2    322 _PSW_2	=	0x00d2
+                    00D1    323 _PSW_1	=	0x00d1
+                    00D0    324 _PSW_0	=	0x00d0
+                    008F    325 _TCON_7	=	0x008f
+                    008E    326 _TCON_6	=	0x008e
+                    008D    327 _TCON_5	=	0x008d
+                    008C    328 _TCON_4	=	0x008c
+                    008B    329 _TCON_3	=	0x008b
+                    008A    330 _TCON_2	=	0x008a
+                    0089    331 _TCON_1	=	0x0089
+                    0088    332 _TCON_0	=	0x0088
+                    00AF    333 _IEN0_7	=	0x00af
+                    00AE    334 _IEN0_6	=	0x00ae
+                    00AD    335 _IEN0_5	=	0x00ad
+                    00AC    336 _IEN0_4	=	0x00ac
+                    00AB    337 _IEN0_3	=	0x00ab
+                    00AA    338 _IEN0_2	=	0x00aa
+                    00A9    339 _IEN0_1	=	0x00a9
+                    00A8    340 _IEN0_0	=	0x00a8
+                    00EF    341 _IEN1_7	=	0x00ef
+                    00EE    342 _IEN1_6	=	0x00ee
+                    00EC    343 _IEN1_4	=	0x00ec
+                    00EB    344 _IEN1_3	=	0x00eb
+                    00EA    345 _IEN1_2	=	0x00ea
+                    00E9    346 _IEN1_1	=	0x00e9
+                    00E8    347 _IEN1_0	=	0x00e8
+                    00BE    348 _IP0_6	=	0x00be
+                    00BD    349 _IP0_5	=	0x00bd
+                    00BC    350 _IP0_4	=	0x00bc
+                    00BB    351 _IP0_3	=	0x00bb
+                    00BA    352 _IP0_2	=	0x00ba
+                    00B9    353 _IP0_1	=	0x00b9
+                    00B8    354 _IP0_0	=	0x00b8
+                    009F    355 _SCON_7	=	0x009f
+                    009E    356 _SCON_6	=	0x009e
+                    009D    357 _SCON_5	=	0x009d
+                    009C    358 _SCON_4	=	0x009c
+                    009B    359 _SCON_3	=	0x009b
+                    009A    360 _SCON_2	=	0x009a
+                    0099    361 _SCON_1	=	0x0099
+                    0098    362 _SCON_0	=	0x0098
+                    00DE    363 _I2CON_6	=	0x00de
+                    00DD    364 _I2CON_5	=	0x00dd
+                    00DC    365 _I2CON_4	=	0x00dc
+                    00DB    366 _I2CON_3	=	0x00db
+                    00DA    367 _I2CON_2	=	0x00da
+                    00D8    368 _I2CON_0	=	0x00d8
+                    0087    369 _P0_7	=	0x0087
+                    0086    370 _P0_6	=	0x0086
+                    0085    371 _P0_5	=	0x0085
+                    0084    372 _P0_4	=	0x0084
+                    0083    373 _P0_3	=	0x0083
+                    0082    374 _P0_2	=	0x0082
+                    0081    375 _P0_1	=	0x0081
+                    0080    376 _P0_0	=	0x0080
+                    0097    377 _P1_7	=	0x0097
+                    0096    378 _P1_6	=	0x0096
+                    0095    379 _P1_5	=	0x0095
+                    0094    380 _P1_4	=	0x0094
+                    0093    381 _P1_3	=	0x0093
+                    0092    382 _P1_2	=	0x0092
+                    0091    383 _P1_1	=	0x0091
+                    0090    384 _P1_0	=	0x0090
+                    00A7    385 _P2_7	=	0x00a7
+                    00A6    386 _P2_6	=	0x00a6
+                    00A5    387 _P2_5	=	0x00a5
+                    00A4    388 _P2_4	=	0x00a4
+                    00A3    389 _P2_3	=	0x00a3
+                    00A2    390 _P2_2	=	0x00a2
+                    00A1    391 _P2_1	=	0x00a1
+                    00A0    392 _P2_0	=	0x00a0
+                    00B1    393 _P3_1	=	0x00b1
+                    00B0    394 _P3_0	=	0x00b0
+                    00CF    395 _TCR20_7	=	0x00cf
+                    00CE    396 _TCR20_6	=	0x00ce
+                    00CD    397 _TCR20_5	=	0x00cd
+                    00CC    398 _TCR20_4	=	0x00cc
+                    00CB    399 _TCR20_3	=	0x00cb
+                    00CA    400 _TCR20_2	=	0x00ca
+                    00C9    401 _TCR20_1	=	0x00c9
+                    00C8    402 _TCR20_0	=	0x00c8
+                            403 ;--------------------------------------------------------
+                            404 ; overlayable register banks
+                            405 ;--------------------------------------------------------
+                            406 	.area REG_BANK_0	(REL,OVR,DATA)
+   0000                     407 	.ds 8
+                            408 ;--------------------------------------------------------
+                            409 ; internal ram data
+                            410 ;--------------------------------------------------------
+                            411 	.area DSEG    (DATA)
+   0000                     412 _cc1100_write_PARM_2:
+   0000                     413 	.ds 3
+   0003                     414 _cc1100_write_PARM_3:
+   0003                     415 	.ds 1
+   0004                     416 _cc1100_write1_PARM_2:
+   0004                     417 	.ds 1
+   0005                     418 _cc1100_read_PARM_2:
+   0005                     419 	.ds 3
+   0008                     420 _cc1100_read_PARM_3:
+   0008                     421 	.ds 1
+                            422 ;--------------------------------------------------------
+                            423 ; overlayable items in internal ram 
+                            424 ;--------------------------------------------------------
+                            425 	.area	OSEG    (OVR,DATA)
+                            426 ;--------------------------------------------------------
+                            427 ; indirectly addressable internal ram data
+                            428 ;--------------------------------------------------------
+                            429 	.area ISEG    (DATA)
+                            430 ;--------------------------------------------------------
+                            431 ; absolute internal ram data
+                            432 ;--------------------------------------------------------
+                            433 	.area IABS    (ABS,DATA)
+                            434 	.area IABS    (ABS,DATA)
+                            435 ;--------------------------------------------------------
+                            436 ; bit data
+                            437 ;--------------------------------------------------------
+                            438 	.area BSEG    (BIT)
+                            439 ;--------------------------------------------------------
+                            440 ; paged external ram data
+                            441 ;--------------------------------------------------------
+                            442 	.area PSEG    (PAG,XDATA)
+                            443 ;--------------------------------------------------------
+                            444 ; external ram data
+                            445 ;--------------------------------------------------------
+                            446 	.area XSEG    (XDATA)
+                            447 ;--------------------------------------------------------
+                            448 ; absolute external ram data
+                            449 ;--------------------------------------------------------
+                            450 	.area XABS    (ABS,XDATA)
+                            451 ;--------------------------------------------------------
+                            452 ; external initialized ram data
+                            453 ;--------------------------------------------------------
+                            454 	.area XISEG   (XDATA)
+                            455 	.area HOME    (CODE)
+                            456 	.area GSINIT0 (CODE)
+                            457 	.area GSINIT1 (CODE)
+                            458 	.area GSINIT2 (CODE)
+                            459 	.area GSINIT3 (CODE)
+                            460 	.area GSINIT4 (CODE)
+                            461 	.area GSINIT5 (CODE)
+                            462 	.area GSINIT  (CODE)
+                            463 	.area GSFINAL (CODE)
+                            464 	.area CSEG    (CODE)
+                            465 ;--------------------------------------------------------
+                            466 ; global & static initialisations
+                            467 ;--------------------------------------------------------
+                            468 	.area HOME    (CODE)
+                            469 	.area GSINIT  (CODE)
+                            470 	.area GSFINAL (CODE)
+                            471 	.area GSINIT  (CODE)
+                            472 ;--------------------------------------------------------
+                            473 ; Home
+                            474 ;--------------------------------------------------------
+                            475 	.area HOME    (CODE)
+                            476 	.area HOME    (CODE)
+                            477 ;--------------------------------------------------------
+                            478 ; code
+                            479 ;--------------------------------------------------------
+                            480 	.area CSEG    (CODE)
+                            481 ;------------------------------------------------------------
+                            482 ;Allocation info for local variables in function 'spi_rw'
+                            483 ;------------------------------------------------------------
+                            484 ;write                     Allocated to registers r2 
+                            485 ;z                         Allocated to registers r3 
+                            486 ;------------------------------------------------------------
+                            487 ;	cc1100.c:114: unsigned char spi_rw(unsigned char write) {
+                            488 ;	-----------------------------------------
+                            489 ;	 function spi_rw
+                            490 ;	-----------------------------------------
+   0000                     491 _spi_rw:
+                    0002    492 	ar2 = 0x02
+                    0003    493 	ar3 = 0x03
+                    0004    494 	ar4 = 0x04
+                    0005    495 	ar5 = 0x05
+                    0006    496 	ar6 = 0x06
+                    0007    497 	ar7 = 0x07
+                    0000    498 	ar0 = 0x00
+                    0001    499 	ar1 = 0x01
+   0000 AA 82               500 	mov	r2,dpl
+                            501 ;	cc1100.c:118: for (z= 8; z > 0; z--) {
+   0002 7B 08               502 	mov	r3,#0x08
+   0004                     503 00106$:
+   0004 EB                  504 	mov	a,r3
+   0005 60 04               505 	jz	00112$
+   0007 7C 01               506 	mov	r4,#0x01
+   0009 80 02               507 	sjmp	00113$
+   000B                     508 00112$:
+   000B 7C 00               509 	mov	r4,#0x00
+   000D                     510 00113$:
+   000D EC                  511 	mov	a,r4
+   000E 60 16               512 	jz	00109$
+                            513 ;	cc1100.c:119: SCK = 0;
+   0010 C2 97               514 	clr	_P1_7
+                            515 ;	cc1100.c:120: if (write & 0x80)
+   0012 EA                  516 	mov	a,r2
+   0013 30 E7 04            517 	jnb	acc.7,00102$
+                            518 ;	cc1100.c:121: MOSI1 = 1;
+   0016 D2 96               519 	setb	_P1_6
+   0018 80 02               520 	sjmp	00103$
+   001A                     521 00102$:
+                            522 ;	cc1100.c:123: MOSI1 = 0;
+   001A C2 96               523 	clr	_P1_6
+   001C                     524 00103$:
+                            525 ;	cc1100.c:124: SCK = 1;
+   001C D2 97               526 	setb	_P1_7
+                            527 ;	cc1100.c:125: write <<=1;
+                            528 ;	cc1100.c:126: if (MISO1)
+                            529 ;	cc1100.c:127: write |= 0x01;
+   001E EA                  530 	mov	a,r2
+   001F A2 95               531 	mov	c,_P1_5
+   0021 3A                  532 	addc	a,r2
+   0022 FA                  533 	mov	r2,a
+                            534 ;	cc1100.c:118: for (z= 8; z > 0; z--) {
+   0023 1B                  535 	dec	r3
+   0024 80 DE               536 	sjmp	00106$
+   0026                     537 00109$:
+                            538 ;	cc1100.c:129: SCK = 0;
+   0026 C2 97               539 	clr	_P1_7
+                            540 ;	cc1100.c:131: return(write);  
+   0028 8A 82               541 	mov	dpl,r2
+   002A 22                  542 	ret
+                            543 ;------------------------------------------------------------
+                            544 ;Allocation info for local variables in function 'cc1100_init'
+                            545 ;------------------------------------------------------------
+                            546 ;i                         Allocated to registers r2 
+                            547 ;------------------------------------------------------------
+                            548 ;	cc1100.c:135: void cc1100_init(void) {
+                            549 ;	-----------------------------------------
+                            550 ;	 function cc1100_init
+                            551 ;	-----------------------------------------
+   002B                     552 _cc1100_init:
+                            553 ;	cc1100.c:139: SCK = 1;
+   002B D2 97               554 	setb	_P1_7
+                            555 ;	cc1100.c:140: MOSI1 = 0;
+   002D C2 96               556 	clr	_P1_6
+                            557 ;	cc1100.c:141: CS = 0;
+   002F C2 81               558 	clr	_P0_1
+                            559 ;	cc1100.c:142: while(i) {
+   0031 7A FF               560 	mov	r2,#0xFF
+   0033                     561 00101$:
+   0033 EA                  562 	mov	a,r2
+   0034 60 03               563 	jz	00103$
+                            564 ;	cc1100.c:143: i--;
+   0036 1A                  565 	dec	r2
+   0037 80 FA               566 	sjmp	00101$
+   0039                     567 00103$:
+                            568 ;	cc1100.c:145: CS = 1;
+   0039 D2 81               569 	setb	_P0_1
+                            570 ;	cc1100.c:147: while(i) {
+   003B 7A FF               571 	mov	r2,#0xFF
+   003D                     572 00104$:
+   003D EA                  573 	mov	a,r2
+   003E 60 03               574 	jz	00106$
+                            575 ;	cc1100.c:148: i--;
+   0040 1A                  576 	dec	r2
+   0041 80 FA               577 	sjmp	00104$
+   0043                     578 00106$:
+                            579 ;	cc1100.c:150: CS = 0;
+   0043 C2 81               580 	clr	_P0_1
+                            581 ;	cc1100.c:151: SCK = 0; 
+   0045 C2 97               582 	clr	_P1_7
+                            583 ;	cc1100.c:152: while (MISO1);  
+   0047                     584 00107$:
+   0047 20 95 FD            585 	jb	_P1_5,00107$
+                            586 ;	cc1100.c:153: spi_rw(SRES);
+   004A 75 82 30            587 	mov	dpl,#0x30
+   004D 12s00r00            588 	lcall	_spi_rw
+                            589 ;	cc1100.c:154: while (MISO1);
+   0050                     590 00110$:
+   0050 20 95 FD            591 	jb	_P1_5,00110$
+                            592 ;	cc1100.c:156: cc1100_write(0x00, conf, 0x2f);
+   0053 75*00r00            593 	mov	_cc1100_write_PARM_2,#_conf
+   0056 75*01s00            594 	mov	(_cc1100_write_PARM_2 + 1),#(_conf >> 8)
+   0059 75*02 80            595 	mov	(_cc1100_write_PARM_2 + 2),#0x80
+   005C 75*03 2F            596 	mov	_cc1100_write_PARM_3,#0x2F
+   005F 75 82 00            597 	mov	dpl,#0x00
+   0062 12s00r6E            598 	lcall	_cc1100_write
+                            599 ;	cc1100.c:157: cc1100_write1(PATABLE, PA_VALUE);	
+   0065 75*04 60            600 	mov	_cc1100_write1_PARM_2,#0x60
+   0068 75 82 3E            601 	mov	dpl,#0x3E
+   006B 02s00rAF            602 	ljmp	_cc1100_write1
+                            603 ;------------------------------------------------------------
+                            604 ;Allocation info for local variables in function 'cc1100_write'
+                            605 ;------------------------------------------------------------
+                            606 ;dat                       Allocated with name '_cc1100_write_PARM_2'
+                            607 ;length                    Allocated with name '_cc1100_write_PARM_3'
+                            608 ;addr                      Allocated to registers r2 
+                            609 ;i                         Allocated to registers r3 
+                            610 ;status                    Allocated to registers r2 
+                            611 ;------------------------------------------------------------
+                            612 ;	cc1100.c:161: unsigned char cc1100_write(unsigned char addr, unsigned char* dat, unsigned char length) {
+                            613 ;	-----------------------------------------
+                            614 ;	 function cc1100_write
+                            615 ;	-----------------------------------------
+   006E                     616 _cc1100_write:
+   006E AA 82               617 	mov	r2,dpl
+                            618 ;	cc1100.c:166: CS = 0;
+   0070 C2 81               619 	clr	_P0_1
+                            620 ;	cc1100.c:167: while (MISO1);
+   0072                     621 00101$:
+   0072 20 95 FD            622 	jb	_P1_5,00101$
+                            623 ;	cc1100.c:168: status = spi_rw(addr | WRITE | BURST);
+   0075 74 40               624 	mov	a,#0x40
+   0077 4A                  625 	orl	a,r2
+   0078 F5 82               626 	mov	dpl,a
+   007A 12s00r00            627 	lcall	_spi_rw
+   007D AA 82               628 	mov	r2,dpl
+                            629 ;	cc1100.c:169: for (i=0; i < length; i++) 
+   007F 7B 00               630 	mov	r3,#0x00
+   0081                     631 00104$:
+   0081 C3                  632 	clr	c
+   0082 EB                  633 	mov	a,r3
+   0083 95*03               634 	subb	a,_cc1100_write_PARM_3
+   0085 50 23               635 	jnc	00107$
+                            636 ;	cc1100.c:170: spi_rw(dat[i]); 
+   0087 EB                  637 	mov	a,r3
+   0088 25*00               638 	add	a,_cc1100_write_PARM_2
+   008A FC                  639 	mov	r4,a
+   008B E4                  640 	clr	a
+   008C 35*01               641 	addc	a,(_cc1100_write_PARM_2 + 1)
+   008E FD                  642 	mov	r5,a
+   008F AE*02               643 	mov	r6,(_cc1100_write_PARM_2 + 2)
+   0091 8C 82               644 	mov	dpl,r4
+   0093 8D 83               645 	mov	dph,r5
+   0095 8E F0               646 	mov	b,r6
+   0097 12s00r00            647 	lcall	__gptrget
+   009A F5 82               648 	mov	dpl,a
+   009C C0 02               649 	push	ar2
+   009E C0 03               650 	push	ar3
+   00A0 12s00r00            651 	lcall	_spi_rw
+   00A3 D0 03               652 	pop	ar3
+   00A5 D0 02               653 	pop	ar2
+                            654 ;	cc1100.c:169: for (i=0; i < length; i++) 
+   00A7 0B                  655 	inc	r3
+   00A8 80 D7               656 	sjmp	00104$
+   00AA                     657 00107$:
+                            658 ;	cc1100.c:171: CS = 1;
+   00AA D2 81               659 	setb	_P0_1
+                            660 ;	cc1100.c:173: return(status);
+   00AC 8A 82               661 	mov	dpl,r2
+   00AE 22                  662 	ret
+                            663 ;------------------------------------------------------------
+                            664 ;Allocation info for local variables in function 'cc1100_write1'
+                            665 ;------------------------------------------------------------
+                            666 ;dat                       Allocated with name '_cc1100_write1_PARM_2'
+                            667 ;addr                      Allocated to registers r2 
+                            668 ;status                    Allocated to registers r2 
+                            669 ;------------------------------------------------------------
+                            670 ;	cc1100.c:176: unsigned char cc1100_write1(unsigned char addr,unsigned char dat) {
+                            671 ;	-----------------------------------------
+                            672 ;	 function cc1100_write1
+                            673 ;	-----------------------------------------
+   00AF                     674 _cc1100_write1:
+   00AF AA 82               675 	mov	r2,dpl
+                            676 ;	cc1100.c:180: CS = 0;
+   00B1 C2 81               677 	clr	_P0_1
+                            678 ;	cc1100.c:181: while (MISO1);
+   00B3                     679 00101$:
+   00B3 20 95 FD            680 	jb	_P1_5,00101$
+                            681 ;	cc1100.c:182: status = spi_rw(addr | WRITE); 
+   00B6 8A 82               682 	mov	dpl,r2
+   00B8 12s00r00            683 	lcall	_spi_rw
+   00BB AA 82               684 	mov	r2,dpl
+                            685 ;	cc1100.c:183: spi_rw(dat); 
+   00BD 85*04 82            686 	mov	dpl,_cc1100_write1_PARM_2
+   00C0 C0 02               687 	push	ar2
+   00C2 12s00r00            688 	lcall	_spi_rw
+   00C5 D0 02               689 	pop	ar2
+                            690 ;	cc1100.c:184: CS = 1;
+   00C7 D2 81               691 	setb	_P0_1
+                            692 ;	cc1100.c:186: return(status);
+   00C9 8A 82               693 	mov	dpl,r2
+   00CB 22                  694 	ret
+                            695 ;------------------------------------------------------------
+                            696 ;Allocation info for local variables in function 'cc1100_read'
+                            697 ;------------------------------------------------------------
+                            698 ;dat                       Allocated with name '_cc1100_read_PARM_2'
+                            699 ;length                    Allocated with name '_cc1100_read_PARM_3'
+                            700 ;addr                      Allocated to registers r2 
+                            701 ;i                         Allocated to registers r3 
+                            702 ;status                    Allocated to registers r2 
+                            703 ;------------------------------------------------------------
+                            704 ;	cc1100.c:189: unsigned char cc1100_read(unsigned char addr, unsigned char* dat, unsigned char length) {
+                            705 ;	-----------------------------------------
+                            706 ;	 function cc1100_read
+                            707 ;	-----------------------------------------
+   00CC                     708 _cc1100_read:
+   00CC AA 82               709 	mov	r2,dpl
+                            710 ;	cc1100.c:194: CS = 0;
+   00CE C2 81               711 	clr	_P0_1
+                            712 ;	cc1100.c:195: while (MISO1);
+   00D0                     713 00101$:
+   00D0 20 95 FD            714 	jb	_P1_5,00101$
+                            715 ;	cc1100.c:196: status = spi_rw(addr | READ);
+   00D3 74 80               716 	mov	a,#0x80
+   00D5 4A                  717 	orl	a,r2
+   00D6 F5 82               718 	mov	dpl,a
+   00D8 12s00r00            719 	lcall	_spi_rw
+   00DB AA 82               720 	mov	r2,dpl
+                            721 ;	cc1100.c:197: for (i=0; i < length; i++)
+   00DD 7B 00               722 	mov	r3,#0x00
+   00DF                     723 00104$:
+   00DF C3                  724 	clr	c
+   00E0 EB                  725 	mov	a,r3
+   00E1 95*08               726 	subb	a,_cc1100_read_PARM_3
+   00E3 50 33               727 	jnc	00107$
+                            728 ;	cc1100.c:198: dat[i]=spi_rw(0x00);
+   00E5 EB                  729 	mov	a,r3
+   00E6 25*05               730 	add	a,_cc1100_read_PARM_2
+   00E8 FC                  731 	mov	r4,a
+   00E9 E4                  732 	clr	a
+   00EA 35*06               733 	addc	a,(_cc1100_read_PARM_2 + 1)
+   00EC FD                  734 	mov	r5,a
+   00ED AE*07               735 	mov	r6,(_cc1100_read_PARM_2 + 2)
+   00EF 75 82 00            736 	mov	dpl,#0x00
+   00F2 C0 02               737 	push	ar2
+   00F4 C0 03               738 	push	ar3
+   00F6 C0 04               739 	push	ar4
+   00F8 C0 05               740 	push	ar5
+   00FA C0 06               741 	push	ar6
+   00FC 12s00r00            742 	lcall	_spi_rw
+   00FF AF 82               743 	mov	r7,dpl
+   0101 D0 06               744 	pop	ar6
+   0103 D0 05               745 	pop	ar5
+   0105 D0 04               746 	pop	ar4
+   0107 D0 03               747 	pop	ar3
+   0109 D0 02               748 	pop	ar2
+   010B 8C 82               749 	mov	dpl,r4
+   010D 8D 83               750 	mov	dph,r5
+   010F 8E F0               751 	mov	b,r6
+   0111 EF                  752 	mov	a,r7
+   0112 12s00r00            753 	lcall	__gptrput
+                            754 ;	cc1100.c:197: for (i=0; i < length; i++)
+   0115 0B                  755 	inc	r3
+   0116 80 C7               756 	sjmp	00104$
+   0118                     757 00107$:
+                            758 ;	cc1100.c:199: CS = 1;
+   0118 D2 81               759 	setb	_P0_1
+                            760 ;	cc1100.c:201: return(status);
+   011A 8A 82               761 	mov	dpl,r2
+   011C 22                  762 	ret
+                            763 ;------------------------------------------------------------
+                            764 ;Allocation info for local variables in function 'cc1100_read1'
+                            765 ;------------------------------------------------------------
+                            766 ;addr                      Allocated to registers r2 
+                            767 ;r                         Allocated to registers 
+                            768 ;------------------------------------------------------------
+                            769 ;	cc1100.c:204: unsigned char cc1100_read1(unsigned char addr) {
+                            770 ;	-----------------------------------------
+                            771 ;	 function cc1100_read1
+                            772 ;	-----------------------------------------
+   011D                     773 _cc1100_read1:
+   011D AA 82               774 	mov	r2,dpl
+                            775 ;	cc1100.c:208: CS = 0;
+   011F C2 81               776 	clr	_P0_1
+                            777 ;	cc1100.c:209: while (MISO1);
+   0121                     778 00101$:
+   0121 20 95 FD            779 	jb	_P1_5,00101$
+                            780 ;	cc1100.c:210: r = spi_rw(addr | READ);
+   0124 74 80               781 	mov	a,#0x80
+   0126 4A                  782 	orl	a,r2
+   0127 F5 82               783 	mov	dpl,a
+   0129 12s00r00            784 	lcall	_spi_rw
+                            785 ;	cc1100.c:211: r=spi_rw(0x00);
+   012C 75 82 00            786 	mov	dpl,#0x00
+   012F 12s00r00            787 	lcall	_spi_rw
+                            788 ;	cc1100.c:212: CS = 1;
+   0132 D2 81               789 	setb	_P0_1
+                            790 ;	cc1100.c:214: return(r);
+   0134 22                  791 	ret
+                            792 ;------------------------------------------------------------
+                            793 ;Allocation info for local variables in function 'cc1100_strobe'
+                            794 ;------------------------------------------------------------
+                            795 ;cmd                       Allocated to registers r2 
+                            796 ;status                    Allocated to registers 
+                            797 ;------------------------------------------------------------
+                            798 ;	cc1100.c:217: unsigned char cc1100_strobe(unsigned char cmd) {
+                            799 ;	-----------------------------------------
+                            800 ;	 function cc1100_strobe
+                            801 ;	-----------------------------------------
+   0135                     802 _cc1100_strobe:
+   0135 AA 82               803 	mov	r2,dpl
+                            804 ;	cc1100.c:221: CS = 0;
+   0137 C2 81               805 	clr	_P0_1
+                            806 ;	cc1100.c:222: while (MISO1);
+   0139                     807 00101$:
+   0139 20 95 FD            808 	jb	_P1_5,00101$
+                            809 ;	cc1100.c:223: status = spi_rw(cmd);
+   013C 8A 82               810 	mov	dpl,r2
+   013E 12s00r00            811 	lcall	_spi_rw
+                            812 ;	cc1100.c:224: CS = 1;
+   0141 D2 81               813 	setb	_P0_1
+                            814 ;	cc1100.c:226: return(status);
+   0143 22                  815 	ret
+                            816 ;------------------------------------------------------------
+                            817 ;Allocation info for local variables in function 'cc1100_read_status_reg_otf'
+                            818 ;------------------------------------------------------------
+                            819 ;reg                       Allocated to registers r2 
+                            820 ;res1                      Allocated to registers r3 
+                            821 ;res2                      Allocated to registers r5 
+                            822 ;------------------------------------------------------------
+                            823 ;	cc1100.c:233: unsigned char cc1100_read_status_reg_otf(unsigned char reg){
+                            824 ;	-----------------------------------------
+                            825 ;	 function cc1100_read_status_reg_otf
+                            826 ;	-----------------------------------------
+   0144                     827 _cc1100_read_status_reg_otf:
+   0144 AA 82               828 	mov	r2,dpl
+                            829 ;	cc1100.c:236: res1 = cc1100_read1(reg | BURST);
+   0146 74 40               830 	mov	a,#0x40
+   0148 4A                  831 	orl	a,r2
+   0149 F5 82               832 	mov	dpl,a
+   014B C0 02               833 	push	ar2
+   014D 12s01r1D            834 	lcall	_cc1100_read1
+   0150 AB 82               835 	mov	r3,dpl
+   0152 D0 02               836 	pop	ar2
+                            837 ;	cc1100.c:237: while ( (res2=cc1100_read1(reg | BURST)) != res1)
+   0154 43 02 40            838 	orl	ar2,#0x40
+   0157                     839 00101$:
+   0157 8A 82               840 	mov	dpl,r2
+   0159 C0 02               841 	push	ar2
+   015B C0 03               842 	push	ar3
+   015D 12s01r1D            843 	lcall	_cc1100_read1
+   0160 AC 82               844 	mov	r4,dpl
+   0162 D0 03               845 	pop	ar3
+   0164 D0 02               846 	pop	ar2
+   0166 EC                  847 	mov	a,r4
+   0167 FD                  848 	mov	r5,a
+   0168 B5 03 02            849 	cjne	a,ar3,00108$
+   016B 80 04               850 	sjmp	00103$
+   016D                     851 00108$:
+                            852 ;	cc1100.c:238: res1 = res2;
+   016D 8D 03               853 	mov	ar3,r5
+   016F 80 E6               854 	sjmp	00101$
+   0171                     855 00103$:
+                            856 ;	cc1100.c:239: return res2;
+   0171 8D 82               857 	mov	dpl,r5
+   0173 22                  858 	ret
+                            859 ;------------------------------------------------------------
+                            860 ;Allocation info for local variables in function 'switch_to_idle'
+                            861 ;------------------------------------------------------------
+                            862 ;------------------------------------------------------------
+                            863 ;	cc1100.c:244: void switch_to_idle() {
+                            864 ;	-----------------------------------------
+                            865 ;	 function switch_to_idle
+                            866 ;	-----------------------------------------
+   0174                     867 _switch_to_idle:
+                            868 ;	cc1100.c:245: cc1100_strobe(SIDLE);
+   0174 75 82 36            869 	mov	dpl,#0x36
+   0177 12s01r35            870 	lcall	_cc1100_strobe
+                            871 ;	cc1100.c:246: while ((cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) != MARCSTATE_IDLE);
+   017A                     872 00101$:
+   017A 75 82 F5            873 	mov	dpl,#0xF5
+   017D 12s01r44            874 	lcall	_cc1100_read_status_reg_otf
+   0180 E5 82               875 	mov	a,dpl
+   0182 54 1F               876 	anl	a,#0x1F
+   0184 FA                  877 	mov	r2,a
+   0185 BA 01 F2            878 	cjne	r2,#0x01,00101$
+   0188 22                  879 	ret
+                            880 	.area CSEG    (CODE)
+                            881 	.area CONST   (CODE)
+   0000                     882 _conf:
+   0000 06                  883 	.db #0x06	; 6
+   0001 2E                  884 	.db #0x2E	; 46
+   0002 07                  885 	.db #0x07	; 7
+   0003 00                  886 	.db #0x00	; 0
+   0004 D3                  887 	.db #0xD3	; 211
+   0005 91                  888 	.db #0x91	; 145
+   0006 FF                  889 	.db #0xFF	; 255
+   0007 0E                  890 	.db #0x0E	; 14
+   0008 05                  891 	.db #0x05	; 5
+   0009 01                  892 	.db #0x01	; 1
+   000A 06                  893 	.db #0x06	; 6
+   000B 08                  894 	.db #0x08	; 8
+   000C 00                  895 	.db #0x00	; 0
+   000D 10                  896 	.db #0x10	; 16
+   000E 09                  897 	.db #0x09	; 9
+   000F F4                  898 	.db #0xF4	; 244
+   0010 CA                  899 	.db #0xCA	; 202
+   0011 75                  900 	.db #0x75	; 117	u
+   0012 83                  901 	.db #0x83	; 131
+   0013 31                  902 	.db #0x31	; 49
+   0014 E5                  903 	.db #0xE5	; 229
+   0015 34                  904 	.db #0x34	; 52
+   0016 07                  905 	.db #0x07	; 7
+   0017 00                  906 	.db #0x00	; 0
+   0018 18                  907 	.db #0x18	; 24
+   0019 16                  908 	.db #0x16	; 22
+   001A 6C                  909 	.db #0x6C	; 108	l
+   001B 43                  910 	.db #0x43	; 67	C
+   001C 40                  911 	.db #0x40	; 64
+   001D 91                  912 	.db #0x91	; 145
+   001E 46                  913 	.db #0x46	; 70	F
+   001F 50                  914 	.db #0x50	; 80	P
+   0020 78                  915 	.db #0x78	; 120	x
+   0021 56                  916 	.db #0x56	; 86	V
+   0022 10                  917 	.db #0x10	; 16
+   0023 E9                  918 	.db #0xE9	; 233
+   0024 2A                  919 	.db #0x2A	; 42
+   0025 00                  920 	.db #0x00	; 0
+   0026 1F                  921 	.db #0x1F	; 31
+   0027 41                  922 	.db #0x41	; 65	A
+   0028 00                  923 	.db #0x00	; 0
+   0029 59                  924 	.db #0x59	; 89	Y
+   002A 7F                  925 	.db #0x7F	; 127
+   002B 3F                  926 	.db #0x3F	; 63
+   002C 81                  927 	.db #0x81	; 129
+   002D 35                  928 	.db #0x35	; 53
+   002E 09                  929 	.db #0x09	; 9
+                            930 	.area XINIT   (CODE)
+                            931 	.area CABS    (ABS,CODE)

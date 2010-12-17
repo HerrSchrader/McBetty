@@ -1,0 +1,1730 @@
+Archive member included because of file (symbol)
+
+/home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+                              display/fonty.thumb.o (__aeabi_uidiv)
+/home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+                              rtc/rtc.thumb.o (__aeabi_idiv)
+/home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                              /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o) (__aeabi_idiv0)
+
+Allocating common symbols
+Common symbol       size              file
+
+bmin                0x4               adc/adcirq.thumb.o
+ir_leadtime         0x4               infrared/infrared.thumb.o
+do_rcu              0x4               display/lcd.thumb.o
+ir_header_bit       0x4               infrared/infrared.thumb.o
+c4_wcb              0x4               games/connect4.thumb.o
+font_bitsML         0x4               display/fonty.thumb.o
+rcubuf              0x100             display/lcd.thumb.o
+ir_numbits          0x4               infrared/infrared.thumb.o
+act_encoder         0x1               infrared/infrared.thumb.o
+c4_level            0x1               games/connect4.thumb.o
+do_rcuS             0x4               display/lcd.thumb.o
+ir_pause            0x4               infrared/infrared.thumb.o
+drawbuf             0x100             display/lcd.thumb.o
+bl_max              0x1               display/backlight.thumb.o
+ir_pre              0x4               infrared/infrared.thumb.o
+oldkeys             0x8               main.o
+sdata               0x4               audio/soundirq.o
+irEncoder           0x4               infrared/infrared.thumb.o
+act_set             0x1               infrared/infrared.thumb.o
+hi_border           0x1               main.o
+mod_enable          0x1               infrared/infrared.thumb.o
+draw_vline          0x4               display/lcd.thumb.o
+font_bitsUL         0x4               display/fonty.thumb.o
+ir_bit              0x4               infrared/infrared.thumb.o
+glBfsOffsetToFreeRecord
+                    0xc               main.o
+irSend              0x4               infrared/infrared.thumb.o
+c4_player           0x1               games/connect4.thumb.o
+font_bitsLL         0x4               display/fonty.thumb.o
+ir_state            0x4               infrared/infrared.thumb.o
+RFstatus            0x4               main.o
+testdata2           0x4               gui/mainmenu.thumb.o
+playcounter         0x2               main.o
+callbacks           0x180             timer/timerirq.o
+playtone_cb         0x4               main.o
+ir_preamble         0x4               infrared/infrared.thumb.o
+irStop              0x4               infrared/infrared.thumb.o
+playstate           0x1               main.o
+bat_adc             0x4               adc/adcirq.thumb.o
+ir_wait             0x4               infrared/infrared.thumb.o
+direction           0x1               display/backlight.thumb.o
+sact                0x1               audio/soundirq.o
+ccol                0x4               games/connect4.thumb.o
+SID                 0x28              main.o
+i                   0x1               main.o
+draw_block          0x4               display/lcd.thumb.o
+bat_state           0x1               adc/adc.thumb.o
+xx                  0x2               main.o
+bl_cb               0x4               display/backlight.thumb.o
+draw_hline          0x4               display/lcd.thumb.o
+font_dlines         0x1               display/fonty.thumb.o
+keyMap              0xa8              infrared/infrared.thumb.o
+slen                0x4               audio/soundirq.o
+flash_base          0x4               flash/flash.thumb.o
+c4_abort            0x1               games/connect4.thumb.o
+irDevTab            0xa               main.o
+c4_moves            0x1               games/connect4.thumb.o
+col                 0x4               games/connect4.thumb.o
+bl_val              0x1               audio/soundirq.o
+seed                0x4               games/connect4.thumb.o
+ir_bittime1         0x4               infrared/infrared.thumb.o
+tonelen             0x3               main.o
+ir_header_cmd       0x4               infrared/infrared.thumb.o
+cycles              0x4               infrared/infrared.thumb.o
+voices              0x180             audio/sound.thumb.o
+sysInfo             0x1               main.o
+font_bitsLM         0x4               display/fonty.thumb.o
+glBfsFillOrder      0x3               main.o
+font_info           0x4               display/fonty.thumb.o
+timeout             0x1               audio/sound.thumb.o
+time                0x3               main.o
+playtone            0xc               main.o
+ir_toggle           0x4               infrared/infrared.thumb.o
+bl_timeout          0x4               display/backlight.thumb.o
+irRepeat            0x4               infrared/infrared.thumb.o
+playcountermax      0x2               main.o
+bl_speed            0x1               display/backlight.thumb.o
+ir_bittime0         0x4               infrared/infrared.thumb.o
+last_sample         0x1               audio/soundirq.o
+font_bitsMM         0x4               display/fonty.thumb.o
+ir_actcmd           0x4               infrared/infrared.thumb.o
+ir_waittime         0x1               infrared/infrared.thumb.o
+font_bitsUM         0x4               display/fonty.thumb.o
+timeInfo            0x1               main.o
+ir_cmd              0x4               infrared/infrared.thumb.o
+lo_border           0x1               main.o
+date                0x4               main.o
+font_bits           0x4               display/fonty.thumb.o
+ir_startstop        0x4               infrared/infrared.thumb.o
+cmp_val             0x1               audio/soundirq.o
+ir_trail            0x4               infrared/infrared.thumb.o
+auto_timeout        0x4               audio/sound.thumb.o
+ir_bittime          0x1               infrared/infrared.thumb.o
+bmax                0x4               adc/adcirq.thumb.o
+keys                0x8               keyboard/keyirq.o
+ir_len              0x4               infrared/infrared.thumb.o
+testdata1           0x4               gui/mainmenu.thumb.o
+glBfsDeletedBytes   0x6               main.o
+cc1100Addr          0x1               main.o
+out1                0x1               audio/soundirq.o
+is_drawing          0x4               display/lcd.thumb.o
+tval                0x4               audio/soundirq.o
+c4_cb               0x4               games/connect4.thumb.o
+key_state           0x4               main.o
+ir_prebits          0x1               infrared/infrared.thumb.o
+WORrx_cb            0x4               cc1100/rf.thumb.o
+RAWcmd              0x4               infrared/ir_raw.thumbunopt.o
+RFbuf               0x40              main.o
+row                 0x4               games/connect4.thumb.o
+activefont          0x1               main.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+ram              0x40000000         0x0000fc00
+flash            0x80000000         0x00100000
+*default*        0x00000000         0xffffffff
+
+Linker script and memory map
+
+                0x40010000                _stack_end = 0x40010000
+                0x00000000                . = 0x0
+
+startup
+ *(.startup)
+                0x00000000                . = ALIGN (0x4)
+
+.text           0x80000000    0x1bd5c
+ *(.text)
+ .text          0x80000000      0x198 crt.o
+                0x80000000                _startup
+                0x80000008                Reset_Handler
+ .text          0x80000198      0x700 main.o
+                0x800001e4                drawMainscreen
+                0x80000198                ask_for_time
+                0x800002a0                setSpeed
+                0x80000390                main
+ .text          0x80000898       0x70 global.o
+                0x80000898                memcpy
+                0x800008b8                memcmp
+ .text          0x80000908        0x0 audio/soundirq.o
+ .text          0x80000908        0x0 infrared/infraredirq.o
+ .text          0x80000908       0x84 interrupt/irq.o
+                0x80000988                UNDEF_Routine
+                0x80000958                restoreIRQ
+                0x80000984                SWI_Routine
+                0x80000918                enableIRQ
+                0x80000938                disableIRQ
+ .text          0x8000098c        0x0 keyboard/keyirq.o
+ .text          0x8000098c        0x0 timer/timerirq.o
+ .text          0x8000098c      0x3b0 adc/adc.thumb.o
+                0x80000a5c                draw_b
+                0x8000098c                calcBat
+                0x80000c38                showBat
+                0x800009a8                startADC
+ .text          0x80000d3c        0x0 adc/adcirq.thumb.o
+ .text          0x80000d3c      0x174 audio/sound.thumb.o
+                0x80000e88                initVoices
+                0x80000db4                initSound
+                0x80000e50                stopSound
+                0x80000e74                waitSound
+                0x80000e10                playSound
+                0x80000d3c                startSoundIRQ
+                0x80000dec                switchSound
+ .text          0x80000eb0      0x1e4 audio/sid.thumb.o
+                0x80000fa8                SIDplaytone
+                0x80000f2c                SIDplaydump
+                0x80000ecc                SIDsetadsr
+                0x80000eb0                SIDsetfrq
+                0x80000f04                SIDsetwave
+ .text          0x80001094      0x340 cc1100/cc1100.thumb.o
+                0x8000111c                cc1100_write1
+                0x800012ec                cc1100_init
+                0x80001094                cc1100_write
+                0x8000121c                cc1100_read1
+                0x80001188                cc1100_read
+                0x80001290                cc1100_strobe
+ .text          0x800013d4      0x4dc cc1100/rf.thumb.o
+                0x80001448                enableWOR
+                0x800015cc                RF_getfifo
+                0x800013e4                startcc1100IRQ
+                0x80001884                RF_init
+                0x80001830                WORrx_timeout
+                0x80001684                switch_WOR_RX
+                0x80001484                waitTX
+                0x800016dc                cc1100IRQ
+                0x80001580                RF_send
+                0x800013d4                WORsend_timeout
+                0x800014d8                RF_sendWOR
+                0x8000146c                switch_to_idle
+                0x800015ec                draw_ant
+ .text          0x800018b0     0x1104 display/lcd.thumb.o
+                0x800018b0                pause
+                0x80001b24                draw_line
+                0x80001dc0                draw_qcircle
+                0x80001ab8                draw_pixel
+                0x80001910                draw_logo
+                0x800018e8                lcd_enable
+                0x8000230c                draw_arrow
+                0x800018b4                lcd_set
+                0x80001fc8                draw_disc
+                0x80002878                lcd_init
+                0x80002828                lcd_fill
+                0x80001980                draw_rect
+                0x800020e4                draw_qdisc
+                0x80001c84                draw_circle
+                0x8000249c                draw_frame
+ .text          0x800029b4      0xb28 display/fonty.thumb.o
+                0x80003124                draw_char
+                0x80002ab0                _draw_char
+                0x800029b4                set_font
+                0x80003344                draw_hexS
+                0x800033d8                get_digit
+                0x8000315c                draw_string
+                0x80003204                get_stringwidth
+                0x80003034                _draw_charB
+                0x800032a4                get_stringheight
+                0x800032e8                draw_hexC
+                0x80003390                draw_hexW
+                0x80003420                draw_numU
+ .text          0x800034dc      0x15c display/backlight.thumb.o
+                0x800035ec                initBacklight
+                0x800034f0                setBLTimeout
+                0x80003504                autoBL
+                0x800034dc                setBLSpeed
+                0x8000358c                setBacklight
+ .text          0x80003638      0x21c flash/flash.thumb.o
+                0x80003744                writeWord
+                0x800036f8                writeBulk
+                0x800037a8                eraseSector
+                0x800036dc                endBulk
+                0x80003638                eraseFlash
+                0x800036ac                prepareBulk
+ .text          0x80003854      0x858 flash/bfs.thumb.o
+                0x80003c98                BFS_MakeSpace
+                0x80003ed0                BFS_DeleteAllFiles
+                0x80003a3c                writeBuffer
+                0x80003dac                BFS_SaveFile
+                0x8000395c                BFS_GetFileHeaderAddress
+                0x80003a34                readWord
+                0x800039d0                BFS_LoadFileAddr
+                0x800038ac                BFS_GetPhyByteAddrFromBfsSector
+                0x80003a00                BFS_ByteAddressToBfsSector
+                0x80003c18                BFS_IsSectorFormated
+                0x80003c44                BFS_CmpFile
+                0x80003ae8                BFS_WriteAtAddress
+                0x80004050                BFS_LoadFile
+                0x80003f44                BFS_Mount
+                0x80003ba0                BFS_FlashToFlashCopy
+                0x80003bb0                BFS_DeleteFile
+                0x80003854                BFS_SortArray
+                0x800038c4                BFS_GetFileHeaderInfo
+                0x80003a30                readByte
+ .text          0x800040ac        0x0 games/gamesmenu.thumb.o
+ .text          0x800040ac      0x61c games/tic_tac_toe.thumb.o
+                0x800042bc                GameTicTacToe_DrawGameField
+                0x80004198                GameTicTacToe_ComputerMove
+                0x800040ac                GameTicTacToe_IsSolved
+                0x80004470                GameTicTacToe
+ .text          0x800046c8      0xd30 games/sokoban.thumb.o
+                0x8000506c                GameSokoban_InitDisplayForNewGame
+                0x80004b08                GameSokoban_UndoAMove
+                0x80004c20                GameSokoban_Move
+                0x800046c8                GameSokoban_InitGameField
+                0x800047c4                GameSokoban_IsSolved
+                0x800050c4                GameSokoban
+                0x80004964                GameSokoban_DrawCell
+                0x800047f4                GameSokoban_SaveUndo
+ .text          0x800053f8      0xf40 games/connect4.thumb.o
+                0x80005cf8                progress_callback
+                0x800053f8                rand31
+                0x800055bc                c4_auto_move
+                0x80005868                c4_reset
+                0x80005738                c4_is_winner
+                0x80005784                c4_win_coords
+                0x80005a30                c4_selplayer
+                0x8000585c                c4_end_game
+                0x80005d80                move
+                0x80005434                c4_new_game
+                0x80005c38                checkwin
+                0x8000558c                c4_make_move
+                0x80005754                c4_is_tie
+                0x80005970                win_callback
+                0x80005874                draw_stone
+                0x80005b2c                delete_marker
+                0x80005720                c4_score_of_player
+                0x80005b90                draw_marker
+                0x80005ef0                start_connect4
+ .text          0x80006338      0x23c gui/menu.thumb.o
+                0x8000633c                menu_execentry
+                0x80006338                init_menu
+                0x800063b8                menu_exec
+ .text          0x80006574        0x0 gui/mainmenu.thumb.o
+ .text          0x80006574      0xe64 gui/testmenu.thumb.o
+                0x8000663c                bat_dbg
+                0x80006764                test_numbox
+                0x80006c54                erase_flash1
+                0x8000664c                testmenu_init
+                0x80006740                test_numchange
+                0x80006c64                test_irrec
+                0x80006888                draw_fonts
+                0x80006784                test_click
+                0x80006e88                test_RF
+                0x80006d6c                set_bl
+                0x80006660                test_controls
+                0x80006924                test_sid
+                0x800070c0                test_bl
+                0x800067a0                illusion
+                0x8000718c                test_frame2
+                0x80007308                test_circle
+                0x80006728                formload
+                0x80006710                formclose
+                0x800070d0                tkey
+                0x80006574                draw_itile
+                0x80007170                test_logo
+                0x80007114                fp1
+                0x80007268                test_frame
+ .text          0x800073d8      0x5f8 gui/settingsmenu.thumb.o
+                0x80007474                load_setting
+                0x8000778c                display_setting
+                0x80007428                load_RC_setting
+                0x800073d8                enter_settings_menu
+                0x80007544                RF_setting
+                0x800074d8                load_RF_setting
+ .text          0x800079d0      0xc8c gui/controls.thumb.o
+                0x80007aa4                txtbox_draw
+                0x80008338                form_exec
+                0x80007fe4                button_draw
+                0x80007db8                numbox_entervalue
+                0x8000822c                control_draw
+                0x80007a54                get_next_control
+                0x80007b5c                txtbox_entervalue
+                0x80007f88                numbox_draw
+                0x800082a4                form_draw
+                0x80008128                control_onkey
+                0x800079d0                get_prev_control
+                0x80007b00                label_draw
+                0x800083dc                msgbox
+ .text          0x8000865c      0x3f0 infrared/infrared.thumb.o
+                0x8000875c                runIR
+                0x80008768                stopIR
+                0x8000866c                startIrIRQ
+                0x80008774                copyMapC
+                0x800087dc                copyMapI
+                0x800087fc                setEncoder
+                0x80008828                getCode
+                0x80008750                defSender
+                0x80008754                defRepeater
+                0x80008730                initIR
+                0x80008794                copyMapPC
+                0x80008758                defStopper
+                0x8000865c                dummy
+                0x800087bc                copyMapS
+                0x800086a0                setIR
+ .text          0x80008a4c        0x0 infrared/codes.thumb.o
+ .text          0x80008a4c        0x0 infrared/encoders.thumb.o
+ .text          0x80008a4c      0xdf8 infrared/ir_capture.thumb.o
+                0x80009798                RAW_learnset
+                0x80008b20                compare_message
+                0x800094c4                getIR
+                0x80009040                RAW_keyerase
+                0x80008b5c                clear_cmd
+                0x800097b0                getIR_test
+                0x80008b70                RAW_learnmenue
+                0x80008bd0                RAW_eraseall
+                0x80008c00                RAW_allkeyserase
+                0x80008a4c                waitIrHi
+                0x800091b0                debug_print_capture
+                0x80008ea0                RAW_editset
+                0x80008acc                decodewide
+                0x800092d4                captureIR
+                0x80009630                RAW_learn
+                0x80008c3c                analyzeIR
+                0x80009084                debug_print_cmd
+ .text          0x80009844      0x7a4 infrared/ir_selector.thumb.o
+                0x8000987c                getSetName
+                0x80009844                getEncName
+                0x80009854                EncIsValid
+                0x80009a98                select_ir
+                0x80009e10                RC_setting
+                0x80009920                listSet
+ .text          0x80009fe8      0x2e8 keyboard/keyboard.thumb.o
+                0x8000a000                getNumKeyValue
+                0x8000a26c                initKeys
+                0x8000a24c                waitKeyDown
+                0x80009fe8                waitKeyUp
+                0x8000a084                getKeynum
+ .text          0x8000a2d0      0xb64 rtc/rtc.thumb.o
+                0x8000ad90                initRTC
+                0x8000a2d0                startRtcIRQ
+                0x8000a5a8                RTCtest
+                0x8000a518                getDate
+                0x8000a390                checkBCD
+                0x8000a654                printDate
+                0x8000a8b8                change_clock
+                0x8000a3e0                isschaltjahr
+                0x8000a870                setDate
+                0x8000a894                setTime
+                0x8000a564                getTime
+                0x8000a4cc                send_time
+                0x8000a7cc                printTime
+                0x8000ace4                rtcIRQ
+                0x8000a40c                calcweekday
+                0x8000a328                calcBCD
+ .text          0x8000ae34      0x160 rtc/i2c.thumb.o
+                0x8000aebc                i2c_write
+                0x8000aef4                i2c_write1
+                0x8000ae5c                i2c_start
+                0x8000ae34                wait_SI
+                0x8000af70                i2c_stop
+                0x8000af18                i2c_read
+ .text          0x8000af94      0x280 serial/serial.thumb.o
+                0x8000af94                serial_flush_input
+                0x8000b1b8                putHexC
+                0x8000afcc                serial_setbrg
+                0x8000b1dc                putHexS
+                0x8000b178                serial_tstc
+                0x8000b15c                serial_putc
+                0x8000afb8                serial_flush_output
+                0x8000b140                serial_init
+                0x8000b1a0                serial_puts
+                0x8000b1f8                putHexW
+                0x8000b188                serial_getc
+ .text          0x8000b214      0x144 timer/timerfuncs.thumb.o
+                0x8000b288                wait5ms
+                0x8000b214                startTimerIRQ
+                0x8000b2d8                removeTimerCB
+                0x8000b2a8                addTimerCB
+                0x8000b318                stopCB
+                0x8000b338                setCBIntervall
+                0x8000b2f8                startCB
+ .text          0x8000b358        0x0 tools/toolsmenu.thumb.o
+ .text          0x8000b358      0xc04 tools/scart_icp.thumb.o
+                0x8000b4d0                scart_icp_header
+                0x8000b528                scart_icp
+ .text          0x8000bf5c      0x1dc infrared/ir_itt.thumbunopt.o
+                0x8000c0c4                ITT_Repeat
+                0x8000c108                ITT_Stop
+                0x8000bf5c                ITT_LoadMap
+                0x8000c068                ITT_Send
+                0x8000bfdc                ITT_Init
+ .text          0x8000c138      0x22c infrared/ir_nrc17.thumbunopt.o
+                0x8000c314                NRC17_Stop
+                0x8000c1c4                NRC17_Init
+                0x8000c138                NRC17_CopyMap
+                0x8000c268                NRC17_Send
+                0x8000c2d0                NRC17_Repeat
+                0x8000c17c                NRC17_LoadMap
+ .text          0x8000c364      0x234 infrared/ir_raw.thumbunopt.o
+                0x8000c528                RAW_Stop
+                0x8000c51c                RAW_Repeat
+                0x8000c364                RAW_Init
+                0x8000c450                RAW_Send
+ .text          0x8000c598      0x1a0 infrared/ir_rc5.thumbunopt.o
+                0x8000c598                RC5_Init
+                0x8000c6f0                RC5_Stop
+                0x8000c6a4                RC5_Repeat
+                0x8000c628                RC5_Send
+ .text          0x8000c738      0x144 infrared/ir_rc6.thumbunopt.o
+                0x8000c7ec                RC6_Repeat
+                0x8000c738                RC6_Init
+                0x8000c840                RC6_Stop
+                0x8000c7bc                RC6_Send
+ .text          0x8000c87c      0x18c infrared/ir_rca.thumbunopt.o
+                0x8000c87c                RCA_LoadMap
+                0x8000c93c                RCA_Send
+                0x8000c8b8                RCA_Init
+                0x8000c9ac                RCA_Repeat
+                0x8000c9c4                RCA_Stop
+ .text          0x8000ca08      0x180 infrared/ir_rcmm.thumbunopt.o
+                0x8000cae8                RCMM_Send
+                0x8000ca08                RCMM_LoadMap
+                0x8000ca64                RCMM_Init
+                0x8000cb58                RCMM_Stop
+                0x8000cb18                RCMM_Repeat
+ .text          0x8000cb88      0x188 infrared/ir_rec80.thumbunopt.o
+                0x8000ccac                REC80_Repeat
+                0x8000cbc4                REC80_Init
+                0x8000cc54                REC80_Send
+                0x8000cce0                REC80_Stop
+                0x8000cb88                REC80_LoadMap
+ .text          0x8000cd10      0x164 infrared/ir_recs80.thumbunopt.o
+                0x8000ce3c                RECS80_Stop
+                0x8000cda8                RECS80_Send
+                0x8000cdfc                RECS80_Repeat
+                0x8000cd10                RECS80_Init
+ .text          0x8000ce74      0x1ac infrared/ir_rf.thumbunopt.o
+                0x8000cfe4                IRRF_Stop
+                0x8000ce74                IRRF_Init
+                0x8000cf04                IRRF_Send
+                0x8000cf60                IRRF_Repeat
+ .text          0x8000d020      0x170 infrared/ir_sirc.thumbunopt.o
+                0x8000d0b8                SIRC_Send
+                0x8000d160                SIRC_Stop
+                0x8000d120                SIRC_Repeat
+                0x8000d020                SIRC_Init
+ .text          0x8000d190      0x29c infrared/ir_spaceenc.thumbunopt.o
+                0x8000d3fc                SPACEENC2_Stop
+                0x8000d2ec                SPACEENC_Send
+                0x8000d320                SPACEENC_Repeat
+                0x8000d268                SPACEENC_Init
+                0x8000d394                SPACEENC2_Send
+                0x8000d3b4                SPACEENC2_Repeat
+                0x8000d190                SPACEENC_LoadMap
+                0x8000d358                SPACEENC_Stop
+ .text          0x8000d42c      0x114 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+                0x8000d42c                __udivsi3
+                0x8000d42c                __aeabi_uidiv
+                0x8000d520                __aeabi_uidivmod
+ .text          0x8000d540      0x148 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+                0x8000d540                __aeabi_idiv
+                0x8000d540                __divsi3
+                0x8000d668                __aeabi_idivmod
+ .text          0x8000d688        0x4 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x8000d688                __aeabi_ldiv0
+                0x8000d688                __aeabi_idiv0
+ *(.rodata)
+ .rodata        0x8000d68c       0x10 main.o
+                0x8000d68c                hval
+ .rodata        0x8000d69c        0x3 audio/soundirq.o
+                0x8000d69c                prevvoice
+ *fill*         0x8000d69f        0x1 00
+ .rodata        0x8000d6a0       0xe0 audio/sid.thumb.o
+                0x8000d73d                song3
+                0x8000d6dc                DecayReleaseRate
+                0x8000d6a0                notes
+                0x8000d6bc                AttackRate
+                0x8000d6fc                song2
+ .rodata        0x8000d780       0x2f cc1100/cc1100.thumb.o
+                0x8000d780                conf
+ .rodata        0x8000d7af        0x2 cc1100/rf.thumb.o
+                0x8000d7af                default_RFsettings
+ .rodata        0x8000d7b1     0x1402 display/lcd.thumb.o
+                0x8000ebb2                b_h
+                0x8000ebb1                b_w
+                0x8000d7b1                b_data
+ .rodata        0x8000ebb3     0x1347 display/fonty.thumb.o
+                0x8000ec3a                smooth_mt_bits
+                0x8000ef67                smooth_lt_bits
+                0x8000f294                smooth_mb_bits
+                0x8000ebb3                smooth_info
+                0x8000f8ee                charset_bits
+                0x8000f5c1                smooth_lb_bits
+                0x8000fef8                charset_dlines
+                0x8000fe68                charset_info
+                0x8000fef9                smooth_dlines
+ *fill*         0x8000fefa        0x2 00
+ .rodata        0x8000fefc       0x4c flash/flash.thumb.o
+                0x8000fefc                secaddr
+ .rodata        0x8000ff48       0x48 games/gamesmenu.thumb.o
+                0x8000ff48                gamesMenuEntries
+                0x8000ff84                gamesMenu
+ .rodata        0x8000ff90     0x7a34 games/sokoban.thumb.o
+                0x8000ff90                Sokoban_Levels
+ .rodata        0x800179c4      0x26c games/connect4.thumb.o
+                0x800179dc                map
+                0x80017c28                drop_order
+ .rodata        0x80017c30       0x5c gui/mainmenu.thumb.o
+                0x80017c80                mainMenu
+                0x80017c30                mainMenuEntries
+ .rodata        0x80017c8c      0x1dc gui/testmenu.thumb.o
+                0x80017d10                itilemap
+                0x80017e5c                testMenu
+                0x80017d44                testMenuEntries
+ .rodata        0x80017e68       0x7c gui/settingsmenu.thumb.o
+                0x80017e68                settingsMenu
+                0x80017e80                settingsMenuEntries
+                0x80017e74                default_settings
+ .rodata        0x80017ee4       0x5f gui/controls.thumb.o
+                0x80017f14                TXTKey5
+                0x80017f40                TXTKey0
+                0x80017efc                TXTKey2
+                0x80017f24                TXTKey7
+                0x80017f04                TXTKey3
+                0x80017ee4                string_yes
+                0x80017f0c                TXTKey4
+                0x80017ee7                string_no
+                0x80017f36                TXTKey9
+                0x80017eec                string_ok
+                0x80017eef                TXTKey1
+                0x80017f2e                TXTKey8
+                0x80017f1c                TXTKey6
+ *fill*         0x80017f43        0x1 00
+ .rodata        0x80017f44       0x14 infrared/infrared.thumb.o
+                0x80017f44                defModule
+ .rodata        0x80017f58      0x81c infrared/codes.thumb.o
+                0x8001856c                SIRC
+                0x800181d8                RC5
+                0x80018108                NRC17
+                0x80017f8c                ITT
+                0x800183a0                RCMM
+                0x8001863c                SPACEENC
+                0x800182a0                RC6
+                0x800183e4                REC80
+                0x80018760                RAW
+                0x8001835c                RCA
+                0x800184ac                RECS80
+                0x800186ac                IRRF
+ .rodata        0x80018774      0x110 infrared/encoders.thumb.o
+                0x800187c0                encoders
+ .rodata        0x80018884       0xc0 infrared/ir_capture.thumb.o
+                0x80018938                string_unknown
+ .rodata        0x80018944       0x13 infrared/ir_selector.thumb.o
+                0x8001894d                default_irDevTab
+ *fill*         0x80018957        0x1 00
+ .rodata        0x80018958       0x84 rtc/rtc.thumb.o
+                0x800189c1                rtc_init
+                0x80018988                days
+                0x800189ce                rtc_timer_init
+                0x800189d8                default_date
+                0x800189d4                default_time
+                0x80018996                months
+ .rodata        0x800189dc       0x20 tools/toolsmenu.thumb.o
+                0x800189f0                toolsMenu
+                0x800189dc                toolsMenuEntries
+ .rodata        0x800189fc     0x2004 tools/scart_icp.thumb.o
+                0x8001a9fc                scart_bootstat
+                0x8001a9fd                scart_bootvec
+                0x8001a9fe                scart_image_startaddr
+                0x800189fc                scart_image
+ .rodata        0x8001aa00       0x54 infrared/ir_itt.thumbunopt.o
+                0x8001aa14                ITT2_Module
+                0x8001aa00                ITT_Module
+ .rodata        0x8001aa54       0x34 infrared/ir_nrc17.thumbunopt.o
+                0x8001aa54                NRC17_Module
+ .rodata        0x8001aa88       0x1c infrared/ir_raw.thumbunopt.o
+                0x8001aa88                RAW_Module
+ .rodata        0x8001aaa4       0x2c infrared/ir_rc5.thumbunopt.o
+                0x8001aaa4                RC5_Module
+ .rodata        0x8001aad0       0x3c infrared/ir_rc6.thumbunopt.o
+                0x8001aad0                RC6_Module
+ .rodata        0x8001ab0c       0x38 infrared/ir_rca.thumbunopt.o
+                0x8001ab0c                RCA_Module
+ .rodata        0x8001ab44       0x34 infrared/ir_rcmm.thumbunopt.o
+                0x8001ab44                RCMM_Module
+                0x8001ab58                ir_times
+ .rodata        0x8001ab78       0x38 infrared/ir_rec80.thumbunopt.o
+                0x8001ab78                REC80_Module
+ .rodata        0x8001abb0       0x28 infrared/ir_recs80.thumbunopt.o
+                0x8001abb0                RECS80_Module
+ .rodata        0x8001abd8       0x14 infrared/ir_rf.thumbunopt.o
+                0x8001abd8                IRRF_Module
+ .rodata        0x8001abec       0x2c infrared/ir_sirc.thumbunopt.o
+                0x8001abec                SIRC_Module
+ .rodata        0x8001ac18       0x90 infrared/ir_spaceenc.thumbunopt.o
+                0x8001ac78                SPACEENC2_Module
+                0x8001ac64                SPACEENC_Module
+                0x8001ac54                dtv3_pre
+                0x8001ac18                dtv3_codes
+ *(.rodata*)
+ .rodata.str1.1
+                0x8001aca8        0xa main.o
+ .rodata.str1.1
+                0x8001acb2       0x1c adc/adc.thumb.o
+                                 0x25 (size before relaxing)
+ .rodata.str1.1
+                0x8001acce       0x2b flash/flash.thumb.o
+ .rodata.str1.1
+                0x8001acf9        0x4 flash/bfs.thumb.o
+ .rodata.str1.1
+                0x8001acfd       0x30 games/gamesmenu.thumb.o
+                                 0x4b (size before relaxing)
+ .rodata.str1.1
+                0x8001ad2d       0x69 games/tic_tac_toe.thumb.o
+                                 0x75 (size before relaxing)
+ .rodata.str1.1
+                0x8001ad96       0x53 games/sokoban.thumb.o
+                                 0x7c (size before relaxing)
+ .rodata.str1.1
+                0x8001ade9       0x9d games/connect4.thumb.o
+                                 0xac (size before relaxing)
+ .rodata.str1.1
+                0x8001ae86       0x51 gui/mainmenu.thumb.o
+                                 0x57 (size before relaxing)
+ .rodata.str1.1
+                0x8001aed7      0x2e6 gui/testmenu.thumb.o
+                                0x30a (size before relaxing)
+ .rodata.str1.1
+                0x8001b1bd       0xd8 gui/settingsmenu.thumb.o
+                                 0xe4 (size before relaxing)
+ .rodata.str1.1
+                0x8001b295        0x5 gui/controls.thumb.o
+                                  0x7 (size before relaxing)
+ .rodata.str1.1
+                0x8001b29a       0x28 infrared/codes.thumb.o
+ .rodata.str1.1
+                0x00000000       0x28 infrared/encoders.thumb.o
+                                  0x6 (size before relaxing)
+ .rodata.str1.1
+                0x8001b2c2      0x43b infrared/ir_capture.thumb.o
+                                0x46b (size before relaxing)
+ .rodata.str1.1
+                0x8001b6fd       0xb9 infrared/ir_selector.thumb.o
+                                 0xcb (size before relaxing)
+ .rodata.str1.1
+                0x8001b7b6       0x6b rtc/rtc.thumb.o
+ .rodata.str1.1
+                0x8001b821        0xa tools/toolsmenu.thumb.o
+                                 0x10 (size before relaxing)
+ .rodata.str1.1
+                0x8001b82b      0x2e2 tools/scart_icp.thumb.o
+                                0x2ef (size before relaxing)
+ *(.glue_7)
+ *fill*         0x8001bb0d        0x3 00
+ .glue_7        0x8001bb10        0x0 crt.o
+ .glue_7        0x8001bb10        0x0 main.o
+ .glue_7        0x8001bb10        0x0 global.o
+ .glue_7        0x8001bb10        0x0 audio/soundirq.o
+ .glue_7        0x8001bb10        0x0 infrared/infraredirq.o
+ .glue_7        0x8001bb10        0x0 interrupt/irq.o
+ .glue_7        0x8001bb10        0x0 keyboard/keyirq.o
+ .glue_7        0x8001bb10        0x0 timer/timerirq.o
+ .glue_7        0x8001bb10        0x0 adc/adc.thumb.o
+ .glue_7        0x8001bb10        0x0 adc/adcirq.thumb.o
+ .glue_7        0x8001bb10        0x0 audio/sound.thumb.o
+ .glue_7        0x8001bb10        0x0 audio/sid.thumb.o
+ .glue_7        0x8001bb10        0x0 cc1100/cc1100.thumb.o
+ .glue_7        0x8001bb10        0x0 cc1100/rf.thumb.o
+ .glue_7        0x8001bb10        0x0 display/lcd.thumb.o
+ .glue_7        0x8001bb10        0x0 display/fonty.thumb.o
+ .glue_7        0x8001bb10        0x0 display/backlight.thumb.o
+ .glue_7        0x8001bb10        0x0 flash/flash.thumb.o
+ .glue_7        0x8001bb10        0x0 flash/bfs.thumb.o
+ .glue_7        0x8001bb10        0x0 games/gamesmenu.thumb.o
+ .glue_7        0x8001bb10        0x0 games/tic_tac_toe.thumb.o
+ .glue_7        0x8001bb10        0x0 games/sokoban.thumb.o
+ .glue_7        0x8001bb10        0x0 games/connect4.thumb.o
+ .glue_7        0x8001bb10        0x0 gui/menu.thumb.o
+ .glue_7        0x8001bb10        0x0 gui/mainmenu.thumb.o
+ .glue_7        0x8001bb10        0x0 gui/testmenu.thumb.o
+ .glue_7        0x8001bb10        0x0 gui/settingsmenu.thumb.o
+ .glue_7        0x8001bb10        0x0 gui/controls.thumb.o
+ .glue_7        0x8001bb10        0x0 infrared/infrared.thumb.o
+ .glue_7        0x8001bb10        0x0 infrared/codes.thumb.o
+ .glue_7        0x8001bb10        0x0 infrared/encoders.thumb.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_capture.thumb.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_selector.thumb.o
+ .glue_7        0x8001bb10        0x0 keyboard/keyboard.thumb.o
+ .glue_7        0x8001bb10        0x0 rtc/rtc.thumb.o
+ .glue_7        0x8001bb10        0x0 rtc/i2c.thumb.o
+ .glue_7        0x8001bb10        0x0 serial/serial.thumb.o
+ .glue_7        0x8001bb10        0x0 timer/timerfuncs.thumb.o
+ .glue_7        0x8001bb10        0x0 tools/toolsmenu.thumb.o
+ .glue_7        0x8001bb10        0x0 tools/scart_icp.thumb.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_itt.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_nrc17.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_raw.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_rc5.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_rc6.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_rca.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_rcmm.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_rec80.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_recs80.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_rf.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_sirc.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 infrared/ir_spaceenc.thumbunopt.o
+ .glue_7        0x8001bb10        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .glue_7        0x8001bb10        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .glue_7        0x8001bb10      0x204 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x8001bbc4                __initKeys_from_arm
+                0x8001bcc0                __setBacklight_from_arm
+                0x8001bc18                __enableWOR_from_arm
+                0x8001bc24                __initRTC_from_arm
+                0x8001bb7c                __printDate_from_arm
+                0x8001bc54                __initBacklight_from_arm
+                0x8001bb58                __getSetName_from_arm
+                0x8001bb70                __printTime_from_arm
+                0x8001bce4                __serial_tstc_from_arm
+                0x8001bb10                __RF_sendWOR_from_arm
+                0x8001bc48                __init_menu_from_arm
+                0x8001bbdc                __startSoundIRQ_from_arm
+                0x8001bcf0                __serial_getc_from_arm
+                0x8001bc00                __RF_init_from_arm
+                0x8001bb88                __showBat_from_arm
+                0x8001bc90                __BFS_SaveFile_from_arm
+                0x8001bb4c                __draw_logo_from_arm
+                0x8001bc6c                __load_RC_setting_from_arm
+                0x8001bccc                __menu_exec_from_arm
+                0x8001bc78                __load_RF_setting_from_arm
+                0x8001bba0                __serial_init_from_arm
+                0x8001bb34                __set_font_from_arm
+                0x8001bc30                __startRtcIRQ_from_arm
+                0x8001bb28                __RF_send_from_arm
+                0x8001bc84                __load_setting_from_arm
+                0x8001bc60                __BFS_Mount_from_arm
+                0x8001bbd0                __initSound_from_arm
+                0x8001bcfc                __serial_puts_from_arm
+                0x8001bcb4                __setEncoder_from_arm
+                0x8001bd08                __serial_putc_from_arm
+                0x8001bb1c                __switch_WOR_RX_from_arm
+                0x8001bbac                __startTimerIRQ_from_arm
+                0x8001bc9c                __eraseSector_from_arm
+                0x8001bbb8                __startADC_from_arm
+                0x8001bb94                __lcd_init_from_arm
+                0x8001bca8                __EncIsValid_from_arm
+                0x8001bb40                __lcd_fill_from_arm
+                0x8001bcd8                __getCode_from_arm
+                0x8001bbe8                __initIR_from_arm
+                0x8001bb64                __draw_string_from_arm
+                0x8001bbf4                __startIrIRQ_from_arm
+                0x8001bc3c                __testmenu_init_from_arm
+                0x8001bc0c                __startcc1100IRQ_from_arm
+ *(.glue_7t)
+ .glue_7t       0x8001bd14        0x0 crt.o
+ .glue_7t       0x8001bd14        0x0 main.o
+ .glue_7t       0x8001bd14        0x0 global.o
+ .glue_7t       0x8001bd14        0x0 audio/soundirq.o
+ .glue_7t       0x8001bd14        0x0 infrared/infraredirq.o
+ .glue_7t       0x8001bd14        0x0 interrupt/irq.o
+ .glue_7t       0x8001bd14        0x0 keyboard/keyirq.o
+ .glue_7t       0x8001bd14        0x0 timer/timerirq.o
+ .glue_7t       0x8001bd14        0x0 adc/adc.thumb.o
+ .glue_7t       0x8001bd14        0x0 adc/adcirq.thumb.o
+ .glue_7t       0x8001bd14        0x0 audio/sound.thumb.o
+ .glue_7t       0x8001bd14        0x0 audio/sid.thumb.o
+ .glue_7t       0x8001bd14        0x0 cc1100/cc1100.thumb.o
+ .glue_7t       0x8001bd14        0x0 cc1100/rf.thumb.o
+ .glue_7t       0x8001bd14        0x0 display/lcd.thumb.o
+ .glue_7t       0x8001bd14        0x0 display/fonty.thumb.o
+ .glue_7t       0x8001bd14        0x0 display/backlight.thumb.o
+ .glue_7t       0x8001bd14        0x0 flash/flash.thumb.o
+ .glue_7t       0x8001bd14        0x0 flash/bfs.thumb.o
+ .glue_7t       0x8001bd14        0x0 games/gamesmenu.thumb.o
+ .glue_7t       0x8001bd14        0x0 games/tic_tac_toe.thumb.o
+ .glue_7t       0x8001bd14        0x0 games/sokoban.thumb.o
+ .glue_7t       0x8001bd14        0x0 games/connect4.thumb.o
+ .glue_7t       0x8001bd14        0x0 gui/menu.thumb.o
+ .glue_7t       0x8001bd14        0x0 gui/mainmenu.thumb.o
+ .glue_7t       0x8001bd14        0x0 gui/testmenu.thumb.o
+ .glue_7t       0x8001bd14        0x0 gui/settingsmenu.thumb.o
+ .glue_7t       0x8001bd14        0x0 gui/controls.thumb.o
+ .glue_7t       0x8001bd14        0x0 infrared/infrared.thumb.o
+ .glue_7t       0x8001bd14        0x0 infrared/codes.thumb.o
+ .glue_7t       0x8001bd14        0x0 infrared/encoders.thumb.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_capture.thumb.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_selector.thumb.o
+ .glue_7t       0x8001bd14        0x0 keyboard/keyboard.thumb.o
+ .glue_7t       0x8001bd14        0x0 rtc/rtc.thumb.o
+ .glue_7t       0x8001bd14        0x0 rtc/i2c.thumb.o
+ .glue_7t       0x8001bd14        0x0 serial/serial.thumb.o
+ .glue_7t       0x8001bd14        0x0 timer/timerfuncs.thumb.o
+ .glue_7t       0x8001bd14        0x0 tools/toolsmenu.thumb.o
+ .glue_7t       0x8001bd14        0x0 tools/scart_icp.thumb.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_itt.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_nrc17.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_raw.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_rc5.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_rc6.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_rca.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_rcmm.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_rec80.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_recs80.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_rf.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_sirc.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 infrared/ir_spaceenc.thumbunopt.o
+ .glue_7t       0x8001bd14        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .glue_7t       0x8001bd14        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .glue_7t       0x8001bd14       0x48 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x8001bd20                ____aeabi_uidiv_change_to_arm
+                0x8001bd38                __setSpeed_change_to_arm
+                0x8001bd4c                ____aeabi_idivmod_from_thumb
+                0x8001bd54                ____aeabi_idiv_from_thumb
+                0x8001bd14                __memcpy_from_thumb
+                0x8001bd1c                ____aeabi_uidiv_from_thumb
+                0x8001bd2c                ____aeabi_uidivmod_from_thumb
+                0x8001bd34                __setSpeed_from_thumb
+                0x8001bd48                __enableIRQ_change_to_arm
+                0x8001bd30                ____aeabi_uidivmod_change_to_arm
+                0x8001bd44                __enableIRQ_from_thumb
+                0x8001bd40                __disableIRQ_change_to_arm
+                0x8001bd24                __memcmp_from_thumb
+                0x8001bd28                __memcmp_change_to_arm
+                0x8001bd50                ____aeabi_idivmod_change_to_arm
+                0x8001bd18                __memcpy_change_to_arm
+                0x8001bd3c                __disableIRQ_from_thumb
+                0x8001bd58                ____aeabi_idiv_change_to_arm
+                0x8001bd5c                _etext = .
+
+.vfp11_veneer   0x00000000        0x0
+ .vfp11_veneer  0x00000000        0x0 crt.o
+ .vfp11_veneer  0x00000000        0x0 main.o
+ .vfp11_veneer  0x00000000        0x0 global.o
+ .vfp11_veneer  0x00000000        0x0 audio/soundirq.o
+ .vfp11_veneer  0x00000000        0x0 infrared/infraredirq.o
+ .vfp11_veneer  0x00000000        0x0 interrupt/irq.o
+ .vfp11_veneer  0x00000000        0x0 keyboard/keyirq.o
+ .vfp11_veneer  0x00000000        0x0 timer/timerirq.o
+ .vfp11_veneer  0x00000000        0x0 adc/adc.thumb.o
+ .vfp11_veneer  0x00000000        0x0 adc/adcirq.thumb.o
+ .vfp11_veneer  0x00000000        0x0 audio/sound.thumb.o
+ .vfp11_veneer  0x00000000        0x0 audio/sid.thumb.o
+ .vfp11_veneer  0x00000000        0x0 cc1100/cc1100.thumb.o
+ .vfp11_veneer  0x00000000        0x0 cc1100/rf.thumb.o
+ .vfp11_veneer  0x00000000        0x0 display/lcd.thumb.o
+ .vfp11_veneer  0x00000000        0x0 display/fonty.thumb.o
+ .vfp11_veneer  0x00000000        0x0 display/backlight.thumb.o
+ .vfp11_veneer  0x00000000        0x0 flash/flash.thumb.o
+ .vfp11_veneer  0x00000000        0x0 flash/bfs.thumb.o
+ .vfp11_veneer  0x00000000        0x0 games/gamesmenu.thumb.o
+ .vfp11_veneer  0x00000000        0x0 games/tic_tac_toe.thumb.o
+ .vfp11_veneer  0x00000000        0x0 games/sokoban.thumb.o
+ .vfp11_veneer  0x00000000        0x0 games/connect4.thumb.o
+ .vfp11_veneer  0x00000000        0x0 gui/menu.thumb.o
+ .vfp11_veneer  0x00000000        0x0 gui/mainmenu.thumb.o
+ .vfp11_veneer  0x00000000        0x0 gui/testmenu.thumb.o
+ .vfp11_veneer  0x00000000        0x0 gui/settingsmenu.thumb.o
+ .vfp11_veneer  0x00000000        0x0 gui/controls.thumb.o
+ .vfp11_veneer  0x00000000        0x0 infrared/infrared.thumb.o
+ .vfp11_veneer  0x00000000        0x0 infrared/codes.thumb.o
+ .vfp11_veneer  0x00000000        0x0 infrared/encoders.thumb.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_capture.thumb.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_selector.thumb.o
+ .vfp11_veneer  0x00000000        0x0 keyboard/keyboard.thumb.o
+ .vfp11_veneer  0x00000000        0x0 rtc/rtc.thumb.o
+ .vfp11_veneer  0x00000000        0x0 rtc/i2c.thumb.o
+ .vfp11_veneer  0x00000000        0x0 serial/serial.thumb.o
+ .vfp11_veneer  0x00000000        0x0 timer/timerfuncs.thumb.o
+ .vfp11_veneer  0x00000000        0x0 tools/toolsmenu.thumb.o
+ .vfp11_veneer  0x00000000        0x0 tools/scart_icp.thumb.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_itt.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_nrc17.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_raw.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_rc5.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_rc6.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_rca.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_rcmm.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_rec80.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_recs80.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_rf.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_sirc.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 infrared/ir_spaceenc.thumbunopt.o
+ .vfp11_veneer  0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .vfp11_veneer  0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .vfp11_veneer  0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+
+.janus_2cc_veneer
+                0x00000000        0x0
+ .janus_2cc_veneer
+                0x00000000        0x0 crt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 main.o
+ .janus_2cc_veneer
+                0x00000000        0x0 global.o
+ .janus_2cc_veneer
+                0x00000000        0x0 audio/soundirq.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/infraredirq.o
+ .janus_2cc_veneer
+                0x00000000        0x0 interrupt/irq.o
+ .janus_2cc_veneer
+                0x00000000        0x0 keyboard/keyirq.o
+ .janus_2cc_veneer
+                0x00000000        0x0 timer/timerirq.o
+ .janus_2cc_veneer
+                0x00000000        0x0 adc/adc.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 adc/adcirq.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 audio/sound.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 audio/sid.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 cc1100/cc1100.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 cc1100/rf.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 display/lcd.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 display/fonty.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 display/backlight.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 flash/flash.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 flash/bfs.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 games/gamesmenu.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 games/tic_tac_toe.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 games/sokoban.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 games/connect4.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 gui/menu.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 gui/mainmenu.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 gui/testmenu.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 gui/settingsmenu.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 gui/controls.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/infrared.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/codes.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/encoders.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_capture.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_selector.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 keyboard/keyboard.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 rtc/rtc.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 rtc/i2c.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 serial/serial.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 timer/timerfuncs.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 tools/toolsmenu.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 tools/scart_icp.thumb.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_itt.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_nrc17.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_raw.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_rc5.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_rc6.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_rca.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_rcmm.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_rec80.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_recs80.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_rf.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_sirc.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 infrared/ir_spaceenc.thumbunopt.o
+ .janus_2cc_veneer
+                0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .janus_2cc_veneer
+                0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .janus_2cc_veneer
+                0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+
+.v4_bx          0x00000000        0x0
+ .v4_bx         0x00000000        0x0 crt.o
+ .v4_bx         0x00000000        0x0 main.o
+ .v4_bx         0x00000000        0x0 global.o
+ .v4_bx         0x00000000        0x0 audio/soundirq.o
+ .v4_bx         0x00000000        0x0 infrared/infraredirq.o
+ .v4_bx         0x00000000        0x0 interrupt/irq.o
+ .v4_bx         0x00000000        0x0 keyboard/keyirq.o
+ .v4_bx         0x00000000        0x0 timer/timerirq.o
+ .v4_bx         0x00000000        0x0 adc/adc.thumb.o
+ .v4_bx         0x00000000        0x0 adc/adcirq.thumb.o
+ .v4_bx         0x00000000        0x0 audio/sound.thumb.o
+ .v4_bx         0x00000000        0x0 audio/sid.thumb.o
+ .v4_bx         0x00000000        0x0 cc1100/cc1100.thumb.o
+ .v4_bx         0x00000000        0x0 cc1100/rf.thumb.o
+ .v4_bx         0x00000000        0x0 display/lcd.thumb.o
+ .v4_bx         0x00000000        0x0 display/fonty.thumb.o
+ .v4_bx         0x00000000        0x0 display/backlight.thumb.o
+ .v4_bx         0x00000000        0x0 flash/flash.thumb.o
+ .v4_bx         0x00000000        0x0 flash/bfs.thumb.o
+ .v4_bx         0x00000000        0x0 games/gamesmenu.thumb.o
+ .v4_bx         0x00000000        0x0 games/tic_tac_toe.thumb.o
+ .v4_bx         0x00000000        0x0 games/sokoban.thumb.o
+ .v4_bx         0x00000000        0x0 games/connect4.thumb.o
+ .v4_bx         0x00000000        0x0 gui/menu.thumb.o
+ .v4_bx         0x00000000        0x0 gui/mainmenu.thumb.o
+ .v4_bx         0x00000000        0x0 gui/testmenu.thumb.o
+ .v4_bx         0x00000000        0x0 gui/settingsmenu.thumb.o
+ .v4_bx         0x00000000        0x0 gui/controls.thumb.o
+ .v4_bx         0x00000000        0x0 infrared/infrared.thumb.o
+ .v4_bx         0x00000000        0x0 infrared/codes.thumb.o
+ .v4_bx         0x00000000        0x0 infrared/encoders.thumb.o
+ .v4_bx         0x00000000        0x0 infrared/ir_capture.thumb.o
+ .v4_bx         0x00000000        0x0 infrared/ir_selector.thumb.o
+ .v4_bx         0x00000000        0x0 keyboard/keyboard.thumb.o
+ .v4_bx         0x00000000        0x0 rtc/rtc.thumb.o
+ .v4_bx         0x00000000        0x0 rtc/i2c.thumb.o
+ .v4_bx         0x00000000        0x0 serial/serial.thumb.o
+ .v4_bx         0x00000000        0x0 timer/timerfuncs.thumb.o
+ .v4_bx         0x00000000        0x0 tools/toolsmenu.thumb.o
+ .v4_bx         0x00000000        0x0 tools/scart_icp.thumb.o
+ .v4_bx         0x00000000        0x0 infrared/ir_itt.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_nrc17.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_raw.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_rc5.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_rc6.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_rca.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_rcmm.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_rec80.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_recs80.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_rf.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_sirc.thumbunopt.o
+ .v4_bx         0x00000000        0x0 infrared/ir_spaceenc.thumbunopt.o
+ .v4_bx         0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .v4_bx         0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .v4_bx         0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x00000000                . = ALIGN (0x4)
+
+.fastcode       0x40000000     0x204c load address 0x8001bd5c
+                0x8001bd5c                __fastcode_load = LOADADDR (.fastcode)
+                0x40000000                __fastcode_start = .
+ *(.text.fastcode)
+ .text.fastcode
+                0x40000000       0x80 crt.o
+                0x40000000                ramvectors
+                0x40000060                do_fiq
+                0x40000040                do_vic
+ .text.fastcode
+                0x40000080      0x45c audio/soundirq.o
+                0x40000080                soundIRQ
+ .text.fastcode
+                0x400004dc       0xc4 infrared/infraredirq.o
+                0x400004dc                irIRQ
+ .text.fastcode
+                0x400005a0       0x58 interrupt/irq.o
+                0x400005a0                FIQ_Routine
+ .text.fastcode
+                0x400005f8      0x314 keyboard/keyirq.o
+                0x400005f8                keyScanner
+ .text.fastcode
+                0x4000090c       0x84 timer/timerirq.o
+                0x4000090c                timerIRQ
+ .text.fastcode
+                0x40000990       0x68 adc/adcirq.thumb.o
+                0x40000990                adcIRQ
+ .text.fastcode
+                0x400009f8      0x580 display/lcd.thumb.o
+                0x40000b38                _do_rcuS
+                0x40000e28                _draw_vline
+                0x40000d9c                _draw_hline
+                0x40000c18                _draw_block
+                0x400009f8                _do_rcu
+ .text.fastcode
+                0x40000f78      0x1b0 games/connect4.thumb.o
+                0x40000f78                _mcpy
+ .text.fastcode
+                0x40001128        0x4 infrared/infrared.thumb.o
+                0x40001128                defIR
+ .text.fastcode
+                0x4000112c      0x13c infrared/ir_itt.thumbunopt.o
+                0x4000112c                ITT_Encode
+ .text.fastcode
+                0x40001268      0x150 infrared/ir_nrc17.thumbunopt.o
+                0x40001268                NRC17_Encode
+ .text.fastcode
+                0x400013b8      0x148 infrared/ir_raw.thumbunopt.o
+                0x400013b8                RAW_Encode
+ .text.fastcode
+                0x40001500      0x10c infrared/ir_rc5.thumbunopt.o
+                0x40001500                RC5_Encode
+ .text.fastcode
+                0x4000160c      0x214 infrared/ir_rc6.thumbunopt.o
+                0x4000160c                RC6_Encode
+ .text.fastcode
+                0x40001820      0x150 infrared/ir_rca.thumbunopt.o
+                0x40001820                RCA_Encode
+ .text.fastcode
+                0x40001970      0x150 infrared/ir_rcmm.thumbunopt.o
+                0x40001970                RCMM_Encode
+ .text.fastcode
+                0x40001ac0      0x154 infrared/ir_rec80.thumbunopt.o
+                0x40001ac0                REC80_Encode
+ .text.fastcode
+                0x40001c14       0xf0 infrared/ir_recs80.thumbunopt.o
+                0x40001c14                RECS80_Encode
+ .text.fastcode
+                0x40001d04       0x68 infrared/ir_rf.thumbunopt.o
+                0x40001d04                IRRF_Encode
+ .text.fastcode
+                0x40001d6c      0x130 infrared/ir_sirc.thumbunopt.o
+                0x40001d6c                SIRC_Encode
+ .text.fastcode
+                0x40001e9c      0x1b0 infrared/ir_spaceenc.thumbunopt.o
+                0x40001e9c                SPACEENC_Encode
+ *(.text.ramvectors)
+ *(.text.do_vic)
+ *(.text.do_fiq)
+ *(.text.timerIRQ)
+ *(.text.soundIRQ)
+ *(.text.FIQ_Routine)
+ *(.text.keyScanner)
+ *(.text.adcIRQ)
+ *(.text.irIRQ)
+ *(.text.defIR)
+ *(.text.NRC17_Encode)
+ *(.text.ITT_Encode)
+ *(.text.RC5_Encode)
+ *(.text.RCA_Encode)
+ *(.text.RCMM_Encode)
+ *(.text.REC80_Encode)
+ *(.text.RECS80_Encode)
+ *(.text.SIRC_Encode)
+ *(.text.SPACEENC_Encode)
+ *(.text.cc1100IRQ)
+ *(.text._evaluate)
+ *(.text._push_state)
+ *(.text._mcpy)
+ *(.text._do_rcu)
+ *(.text._do_rcuS)
+ *(.text._draw_block)
+ *(.text._draw_hline)
+ *(.text._draw_vline)
+                0x4000204c                . = ALIGN (0x4)
+                0x4000204c                __fastcode_end = .
+
+.data           0x4000204c       0x28 load address 0x8001dda8
+                0x4000204c                _data = .
+ *(.data)
+ .data          0x4000204c        0x0 crt.o
+ .data          0x4000204c        0x0 main.o
+ .data          0x4000204c        0x0 global.o
+ .data          0x4000204c        0x0 audio/soundirq.o
+ .data          0x4000204c        0x0 infrared/infraredirq.o
+ .data          0x4000204c        0x0 interrupt/irq.o
+ .data          0x4000204c        0x0 keyboard/keyirq.o
+ .data          0x4000204c        0x0 timer/timerirq.o
+ .data          0x4000204c        0x0 adc/adc.thumb.o
+ .data          0x4000204c        0x0 adc/adcirq.thumb.o
+ .data          0x4000204c        0x0 audio/sound.thumb.o
+ .data          0x4000204c        0x0 audio/sid.thumb.o
+ .data          0x4000204c        0x0 cc1100/cc1100.thumb.o
+ .data          0x4000204c        0x0 cc1100/rf.thumb.o
+ .data          0x4000204c        0x0 display/lcd.thumb.o
+ .data          0x4000204c        0x0 display/fonty.thumb.o
+ .data          0x4000204c        0x0 display/backlight.thumb.o
+ .data          0x4000204c        0x0 flash/flash.thumb.o
+ .data          0x4000204c        0x0 flash/bfs.thumb.o
+ .data          0x4000204c        0x0 games/gamesmenu.thumb.o
+ .data          0x4000204c        0x0 games/tic_tac_toe.thumb.o
+ .data          0x4000204c        0x0 games/sokoban.thumb.o
+ .data          0x4000204c        0x0 games/connect4.thumb.o
+ .data          0x4000204c        0x0 gui/menu.thumb.o
+ .data          0x4000204c        0x0 gui/mainmenu.thumb.o
+ .data          0x4000204c        0x0 gui/testmenu.thumb.o
+ .data          0x4000204c        0x0 gui/settingsmenu.thumb.o
+ .data          0x4000204c       0x28 gui/controls.thumb.o
+                0x4000204c                TXTKeys
+ .data          0x40002074        0x0 infrared/infrared.thumb.o
+ .data          0x40002074        0x0 infrared/codes.thumb.o
+ .data          0x40002074        0x0 infrared/encoders.thumb.o
+ .data          0x40002074        0x0 infrared/ir_capture.thumb.o
+ .data          0x40002074        0x0 infrared/ir_selector.thumb.o
+ .data          0x40002074        0x0 keyboard/keyboard.thumb.o
+ .data          0x40002074        0x0 rtc/rtc.thumb.o
+ .data          0x40002074        0x0 rtc/i2c.thumb.o
+ .data          0x40002074        0x0 serial/serial.thumb.o
+ .data          0x40002074        0x0 timer/timerfuncs.thumb.o
+ .data          0x40002074        0x0 tools/toolsmenu.thumb.o
+ .data          0x40002074        0x0 tools/scart_icp.thumb.o
+ .data          0x40002074        0x0 infrared/ir_itt.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_nrc17.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_raw.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_rc5.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_rc6.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_rca.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_rcmm.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_rec80.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_recs80.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_rf.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_sirc.thumbunopt.o
+ .data          0x40002074        0x0 infrared/ir_spaceenc.thumbunopt.o
+ .data          0x40002074        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .data          0x40002074        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .data          0x40002074        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x40002074                _edata = .
+                0x40002074                . = ALIGN (0x4)
+
+.bss            0x40002074      0x814
+                0x40002074                _bss_start = .
+ *(.bss)
+ .bss           0x40002074        0x0 crt.o
+ .bss           0x40002074        0x0 main.o
+ .bss           0x40002074        0x0 global.o
+ .bss           0x40002074        0x1 audio/soundirq.o
+ *fill*         0x40002075        0x3 00
+ .bss           0x40002078        0x8 infrared/infraredirq.o
+ .bss           0x40002080        0x0 interrupt/irq.o
+ .bss           0x40002080        0x8 keyboard/keyirq.o
+ .bss           0x40002088        0x0 timer/timerirq.o
+ .bss           0x40002088       0x14 adc/adc.thumb.o
+ .bss           0x4000209c        0x0 adc/adcirq.thumb.o
+ .bss           0x4000209c        0x0 audio/sound.thumb.o
+ .bss           0x4000209c        0x0 audio/sid.thumb.o
+ .bss           0x4000209c        0x0 cc1100/cc1100.thumb.o
+ .bss           0x4000209c        0x0 cc1100/rf.thumb.o
+ .bss           0x4000209c        0x0 display/lcd.thumb.o
+ .bss           0x4000209c       0x18 display/fonty.thumb.o
+ .bss           0x400020b4        0x0 display/backlight.thumb.o
+ .bss           0x400020b4        0x0 flash/flash.thumb.o
+ .bss           0x400020b4        0x0 flash/bfs.thumb.o
+ .bss           0x400020b4        0x0 games/gamesmenu.thumb.o
+ .bss           0x400020b4        0x0 games/tic_tac_toe.thumb.o
+ .bss           0x400020b4        0x0 games/sokoban.thumb.o
+ .bss           0x400020b4       0x24 games/connect4.thumb.o
+ .bss           0x400020d8        0x0 gui/menu.thumb.o
+ .bss           0x400020d8        0x0 gui/mainmenu.thumb.o
+ .bss           0x400020d8        0x0 gui/testmenu.thumb.o
+ .bss           0x400020d8        0x0 gui/settingsmenu.thumb.o
+ .bss           0x400020d8        0x0 gui/controls.thumb.o
+ .bss           0x400020d8        0x0 infrared/infrared.thumb.o
+ .bss           0x400020d8        0x0 infrared/codes.thumb.o
+ .bss           0x400020d8        0x0 infrared/encoders.thumb.o
+ .bss           0x400020d8        0x0 infrared/ir_capture.thumb.o
+ .bss           0x400020d8        0x4 infrared/ir_selector.thumb.o
+ .bss           0x400020dc        0x0 keyboard/keyboard.thumb.o
+ .bss           0x400020dc        0x0 rtc/rtc.thumb.o
+ .bss           0x400020dc        0x0 rtc/i2c.thumb.o
+ .bss           0x400020dc        0x0 serial/serial.thumb.o
+ .bss           0x400020dc        0x0 timer/timerfuncs.thumb.o
+ .bss           0x400020dc        0x0 tools/toolsmenu.thumb.o
+ .bss           0x400020dc        0xc tools/scart_icp.thumb.o
+ .bss           0x400020e8        0x0 infrared/ir_itt.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_nrc17.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_raw.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_rc5.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_rc6.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_rca.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_rcmm.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_rec80.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_recs80.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_rf.thumbunopt.o
+ .bss           0x400020e8        0x0 infrared/ir_sirc.thumbunopt.o
+ .bss           0x400020e8        0x8 infrared/ir_spaceenc.thumbunopt.o
+ .bss           0x400020f0        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .bss           0x400020f0        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .bss           0x400020f0        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+ COMMON         0x400020f0       0xc9 main.o
+                0x400020f0                oldkeys
+                0x400020f8                hi_border
+                0x400020fc                glBfsOffsetToFreeRecord
+                0x40002108                RFstatus
+                0x4000210c                playcounter
+                0x40002110                playtone_cb
+                0x40002114                playstate
+                0x40002116                SID
+                0x4000213e                i
+                0x40002140                xx
+                0x40002142                irDevTab
+                0x4000214c                tonelen
+                0x4000214f                sysInfo
+                0x40002150                glBfsFillOrder
+                0x40002153                time
+                0x40002158                playtone
+                0x40002164                playcountermax
+                0x40002166                timeInfo
+                0x40002167                lo_border
+                0x40002168                date
+                0x4000216c                glBfsDeletedBytes
+                0x40002172                cc1100Addr
+                0x40002174                key_state
+                0x40002178                RFbuf
+                0x400021b8                activefont
+ *fill*         0x400021b9        0x3 00
+ COMMON         0x400021bc       0x14 audio/soundirq.o
+                0x400021bc                sdata
+                0x400021c0                sact
+                0x400021c4                slen
+                0x400021c8                bl_val
+                0x400021c9                last_sample
+                0x400021ca                cmp_val
+                0x400021cb                out1
+                0x400021cc                tval
+ COMMON         0x400021d0        0x8 keyboard/keyirq.o
+                0x400021d0                keys
+ COMMON         0x400021d8      0x180 timer/timerirq.o
+                0x400021d8                callbacks
+ COMMON         0x40002358        0x1 adc/adc.thumb.o
+                0x40002358                bat_state
+ *fill*         0x40002359        0x3 00
+ COMMON         0x4000235c        0xc adc/adcirq.thumb.o
+                0x4000235c                bmin
+                0x40002360                bat_adc
+                0x40002364                bmax
+ COMMON         0x40002368      0x188 audio/sound.thumb.o
+                0x40002368                voices
+                0x400024e8                timeout
+                0x400024ec                auto_timeout
+ COMMON         0x400024f0        0x4 cc1100/rf.thumb.o
+                0x400024f0                WORrx_cb
+ COMMON         0x400024f4      0x218 display/lcd.thumb.o
+                0x400024f4                do_rcu
+                0x400024f8                rcubuf
+                0x400025f8                do_rcuS
+                0x400025fc                drawbuf
+                0x400026fc                draw_vline
+                0x40002700                draw_block
+                0x40002704                draw_hline
+                0x40002708                is_drawing
+ COMMON         0x4000270c       0x24 display/fonty.thumb.o
+                0x4000270c                font_bitsML
+                0x40002710                font_bitsUL
+                0x40002714                font_bitsLL
+                0x40002718                font_dlines
+                0x4000271c                font_bitsLM
+                0x40002720                font_info
+                0x40002724                font_bitsMM
+                0x40002728                font_bitsUM
+                0x4000272c                font_bits
+ COMMON         0x40002730        0xd display/backlight.thumb.o
+                0x40002730                bl_max
+                0x40002731                direction
+                0x40002734                bl_cb
+                0x40002738                bl_timeout
+                0x4000273c                bl_speed
+ *fill*         0x4000273d        0x3 00
+ COMMON         0x40002740        0x4 flash/flash.thumb.o
+                0x40002740                flash_base
+ COMMON         0x40002744       0x20 games/connect4.thumb.o
+                0x40002744                c4_wcb
+                0x40002748                c4_level
+                0x40002749                c4_player
+                0x4000274c                ccol
+                0x40002750                c4_abort
+                0x40002751                c4_moves
+                0x40002754                col
+                0x40002758                seed
+                0x4000275c                c4_cb
+                0x40002760                row
+ COMMON         0x40002764        0x8 gui/mainmenu.thumb.o
+                0x40002764                testdata2
+                0x40002768                testdata1
+ COMMON         0x4000276c      0x115 infrared/infrared.thumb.o
+                0x4000276c                ir_leadtime
+                0x40002770                ir_header_bit
+                0x40002774                ir_numbits
+                0x40002778                act_encoder
+                0x4000277c                ir_pause
+                0x40002780                ir_pre
+                0x40002784                irEncoder
+                0x40002788                act_set
+                0x40002789                mod_enable
+                0x4000278c                ir_bit
+                0x40002790                irSend
+                0x40002794                ir_state
+                0x40002798                ir_preamble
+                0x4000279c                irStop
+                0x400027a0                ir_wait
+                0x400027a4                keyMap
+                0x4000284c                ir_bittime1
+                0x40002850                ir_header_cmd
+                0x40002854                cycles
+                0x40002858                ir_toggle
+                0x4000285c                irRepeat
+                0x40002860                ir_bittime0
+                0x40002864                ir_actcmd
+                0x40002868                ir_waittime
+                0x4000286c                ir_cmd
+                0x40002870                ir_startstop
+                0x40002874                ir_trail
+                0x40002878                ir_bittime
+                0x4000287c                ir_len
+                0x40002880                ir_prebits
+ *fill*         0x40002881        0x3 00
+ COMMON         0x40002884        0x4 infrared/ir_raw.thumbunopt.o
+                0x40002884                RAWcmd
+                0x40002888                . = ALIGN (0x4)
+                0x40002888                _bss_end = .
+                0x40002888                _end = .
+                0xe01fc040                PROVIDE (MEMMAP, 0xe01fc040)
+                0xffe00000                PROVIDE (BCFG0, 0xffe00000)
+                0xffe00004                PROVIDE (BCFG1, 0xffe00004)
+                0xffe00008                PROVIDE (BCFG2, 0xffe00008)
+                0xe002c000                PROVIDE (PINSEL0, 0xe002c000)
+                0xe002c004                PROVIDE (PINSEL1, 0xe002c004)
+                0xe002c014                PROVIDE (PINSEL2, 0xe002c014)
+                0xe0028000                PROVIDE (IO0PIN, 0xe0028000)
+                0xe0028008                PROVIDE (IO0DIR, 0xe0028008)
+                0xe0028024                PROVIDE (IO2SET, 0xe0028024)
+                0xe01fc1a0                PROVIDE (SCS, 0xe01fc1a0)
+                0x3fffc000                PROVIDE (FIODIR0, 0x3fffc000)
+                0xfffff030                PROVIDE (VICVectAddr, 0xfffff030)
+LOAD crt.o
+LOAD main.o
+LOAD global.o
+LOAD audio/soundirq.o
+LOAD infrared/infraredirq.o
+LOAD interrupt/irq.o
+LOAD keyboard/keyirq.o
+LOAD timer/timerirq.o
+LOAD adc/adc.thumb.o
+LOAD adc/adcirq.thumb.o
+LOAD audio/sound.thumb.o
+LOAD audio/sid.thumb.o
+LOAD cc1100/cc1100.thumb.o
+LOAD cc1100/rf.thumb.o
+LOAD display/lcd.thumb.o
+LOAD display/fonty.thumb.o
+LOAD display/backlight.thumb.o
+LOAD flash/flash.thumb.o
+LOAD flash/bfs.thumb.o
+LOAD games/gamesmenu.thumb.o
+LOAD games/tic_tac_toe.thumb.o
+LOAD games/sokoban.thumb.o
+LOAD games/connect4.thumb.o
+LOAD gui/menu.thumb.o
+LOAD gui/mainmenu.thumb.o
+LOAD gui/testmenu.thumb.o
+LOAD gui/settingsmenu.thumb.o
+LOAD gui/controls.thumb.o
+LOAD infrared/infrared.thumb.o
+LOAD infrared/codes.thumb.o
+LOAD infrared/encoders.thumb.o
+LOAD infrared/ir_capture.thumb.o
+LOAD infrared/ir_selector.thumb.o
+LOAD keyboard/keyboard.thumb.o
+LOAD rtc/rtc.thumb.o
+LOAD rtc/i2c.thumb.o
+LOAD serial/serial.thumb.o
+LOAD timer/timerfuncs.thumb.o
+LOAD tools/toolsmenu.thumb.o
+LOAD tools/scart_icp.thumb.o
+LOAD infrared/ir_itt.thumbunopt.o
+LOAD infrared/ir_nrc17.thumbunopt.o
+LOAD infrared/ir_raw.thumbunopt.o
+LOAD infrared/ir_rc5.thumbunopt.o
+LOAD infrared/ir_rc6.thumbunopt.o
+LOAD infrared/ir_rca.thumbunopt.o
+LOAD infrared/ir_rcmm.thumbunopt.o
+LOAD infrared/ir_rec80.thumbunopt.o
+LOAD infrared/ir_recs80.thumbunopt.o
+LOAD infrared/ir_rf.thumbunopt.o
+LOAD infrared/ir_sirc.thumbunopt.o
+LOAD infrared/ir_spaceenc.thumbunopt.o
+LOAD /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a
+OUTPUT(boop_rom.elf elf32-littlearm)
+
+.stab           0x00000000      0x540
+ .stab          0x00000000      0x540 crt.o
+
+.ARM.attributes
+                0x00000000       0x30
+ .ARM.attributes
+                0x00000000       0x20 crt.o
+ .ARM.attributes
+                0x00000020       0x30 main.o
+ .ARM.attributes
+                0x00000050       0x30 global.o
+ .ARM.attributes
+                0x00000080       0x30 audio/soundirq.o
+ .ARM.attributes
+                0x000000b0       0x30 infrared/infraredirq.o
+ .ARM.attributes
+                0x000000e0       0x30 interrupt/irq.o
+ .ARM.attributes
+                0x00000110       0x30 keyboard/keyirq.o
+ .ARM.attributes
+                0x00000140       0x30 timer/timerirq.o
+ .ARM.attributes
+                0x00000170       0x30 adc/adc.thumb.o
+ .ARM.attributes
+                0x000001a0       0x30 adc/adcirq.thumb.o
+ .ARM.attributes
+                0x000001d0       0x30 audio/sound.thumb.o
+ .ARM.attributes
+                0x00000200       0x30 audio/sid.thumb.o
+ .ARM.attributes
+                0x00000230       0x30 cc1100/cc1100.thumb.o
+ .ARM.attributes
+                0x00000260       0x30 cc1100/rf.thumb.o
+ .ARM.attributes
+                0x00000290       0x30 display/lcd.thumb.o
+ .ARM.attributes
+                0x000002c0       0x30 display/fonty.thumb.o
+ .ARM.attributes
+                0x000002f0       0x30 display/backlight.thumb.o
+ .ARM.attributes
+                0x00000320       0x30 flash/flash.thumb.o
+ .ARM.attributes
+                0x00000350       0x30 flash/bfs.thumb.o
+ .ARM.attributes
+                0x00000380       0x2e games/gamesmenu.thumb.o
+ .ARM.attributes
+                0x000003ae       0x30 games/tic_tac_toe.thumb.o
+ .ARM.attributes
+                0x000003de       0x30 games/sokoban.thumb.o
+ .ARM.attributes
+                0x0000040e       0x30 games/connect4.thumb.o
+ .ARM.attributes
+                0x0000043e       0x30 gui/menu.thumb.o
+ .ARM.attributes
+                0x0000046e       0x2e gui/mainmenu.thumb.o
+ .ARM.attributes
+                0x0000049c       0x30 gui/testmenu.thumb.o
+ .ARM.attributes
+                0x000004cc       0x30 gui/settingsmenu.thumb.o
+ .ARM.attributes
+                0x000004fc       0x30 gui/controls.thumb.o
+ .ARM.attributes
+                0x0000052c       0x30 infrared/infrared.thumb.o
+ .ARM.attributes
+                0x0000055c       0x2e infrared/codes.thumb.o
+ .ARM.attributes
+                0x0000058a       0x2e infrared/encoders.thumb.o
+ .ARM.attributes
+                0x000005b8       0x30 infrared/ir_capture.thumb.o
+ .ARM.attributes
+                0x000005e8       0x30 infrared/ir_selector.thumb.o
+ .ARM.attributes
+                0x00000618       0x30 keyboard/keyboard.thumb.o
+ .ARM.attributes
+                0x00000648       0x30 rtc/rtc.thumb.o
+ .ARM.attributes
+                0x00000678       0x30 rtc/i2c.thumb.o
+ .ARM.attributes
+                0x000006a8       0x30 serial/serial.thumb.o
+ .ARM.attributes
+                0x000006d8       0x30 timer/timerfuncs.thumb.o
+ .ARM.attributes
+                0x00000708       0x2e tools/toolsmenu.thumb.o
+ .ARM.attributes
+                0x00000736       0x30 tools/scart_icp.thumb.o
+ .ARM.attributes
+                0x00000766       0x30 infrared/ir_itt.thumbunopt.o
+ .ARM.attributes
+                0x00000796       0x30 infrared/ir_nrc17.thumbunopt.o
+ .ARM.attributes
+                0x000007c6       0x30 infrared/ir_raw.thumbunopt.o
+ .ARM.attributes
+                0x000007f6       0x30 infrared/ir_rc5.thumbunopt.o
+ .ARM.attributes
+                0x00000826       0x30 infrared/ir_rc6.thumbunopt.o
+ .ARM.attributes
+                0x00000856       0x30 infrared/ir_rca.thumbunopt.o
+ .ARM.attributes
+                0x00000886       0x30 infrared/ir_rcmm.thumbunopt.o
+ .ARM.attributes
+                0x000008b6       0x30 infrared/ir_rec80.thumbunopt.o
+ .ARM.attributes
+                0x000008e6       0x30 infrared/ir_recs80.thumbunopt.o
+ .ARM.attributes
+                0x00000916       0x30 infrared/ir_rf.thumbunopt.o
+ .ARM.attributes
+                0x00000946       0x30 infrared/ir_sirc.thumbunopt.o
+ .ARM.attributes
+                0x00000976       0x30 infrared/ir_spaceenc.thumbunopt.o
+ .ARM.attributes
+                0x000009a6       0x14 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .ARM.attributes
+                0x000009ba       0x14 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .ARM.attributes
+                0x000009ce       0x14 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+
+.stabstr        0x00000000       0x3f
+ .stabstr       0x00000000       0x3f crt.o
+
+.comment        0x00000000      0x85e
+ .comment       0x00000000       0x2a main.o
+ .comment       0x0000002a       0x2a global.o
+ .comment       0x00000054       0x2a audio/soundirq.o
+ .comment       0x0000007e       0x2a infrared/infraredirq.o
+ .comment       0x000000a8       0x2a interrupt/irq.o
+ .comment       0x000000d2       0x2a keyboard/keyirq.o
+ .comment       0x000000fc       0x2a timer/timerirq.o
+ .comment       0x00000126       0x2a adc/adc.thumb.o
+ .comment       0x00000150       0x2a adc/adcirq.thumb.o
+ .comment       0x0000017a       0x2a audio/sound.thumb.o
+ .comment       0x000001a4       0x2a audio/sid.thumb.o
+ .comment       0x000001ce       0x2a cc1100/cc1100.thumb.o
+ .comment       0x000001f8       0x2a cc1100/rf.thumb.o
+ .comment       0x00000222       0x2a display/lcd.thumb.o
+ .comment       0x0000024c       0x2a display/fonty.thumb.o
+ .comment       0x00000276       0x2a display/backlight.thumb.o
+ .comment       0x000002a0       0x2a flash/flash.thumb.o
+ .comment       0x000002ca       0x2a flash/bfs.thumb.o
+ .comment       0x000002f4       0x2a games/gamesmenu.thumb.o
+ .comment       0x0000031e       0x2a games/tic_tac_toe.thumb.o
+ .comment       0x00000348       0x2a games/sokoban.thumb.o
+ .comment       0x00000372       0x2a games/connect4.thumb.o
+ .comment       0x0000039c       0x2a gui/menu.thumb.o
+ .comment       0x000003c6       0x2a gui/mainmenu.thumb.o
+ .comment       0x000003f0       0x2a gui/testmenu.thumb.o
+ .comment       0x0000041a       0x2a gui/settingsmenu.thumb.o
+ .comment       0x00000444       0x2a gui/controls.thumb.o
+ .comment       0x0000046e       0x2a infrared/infrared.thumb.o
+ .comment       0x00000498       0x2a infrared/codes.thumb.o
+ .comment       0x000004c2       0x2a infrared/encoders.thumb.o
+ .comment       0x000004ec       0x2a infrared/ir_capture.thumb.o
+ .comment       0x00000516       0x2a infrared/ir_selector.thumb.o
+ .comment       0x00000540       0x2a keyboard/keyboard.thumb.o
+ .comment       0x0000056a       0x2a rtc/rtc.thumb.o
+ .comment       0x00000594       0x2a rtc/i2c.thumb.o
+ .comment       0x000005be       0x2a serial/serial.thumb.o
+ .comment       0x000005e8       0x2a timer/timerfuncs.thumb.o
+ .comment       0x00000612       0x2a tools/toolsmenu.thumb.o
+ .comment       0x0000063c       0x2a tools/scart_icp.thumb.o
+ .comment       0x00000666       0x2a infrared/ir_itt.thumbunopt.o
+ .comment       0x00000690       0x2a infrared/ir_nrc17.thumbunopt.o
+ .comment       0x000006ba       0x2a infrared/ir_raw.thumbunopt.o
+ .comment       0x000006e4       0x2a infrared/ir_rc5.thumbunopt.o
+ .comment       0x0000070e       0x2a infrared/ir_rc6.thumbunopt.o
+ .comment       0x00000738       0x2a infrared/ir_rca.thumbunopt.o
+ .comment       0x00000762       0x2a infrared/ir_rcmm.thumbunopt.o
+ .comment       0x0000078c       0x2a infrared/ir_rec80.thumbunopt.o
+ .comment       0x000007b6       0x2a infrared/ir_recs80.thumbunopt.o
+ .comment       0x000007e0       0x2a infrared/ir_rf.thumbunopt.o
+ .comment       0x0000080a       0x2a infrared/ir_sirc.thumbunopt.o
+ .comment       0x00000834       0x2a infrared/ir_spaceenc.thumbunopt.o
+
+.note.GNU-stack
+                0x00000000        0x0
+ .note.GNU-stack
+                0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .note.GNU-stack
+                0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .note.GNU-stack
+                0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+
+.debug_frame    0x00000000       0x40
+ .debug_frame   0x00000000       0x20 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .debug_frame   0x00000020       0x20 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)

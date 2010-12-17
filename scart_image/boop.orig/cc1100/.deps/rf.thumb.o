@@ -1,0 +1,3 @@
+cc1100/rf.thumb.o: cc1100/rf.c lpc2220.h cc1100/rf.h cc1100/cc1100.h \
+  timer/timerfuncs.h timer/timerirq.h interrupt/irq.h display/lcd.h \
+  display/fonty.h rtc/rtc.h global.h

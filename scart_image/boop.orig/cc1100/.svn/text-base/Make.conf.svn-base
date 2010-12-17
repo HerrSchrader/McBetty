@@ -1,0 +1,1 @@
+THUMBSRCS := cc1100.c rf.c

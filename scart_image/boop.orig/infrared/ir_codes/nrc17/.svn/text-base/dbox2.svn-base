@@ -1,0 +1,64 @@
+/*
+    NRC17_dbox2.code - infrared codes for the dbox2 in NRC17 coding 
+    Copyright (C) 2007  Ch. Klippel <ck@mamalala.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// codes are: subcode[4]:address[4]:command[8] = 16 bits
+
+{
+	0x0000,		// A
+	0x0000,		// B
+	0x0000,		// C
+	0x0000,		// D
+	0x5c20,		// Betty	-> Home
+	0x5c27,		// Exit		-> dbox
+	0x5c0e,		// Up		-> Up
+	0x5c0f,		// Down		-> Down
+	0x5c2f,		// Left		-> Left
+	0x5c2e,		// Right	-> Right
+	0x5c30,		// OK		-> OK
+	0x5c16,		// Vol+		-> Vol+
+	0x5c17,		// Vol-		-> Vol-
+	0x5c28,		// Mute		-> Mute
+	0x5c54,		// Prog+	-> Next
+	0x5c53,		// Prog-	-> Prev
+	0x5c01,		// 1		-> 1
+	0x5c02,		// 2		-> 2
+	0x5c03,		// 3		-> 3
+	0x5c04,		// 4		-> 4
+	0x5c05,		// 5		-> 5
+	0x5c06,		// 6		-> 6
+	0x5c07,		// 7		-> 7
+	0x5c08,		// 8		-> 8
+	0x5c09,		// 9		-> 9
+	0x5c00,		// 0		-> 0
+	0x0000,		// -/--
+	0x0000,		// AV
+	0x5c27,		// Menu		-> dbox
+	0x0000,		// PiP
+	0x0000,		// A/B
+	0x0000,		// 16:9
+	0x5c82,		// Info		-> Help
+	0x0000,		// VTX1
+	0x0000,		// VTX2
+	0x0000,		// VTX3
+	0x5c3b,		// Blue		-> Blue
+	0x5c52,		// Yellow	-> Yellow
+	0x5c55,		// Green	-> Green
+	0x5c2d,		// Red		-> Red
+	0x5c20,		// TV		-> Home
+	0x5c0c		// Power	-> Power
+},

@@ -1,0 +1,4 @@
+display/screen_playing.o: display/screen_playing.c display/screen.h \
+  global.h kernel/pt.h kernel/lc.h kernel/lc-addrlabels.h serial/serial.h \
+  kernel/kernel.h kernel/pt.h mpd/mpd.h display/window.h display/fonty.h \
+  display/lcd.h keyboard/keyboard.h mpd/model.h

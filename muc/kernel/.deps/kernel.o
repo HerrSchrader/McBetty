@@ -1,0 +1,4 @@
+kernel/kernel.o: kernel/kernel.c lpc2220.h global.h kernel/pt.h \
+  kernel/lc.h kernel/lc-addrlabels.h serial/serial.h interrupt/irq.h \
+  isr.h global.h arm_exc.h cc1100/rf.h timer/timerirq.h \
+  keyboard/keyboard.h kernel/kernel.h kernel/pt.h

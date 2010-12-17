@@ -1,0 +1,64 @@
+/*
+    Infrared codes for Sony RM-PP411 Receiver AV2
+    Copyright (C) 2007  Ch. Klippel <ck@mamalala.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// 15 bit commands, msb = 1
+
+{
+	0x0000,	// A		->
+	0x0000,	// B		->	
+	0x0000,	// C		->	
+	0x0000,	// D		->	
+	0xD877,	// Betty	->	Main Menu
+	0x9860,	// Exit		->	Sleep
+	0x0000,	// Up		->	
+	0x0000,	// Down		->	
+	0x0000,	// Left		->	
+	0x0000,	// Right	->	
+	0x0000,	// OK		->	
+	0x9812,	// Vol+		->	Master Vol+
+	0x9813,	// Vol-		->	Master Vol-
+	0x9814,	// Mute		->	Muting
+	0xD86E,	// Prog+	->	Mode+	
+	0xD86F,	// Prog-	->	Mode-
+	0x9822,	// 1		->	Video 1
+	0x981E,	// 2		->	Video 2
+	0x9842,	// 3		->	Video 3
+	0x987D,	// 4		->	DVD/LD
+	0x9869,	// 5		->	MD/Tape
+	0x9825,	// 6		->	CD/SACD
+	0x9821,	// 7		->	Tuner
+	0x9820,	// 8		->	Phono
+	0x981D,	// 9		->	Aux
+	0x9849,	// 0		->	Analog Direct
+	0xD841,	// -/--		->	2 CH
+	0x0000,	// AV		->	
+	0x0000,	// Menu		->	
+	0x0000,	// PiP		->	
+	0x0000,	// A/B		->	
+	0x0000,	// 16:9		->	
+	0x9853,	// Info		->	On Screen
+	0x9815,	// VTX1		->	I/O
+	0xD847,	// VTX2		->	AUTO Decoding
+	0x9817,	// VTX3		->	MPX/Dual
+	0xD826,	// Blue		->	Preset
+	0xD84A,	// Yello	->	Test Tone
+	0xBCFB,	// Green	->	Source
+	0x9872,	// Red		->	Multi CH
+	0x986A,	// TV		->	TV/Sat
+	0x8237, // Power	->	Standby
+},

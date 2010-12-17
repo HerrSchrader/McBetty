@@ -1,0 +1,3 @@
+games/connect4.thumb.o: games/connect4.c display/lcd.h display/fonty.h \
+  keyboard/keyboard.h timer/timerfuncs.h timer/timerirq.h \
+  display/backlight.h games/connect4.h games/c4_map.h

@@ -1,0 +1,2 @@
+display/backlight.thumb.o: display/backlight.c lpc2220.h \
+  timer/timerfuncs.h timer/timerirq.h display/backlight.h

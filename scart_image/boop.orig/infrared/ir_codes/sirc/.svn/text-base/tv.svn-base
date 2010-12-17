@@ -1,0 +1,64 @@
+/*
+    Infrared codes for Sony TV
+    Copyright (C) 2007  Ch. Klippel <ck@mamalala.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// 12 bit commands (MSB = 0)
+
+{
+	0x0000, // A		->	
+	0x0000, // B		->	
+	0x0000, // C		->	
+	0x0000, // D		->	
+	0x0000, // Betty	->	
+	0x0000, // Exit		->	
+	0x0000, // Up		->	
+	0x0000, // Down		->	
+	0x0000, // Left		->	
+	0x0000, // Right	->	
+	0x0000, // OK		->	
+	0x0092, // Vol+		->	Vol+
+	0x0093, // Vol-		->	Vol-
+	0x0094, // Mute		->	Mute
+	0x0090, // Prog+	->	Prog+
+	0x0091, // Prog-	->	Prog-
+	0x0080, // 1		->	1
+	0x0081, // 2		->	2
+	0x0082, // 3		->	3
+	0x0083, // 4		->	4
+	0x0084, // 5		->	5
+	0x0085, // 6		->	6
+	0x0086, // 7		->	7
+	0x0087, // 8		->	8
+	0x0088, // 9		->	9
+	0x0089, // 0		->	0
+	0x009D, // -/--		->	-/--
+	0x00A5, // AV		->	Ext
+	0x0000, // Menu		->	
+	0x0000, // PiP		->	
+	0x0000, // A/B		->	
+	0x0000, // 16:9		->	
+	0x0000, // Info		->	
+	0x00BF, // VTX1		->	Teletext
+	0x0000, // VTX2		->	
+	0x0000, // VTX3		->	
+	0x0182, // Blue		->	Blue
+	0x0182, // Yellow	->	Yellow
+	0x0181, // Green	->	Green
+	0x0180, // Red		->	Red
+	0x00B8, // TV		->	TV
+	0x0095  // Power	->	
+},

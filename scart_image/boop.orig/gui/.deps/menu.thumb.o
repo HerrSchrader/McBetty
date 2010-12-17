@@ -1,0 +1,2 @@
+gui/menu.thumb.o: gui/menu.c gui/menu.h display/lcd.h display/fonty.h \
+  keyboard/keyboard.h lpc2220.h

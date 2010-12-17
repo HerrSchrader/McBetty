@@ -1,0 +1,614 @@
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 1.
+
+
+
+                              1 
+                              2 ;89LPC935 boot flash program for IN-SYSTEM PROGRAMMING
+                              3 ;copyright Philips Semiconductors 2003
+                              4 
+                              5 ;FILENAME: 		LPC2_ISP_8K_V02.TXT
+                              6 ;CODE TYPE: 		ISP
+                              7 ;VERSION: 		02
+                              8 ;RELEASE DATE: 		14 JUN 03
+                              9 ;CODE MEMORY SIZE: 	8KB
+                             10 ;CODE ADDRESS RANGE: 	1E00h - 1FFFh
+                             11 ;BOOT VECTOR: 		1F00h
+                             12 ;USES IAP VERSION: 	02
+                             13 ;USES IAP ENTRY: 	FF03h
+                             14 ;Author:		Bill Houghton
+                             15 ;
+                             16 ;Features:
+                             17 ;
+                             18 ;Version 2:
+                             19 ;- Modifieds WDL and WDCON to select longest WDT timeout & provides periodic feeding.
+                             20 ;- Program user code page has option to use either IDATA or XDATA (if available on chip).
+                             21 ;- Software code corruption protection - valid key needed for write operations 
+                             22 ;- Code traps (software reset) added to start of ISP & IAP sections
+                             23 ;
+                             24 ;Version 1:
+                             25 ;- Includes standard features originally released with LPC932.
+                             26 
+                             27 ;code memory space for LPC2
+                             28 ;
+                             29 ;block 0, 1KB, 0000h - 03FFh
+                             30 ;block 1, 1KB, 0400h - 07FFh
+                             31 ;block 2, 1KB, 0800h - 0BFFh
+                             32 ;block 3, 1KB, 0C00h - 0FFFh
+                             33 ;block 4, 1KB, 1000h - 13FFh
+                             34 ;block 5, 1KB, 1400h - 17FFh
+                             35 ;block 6, 1KB, 1800h - 1BFFh
+                             36 ;block 7, 1KB, 1C00h - 1FFFh
+                             37 
+                             38 ;Bootrom, 240 bytes , FF00h - FFEF
+                             39 
+                             40 
+                             41 
+                    0000     42 PGMU	=	00
+                    0001     43 VRD	=	01               
+                    0002     44 MWR	=	02               
+                    0003     45 MRD	=	03               
+                    0004     46 ERS	=	04               
+                    0005     47 SCRC	=	05               
+                    0006     48 GCRC	=	06               
+                    0007     49 RUSR	=	07
+                    00D1     50 F1	=	0h0D1
+                    00C1     51 WDL	=	0h0C1
+                    00A7     52 WDCON	=	0h0A7
+                    00C2     53 WFEED1	=	0h0C2
+                    00C3     54 WFEED2	=	0h0C3
+                             55                
+                    FF03     56 PGM_MTP	=	0h0FF03		
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 2.
+
+
+
+                             57 
+                             58 
+                             59 ;byte variables definition
+                             60 
+                             61 	.area	DATA	(ABS)
+   0030                      62 	.org	0x30
+                             63 
+   0030                      64 ADR0:		.DS	1		;low byte of address
+   0031                      65 ADR1:		.DS	1		;high byte of address
+   0032                      66 CHKSUM:		.DS	1		;record checksum
+   0033                      67 NBYTES:		.DS	1		;number of bytes in record
+   0034                      68 RTYPE:		.DS	1		;record type
+   0035                      69 TMP3:		.DS	1		;temporary storage
+                             70 
+   0036                      71 UCFG1:		.DS	1	;User configuration register 1
+   0037                      72 UCFG2:		.DS	1	;User configuration register 2
+   0038                      73 BOOTV:		.DS	1	;Boot Vector
+   0039                      74 STATBY:		.DS	1	;Status Byte
+   003A                      75 FCFG1:		.DS	1	;Factory config 1, read only
+   003B                      76 FCFG2:		.DS	1	;Factory config 2, read only 
+   003C                      77 DERIV:		.DS	1	;Derivative
+   003D                      78 TMEB_v:		.DS	1	;TMEB
+   003E                      79 SEC0:		.DS	1	;Security byte 0
+   003F                      80 SEC1:		.DS	1	;Security byte 1
+   0040                      81 SEC2:		.DS	1	;Security byte 2
+   0041                      82 SEC3:		.DS	1	;Security byte 3
+   0042                      83 SEC4:		.DS	1	;Security byte 4
+   0043                      84 SEC5:		.DS	1	;Security byte 5
+   0044                      85 SEC6:		.DS	1	;Security byte 6
+   0045                      86 SEC7:		.DS	1	;Security byte 7
+   0046                      87 MF_ID:		.DS	1	;Signature byte 0 (mfg id)
+   0047                      88 ID_1:		.DS	1	;Signature byte 1 (device id)
+   0048                      89 ID_2:		.DS	1	;Signature byte 2 (derivative id)
+                             90 
+   0049                      91 CRC0:		.DS	1	;CRC data
+   004A                      92 CRC1:		.DS	1	;CRC data
+   004B                      93 CRC2:		.DS	1	;CRC data
+   004C                      94 CRC3:		.DS	1	;CRC data
+                             95 
+                             96 
+   00FF                      97 	.org	0xff
+   00FF                      98 KEY: 		.DS	1	;IAP request key
+                             99 
+                            100 ;*************** equates list       ************************
+                            101 
+                    0036    102 CONFB		=	UCFG1		;start of CONF register space
+                    0091    103 RXDn		=	P1.1		;RxD pin
+                    0002    104 ISP_VER		=	0h02		;ISP version id = 2
+                    008E    105 AUXR		=	0h08E		;auxr register
+                    00A2    106 AUXR1		=	0h0A2		;auxr 1 register
+                    0008    107 SRST		=	0h8		;OR mask for software reset bit
+                    008F    108 TAMOD		=	0h8F		;timer aux mode register
+                    0091    109 P1M1		=	0h91
+                    0092    110 P1M2		=	0h92
+                            111 
+                    00E0    112 OI		=	ACC.0		;operation aborted by interrupt 
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 3.
+
+
+
+                    00E1    113 SV		=	ACC.1		;security violation
+                    00E2    114 HVE		=	ACC.2		;high voltage error 
+                            115 
+                    00FF    116 SBVAL		=	0h0FF		;status byte default value
+                    00FC    117 BVVAL		=	0h0FC		;boot vector default value
+                    0080    118 DBYTES		=	0h80		;start of RAM buffer for hex string
+                    0096    119 KEYVAL		=	0h96		;IAP request key value
+                            120 
+                            121 
+                            122 	.area	BOOT1	(CODE,ABS)
+   1E00                     123 	.org	0x2000-512		;Is 1E00h
+                            124 
+   1E00                     125 RESET:
+   1E00 43 A2 08            126 	ORL	AUXR1,#SRST	;set the software reset bit
+                            127 ;*********************************************************
+                            128 ;
+                            129 ;	START OF PROGRAM
+                            130 ;
+                            131 ;*********************************************************
+                            132 
+                            133 ;	First, we need to measure the baud rate of
+                            134 ;the host in terms of our own clock speed. This
+                            135 ;measurement can be made on a start bit provided
+                            136 ;the first data bit is a logical one. A capital "U"
+                            137 ;is a good choice since it has alternating 1s and 0s . 
+                            138 ;	Our measurement uses T1 which is clocked at
+                            139 ;fosc/2, which is the same as when T1 is used as 
+                            140 ;a baud rate generator. The UART uses 16x sampling
+                            141 ;so we need to divide the T1 count by 16. Even
+                            142 ;though the timer will be used in the 8-bit
+                            143 ;auto-reload mode for baud rate generation, non-reload
+                            144 ;16-bit mode is used for the measurement to give
+                            145 ;more clock counts for slower baud rates. This number
+                            146 ;will be divided by 16. This method allows the timer
+                            147 ;to count up to 4096 counts (16 x 256). The timer
+                            148 ;counts up towards zero thus counts loaded into the
+                            149 ;timer counter need to be negative numbers. A two's
+                            150 ;complement of the adjusted count produces this result.
+                            151 
+                            152 
+   1E03                     153 INIT:
+                            154 
+   1E03 D1 E3               155 	ACALL	I_WDT		;
+   1E05 75 91 00            156 	MOV	P1M1,#0h00
+   1E08 75 92 00            157 	MOV	P1M2,#0h00
+   1E0B 75 90 FF            158 	MOV	P1,#0h0FF
+   1E0E 75 89 10            159 	MOV	TMOD,#0h10	;16-bit non-reload 
+   1E11 53 8F EF            160 	ANL	TAMOD,#0h0EF	;not pwm mode 
+   1E14 75 87 80            161 	MOV	PCON,#0h80	;SMOD = 1 = baud rate = T1/16
+   1E17 E4                  162 	CLR	A		;
+   1E18 F5 8D               163 	MOV	TH1,A		;set T1 to zero since we will
+   1E1A F5 8B               164 	MOV	TL1,A		;use this to count the start bit
+   1E1C                     165 MEAS:	
+   1E1C D1 E9               166 M1:	ACALL	FD_WDT		;feed the WDT
+   1E1E 30 91 FB            167 	JNB	RXDn,M1		;wait for RXD to be high
+   1E21 D1 E9               168 M2:	ACALL	FD_WDT		;feed the WDT
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 4.
+
+
+
+   1E23 20 91 FB            169 	JB	RXDn,M2		;wait until RXD goes low
+   1E26 D2 8E               170 	SETB	TR1		;start measuring the bit time
+   1E28 30 91 FD            171 M3:	JNB	RXDn,M3		;wait until RXD goes high
+   1E2B C2 8E               172 	CLR	TR1		;stop measuring
+   1E2D D1 E9               173 	ACALL	FD_WDT		;feed the WDT
+   1E2F 85 8D 34            174 	MOV	RTYPE,TH1	;copy timer to RAM
+   1E32 79 34               175 	MOV	R1,#RTYPE	;for indirect addressing
+   1E34 E5 8B               176 	MOV	A,TL1		;get timer low byte
+   1E36 D7                  177 	XCHD	A,@R1		;acc= TL upper nibble & TH lower nibble
+   1E37 C4                  178 	SWAP	A		;acc= TH lower nibble & TL upper nibble
+   1E38 F4                  179 	CPL	A		;complement lower byte of count
+   1E39 04                  180 	INC	A		;two's complement  = - count/16
+   1E3A F5 8B               181 	MOV	TL1,A		;
+   1E3C F5 8D               182 	MOV	TH1,A		;load counts & switch to
+   1E3E 75 89 20            183 	MOV	TMOD,#0h20	;8-bit auto-reload mode
+   1E41 D2 8E               184 	SETB	TR1		;start T1
+   1E43 75 98 52            185 	MOV	SCON,#0h52	;init UART 8-bit variable, TI=1 RI=0
+   1E46 D1 A9               186 QRZ:	ACALL	ECHO		;wait until character is rcv'd & get it
+   1E48 B4 55 FB            187 	CJNE	A,#('U),QRZ	;check to see if uppercase "U"
+                            188 
+                            189 
+                            190 ;***** Intel Hex File Load routine *****
+                            191 ;
+                            192 ;This routine loads an Intel Hex formatted file into 
+                            193 ;the buffer memory. The hex file is received as a series
+                            194 ;of ASCII characters on the serial input line of the
+                            195 ;serial port. A record type of 00H is considered to be
+                            196 ;a data field. Any other type of record is considered
+                            197 ;to be an End-of-File marker. This routine also calculates
+                            198 ;the checksum on the field as it is received and compares
+                            199 ;this calculated checksum with the checksum field received
+                            200 ;in the record.
+                            201 
+   1E4B                     202 LCMD:
+   1E4B 7D 00               203 	MOV	R5,#0	;begin record... zero checksum
+   1E4D D1 A9               204 	ACALL	ECHO		;get first char and echo
+   1E4F B4 3A F9            205 	CJNE	A,#(':),LCMD	;record starts with ':' char
+   1E52 D1 82               206 	ACALL	GET2		;get the number of bytes in record
+   1E54 85 35 33            207 	MOV	NBYTES,TMP3	;and save
+   1E57 D1 82               208 	ACALL	GET2		;get MSB of load address
+   1E59 85 35 31            209 	MOV	ADR1,TMP3	;and save
+   1E5C D1 82               210 	ACALL	GET2		;get LSB of load address
+   1E5E 85 35 30            211 	MOV	ADR0,TMP3	;and save it
+   1E61 D1 82               212 	ACALL	GET2		;get record type
+   1E63 85 35 34            213 	MOV	RTYPE,TMP3	;and save it
+   1E66 E5 33               214 	MOV	A,NBYTES	;else, more than
+   1E68 FA                  215 	MOV	R2,A	
+   1E69 60 09               216 	JZ	EOR		;zero data bytes ?
+   1E6B 79 80               217 	MOV	R1,#DBYTES	;pointer for data bytes
+   1E6D D1 82               218 LDATA:	ACALL	GET2		;get data byte
+   1E6F A7 35               219 	MOV	@R1,TMP3	;store it
+   1E71 09                  220 	INC	R1		;and bump up the pointer	
+   1E72 DA F9               221 	DJNZ	R2,LDATA	;repeat if more bytes in record
+   1E74                     222 EOR:
+   1E74 ED                  223 	MOV	A,R5		;
+   1E75 FC                  224 	MOV	R4,A		;save calculated checksum
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 5.
+
+
+
+   1E76 D1 82               225 	ACALL	GET2		;get the checksum byte
+   1E78 EC                  226 	MOV	A,R4		;and compare with calculated checksum byte
+   1E79 B5 35 02            227 	CJNE	A,TMP3,CHKERR	;recv'd & calc'd chksums match ?
+   1E7C C1 C8               228 	AJMP	PROCESS		;YES, process command
+                            229 
+   1E7E 74 58               230 CHKERR:	MOV	A,#('X)
+   1E80 E1 26               231 	AJMP	RSPND1
+                            232 
+   1E82 D1 A9               233 GET2:	ACALL	ECHO		;get first char of length
+   1E84 D1 B3               234 	ACALL	A2HEX		;convert to hex
+   1E86 C4                  235 	SWAP	A		;set in high nibble
+   1E87 F5 35               236 	MOV	TMP3,A		;store in NBYTES
+   1E89 D1 A9               237 	ACALL	ECHO		;get second char of length
+   1E8B D1 B3               238 	ACALL	A2HEX		;convert to hex
+   1E8D 42 35               239 	ORL	TMP3,A		;add into NBYTES
+   1E8F ED                  240 	MOV	A,R5		;get checksum
+   1E90 C3                  241 	CLR	C		;subtract NBYTES
+   1E91 95 35               242 	SUBB	A,TMP3		;from checksum and
+   1E93 FD                  243 	MOV	R5,A		;store as new checksum
+   1E94 22                  244 	RET
+                            245 
+                            246 ;***** console output routine *****
+                            247 ;
+                            248 ;Outputs character in the ACC to 
+                            249 ;the serial output line.
+                            250 
+   1E95                     251 CO:	
+   1E95 D1 E9               252 	ACALL	FD_WDT		;feed the WDT
+   1E97 30 99 FB            253 	JNB	TI,CO		;wait till xmtr ready
+   1E9A C2 99               254 	CLR	TI		;reset xmtr flag
+   1E9C F5 99               255 	MOV	SBUF,A	;output char to SIO
+   1E9E 22                  256 	RET			;and done
+                            257 
+                            258 
+                            259 ;***** console input routine *****
+                            260 ;
+                            261 ;Waits until character has been received
+                            262 ;and then returns char in ACC.
+                            263 
+   1E9F                     264 CI:	
+   1E9F D1 E9               265 	ACALL	FD_WDT		;feed the WDT
+   1EA1 30 98 FB            266 	JNB	RI,CI		;wait till char
+   1EA4 C2 98               267 	CLR	RI		;reset rcvr flag
+   1EA6 E5 99               268 	MOV	A,SBUF	;read the char
+   1EA8 22                  269 	RET			;and done
+                            270 
+                            271 
+                            272 ;***** character echo routine *****
+                            273 ;
+                            274 ;waits until a character is received from
+                            275 ;the console input and echos this character
+                            276 ;to the console output. The received char
+                            277 ;is also passed to the caller in the ACC.
+                            278 
+   1EA9                     279 ECHO:	
+   1EA9 D1 9F               280 	ACALL	CI			;get char from console 
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 6.
+
+
+
+   1EAB D1 95               281 	ACALL	CO			;print the character
+   1EAD 30 E6 02            282 	JNB	ACC.6,EXECHO	;exit if not 4x,5x, or 6x Hex
+   1EB0 C2 E5               283 	CLR	ACC.5			;convert to upper case
+   1EB2                     284 EXECHO:
+   1EB2 22                  285 	RET					;and done
+                            286 
+                            287 
+                            288 ;***** ASCII to HEX routine *****
+                            289 ;
+                            290 ;This routine accepts an ASCII char in the ACC
+                            291 ;and converts it into the corresponding hex digit.
+                            292 ;The routine checks to see if the char is in the
+                            293 ;range of '0' through '9' or in the range of 'A'
+                            294 ;through 'F'. If not in either range then the ASCII
+                            295 ;char is not a valid hex entry from the operator
+                            296 ;and an error flag is returned true along with the
+                            297 ;original ASCII char returned in the ACC.
+                            298 
+   1EB3                     299 A2HEX:
+   1EB3 30 E6 02            300 	JNB	ACC.6,HEX1
+   1EB6 24 09               301 	ADD	A,#0x09
+   1EB8 54 0F               302 HEX1:	ANL	A,#0x0F
+   1EBA 22                  303 	RET
+                            304 
+                            305 
+                            306 ;***** HEX to ASCII routine *****
+                            307 ;
+                            308 ;This routine receives a single hex digit
+                            309 ;(a four bit nibble) in the ACC and returns
+                            310 ;the equivilent ASCII char in the ACC.
+                            311 
+   1EBB                     312 HEX2A:
+   1EBB 54 0F               313 	ANL	A,#0x0F
+   1EBD C3                  314 	CLR	C		;carry affects the testing
+   1EBE 94 0A               315 	SUBB	A,#0x0A		;test for range of 0-9, A-F
+   1EC0 50 03               316 	JNC	HAHIGH		;no carry then A-F range
+   1EC2 24 3A               317 	ADD	A,#0x3A		;add offset for 0-9 range
+   1EC4 22                  318 	RET
+   1EC5                     319 HAHIGH:
+   1EC5 24 41               320 	ADD	A,#0x41		;add in offset for A-F range
+   1EC7 22                  321 	RET
+                            322 
+                            323 ; Calls a function depending on the record type
+                            324 ; for the possible functions see RECTBL below
+   1EC8                     325 PROCESS:
+   1EC8 E5 34               326 	MOV	A,RTYPE			;get record type
+   1ECA 23                  327 	RL	A				;double ACC for two byte jumps
+   1ECB 90 1E CF            328 	MOV	DPTR,#RECTBL	;pointer = start of table
+   1ECE 73                  329 	JMP	@A+DPTR			;branch on record type
+                            330 
+   1ECF                     331 RECTBL:
+   1ECF E1 0B               332 	AJMP	PROGRAM		;0 = program data bytes
+   1ED1 C1 F0               333 	AJMP	RDVER		;1 = read code versions
+   1ED3 E1 8B               334 	AJMP	AUXWR		;2 = misc 'write' functions
+   1ED5 E1 98               335 	AJMP	AUXRD		;3 = misc 'read' functions
+   1ED7 E1 A9               336 	AJMP	ERASE		;4 = erase block or page
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 7.
+
+
+
+   1ED9 E1 BB               337 	AJMP	CRCS		;5 = sector CRC
+   1EDB E1 B7               338 	AJMP	CRCG		;6 = global CRC
+   1EDD E1 DE               339 	AJMP	SETBR		;7 = set baud rate
+   1EDF C1 00               340 	AJMP	RESET		;8 = reset MCU
+   1EE1 E1 2A               341 	AJMP	DCMD		;9 = display device data
+                            342 	
+                            343 
+                            344 ; Initialize the watchdog timer	
+   1EE3                     345 I_WDT:
+   1EE3 75 C1 FF            346 	MOV	WDL,#0x0FF		;set to max count
+   1EE6 43 A7 E0            347 	ORL	WDCON,#0h0E0	;set pre= max
+                            348 						; Fall thru!
+                            349 ; Feed the watchdog timer	
+   1EE9                     350 FD_WDT:	
+   1EE9 75 C2 A5            351 	MOV	WFEED1,#0h0A5	;
+   1EEC 75 C3 5A            352 	MOV	WFEED2,#0h5A	;	
+   1EEF 22                  353 	RET
+                            354 	
+                            355 ; Record Type Function 1: read code versions
+   1EF0                     356 RDVER:
+   1EF0 74 02               357 	MOV	A,#ISP_VER		;get ISP version id
+   1EF2 F1 F4               358 	ACALL	OUTBYT		;and print it
+   1EF4 74 01               359 	MOV	A,#VRD			;function code 
+   1EF6 12 FF 03            360 	LCALL	PGM_MTP		;and perform the function
+   1EF9 EF                  361 	MOV	A,R7			;get the response 
+   1EFA F1 F4               362 	ACALL	OUTBYT		;and print it
+   1EFC E1 24               363 	AJMP	EOF			;and we're done	
+                            364 	
+                            365 	
+                            366 ; ============================================== ;	
+                            367 ; Starting address (boot vector)
+   1F00                     368 	.org	0x2000-256		;Should be 1F00h
+                            369 
+   1F00 C1 03               370 	AJMP	INIT			;Boot vector entry point
+                            371 
+   1F02                     372 ERROR:
+   1F02 74 52               373 	MOV	A,#('R)		;print a verify error
+   1F04 D1 95               374 	ACALL	CO		;send an okay message
+   1F06 EF                  375 	MOV	A,R7		;get status
+   1F07 F1 F4               376 	ACALL	OUTBYT		;and print
+   1F09 E1 73               377 	AJMP	DEXIT		;and done
+                            378 	
+                            379 ; Record Type Function 0: program data bytes
+   1F0B                     380 PROGRAM:
+   1F0B AB 33               381 	MOV	R3,NBYTES		;get the number of bytes in record
+   1F0D EB                  382 	MOV	A,R3			;get the number of bytes in record
+   1F0E 60 14               383 	JZ	EOF				;exit if no bytes in record
+   1F10 AD 30               384 	MOV	R5,ADR0			;get the load address
+   1F12 AC 31               385 	MOV	R4,ADR1			;of the first byte in record
+   1F14 7F 80               386 	MOV	R7,#DBYTES		;pointer to data
+   1F16 74 00               387 	MOV	A,#PGMU			;program user code
+   1F18                     388 EXEC:	
+   1F18 78 FF               389 	MOV	R0,#KEY			;address for the key
+   1F1A 76 96               390 	MOV	@R0,#KEYVAL		;setup a valid key
+   1F1C C2 D1               391 	CLR	F1				;specify IRAM
+   1F1E 12 FF 03            392 	LCALL	PGM_MTP		;write the entire record & verify
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 8.
+
+
+
+   1F21 20 D5 DE            393 	JB	F0,ERROR		;check if an error occured
+                            394 
+                            395 ; Entry point when a function finished without error
+   1F24                     396 EOF:	
+   1F24 74 2E               397 	MOV	A,#('.)		;no error
+   1F26                     398 RSPND1:
+   1F26 D1 95               399 	ACALL	CO			;send an okay message
+   1F28 E1 73               400 	AJMP	DEXIT		;and done
+                            401 
+                            402 
+                            403 ;***** display buffer contents routine *****
+                            404 ;
+                            405 ;This routine displays the contents of the buffer memory
+                            406 ;over a user specified range. The displayed output is formatted
+                            407 ;into a series of lines on the console. A line begins with the
+                            408 ;address of the first byte in the line. Line length is limited
+                            409 ;to a maximum of 16 bytes per line. Once this limit is reached,
+                            410 ;new formatted lines are used.
+                            411 
+   1F2A                     412 DCMD:
+   1F2A 78 80               413 	MOV	R0,#DBYTES	;
+   1F2C 86 83               414 	MOV	DPH,@R0		;get high byte of starting address
+   1F2E 08                  415 	INC	R0		;point to low byte of starting address
+   1F2F 86 82               416 	MOV	DPL,@R0		;get low byte of starting address
+   1F31 08                  417 	INC	R0		;point to high byte of ending address
+   1F32 86 31               418 	MOV	ADR1,@R0	;get high byte of ending address
+   1F34 08                  419 	INC	R0		;point to low byte of ending address
+   1F35 86 30               420 	MOV	ADR0,@R0	;get low byte of ending address
+   1F37 08                  421 	INC	R0		;point to function either display or blankcheck
+   1F38 30 98 FD            422 	JNB	RI,.		;wait till host ready to receive
+   1F3B C2 98               423 	CLR	RI
+                            424 
+   1F3D                     425 DLINE:
+   1F3D B6 00 10            426 	CJNE	@R0,#0h00,DAGN	;ignore this if its not a display command
+   1F40 F1 D5               427 	ACALL	CRLF
+   1F42 7A 10               428 	MOV	R2,#0h10		;R2 = 16 bytes per line
+   1F44 E5 83               429 	MOV	A,DPH
+   1F46 F1 F4               430 	ACALL	OUTBYT
+   1F48 E5 82               431 	MOV	A,DPL
+   1F4A F1 F4               432 	ACALL	OUTBYT		;print the address
+   1F4C 74 3D               433 	MOV	A,#('=)		;of first byte of
+   1F4E D1 95               434 	ACALL	CO		;the line along with
+                            435 
+   1F50                     436 DAGN:
+                            437 
+   1F50 AC 83               438 	MOV	R4,DPH
+   1F52 AD 82               439 	MOV	R5,DPL
+   1F54 74 07               440 	MOV	A,#RUSR		;READ_USER
+   1F56 12 FF 03            441 	LCALL	PGM_MTP		;read the byte
+   1F59 EF                  442 	MOV	A,R7		;get result
+   1F5A                     443 DPRN:
+   1F5A B6 00 04            444 	CJNE	@R0,#0h00,BLKCHK ;ignore this if its not a display command
+   1F5D F1 F4               445 	ACALL	OUTBYT		;and print it
+   1F5F 80 03               446 	SJMP	CKDEND		;and then check if we've reached the end
+   1F61                     447 BLKCHK:
+   1F61 B4 00 1D            448 	CJNE	A,#0h00,BLANKERR
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 9.
+
+
+
+   1F64                     449 CKDEND:
+   1F64 E5 31               450 	MOV	A,ADR1		;
+   1F66 B5 83 13            451 	CJNE	A,DPH,DNEXT	;check if DPH = stop high
+   1F69 E5 30               452 	MOV	A,ADR0		;
+   1F6B B5 82 0E            453 	CJNE	A,DPL,DNEXT	;check if DPL = stop low
+   1F6E B6 01 02            454 	CJNE	@R0,#0h01,DEXIT 	;if display command use display exit 
+   1F71 E1 24               455 	AJMP	EOF		;blankcheck exit (print a period)
+                            456 
+   1F73                     457 DEXIT:
+   1F73 F1 D5               458 	ACALL	CRLF		;print a CRLF
+   1F75 30 99 FD            459 	JNB	TI,.
+   1F78 D2 9C               460 	SETB	REN		;TURN ON UART RECEIVER
+   1F7A C1 4B               461 	AJMP	LCMD		;branch to main loop
+   1F7C                     462 DNEXT:
+   1F7C A3                  463 	INC	DPTR		;more bytes so point to next byte
+   1F7D                     464 DNXT1:
+   1F7D DA D1               465 	DJNZ	R2,DAGN
+   1F7F E1 3D               466 	AJMP	DLINE		;we start a new line or not
+                            467 
+   1F81                     468 BLANKERR:
+   1F81 E5 83               469 	MOV	A,DPH
+   1F83 F1 F4               470 	ACALL	OUTBYT		;print DPH
+   1F85 E5 82               471 	MOV	A,DPL
+   1F87 F1 F4               472 	ACALL	OUTBYT		;print DPL
+   1F89 E1 73               473 	AJMP	DEXIT		;and exit
+                            474 
+                            475 
+   1F8B                     476 AUXWR:
+   1F8B 79 80               477 	MOV	R1,#DBYTES	;pointer for data
+   1F8D E7                  478 	MOV	A,@R1		;
+   1F8E FF                  479 	MOV	R7,A		;get the subfunction code 
+   1F8F 09                  480 	INC	R1		;
+   1F90 E7                  481 	MOV	A,@R1		;
+   1F91 FD                  482 	MOV	R5,A		;get the data to write 
+   1F92 74 02               483 	MOV	A,#MWR		;function code 
+   1F94 E1 18               484 	AJMP	EXEC		;perform the function & check for errors
+                            485 
+   1F96 E1 02               486 ERR:	AJMP	ERROR		;error vector
+                            487 
+   1F98                     488 AUXRD:
+   1F98 79 80               489 	MOV	R1,#DBYTES	;pointer for data
+   1F9A E7                  490 	MOV	A,@R1		;
+   1F9B FF                  491 	MOV	R7,A		;get the subfunction code 
+   1F9C 74 03               492 	MOV	A,#MRD		;function code 
+   1F9E 12 FF 03            493 	LCALL	PGM_MTP		;and perform the function
+   1FA1 20 D5 F2            494 	JB	F0,ERR		;exit if an error occured
+   1FA4 EF                  495 	MOV	A,R7		;get the response 
+   1FA5 F1 F4               496 	ACALL	OUTBYT		;and print it
+   1FA7 E1 24               497 	AJMP	EOF		;and we're done
+                            498 	
+   1FA9                     499 ERASE:
+   1FA9 79 80               500 	MOV	R1,#DBYTES	;pointer for data
+   1FAB E7                  501 	MOV	A,@R1		;
+   1FAC FF                  502 	MOV	R7,A		;get the block or page erase command 
+   1FAD 09                  503 	INC	R1		;
+   1FAE E7                  504 	MOV	A,@R1		;
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 10.
+
+
+
+   1FAF FC                  505 	MOV	R4,A		;get the high address 
+   1FB0 09                  506 	INC	R1		;
+   1FB1 E7                  507 	MOV	A,@R1		;
+   1FB2 FD                  508 	MOV	R5,A		;get the low address 
+   1FB3 74 04               509 	MOV	A,#ERS		;function code 
+   1FB5 E1 18               510 	AJMP	EXEC		;perform the function & check for errors
+                            511 
+   1FB7                     512 CRCG:
+   1FB7 74 06               513 	MOV	A,#GCRC		;function code 
+   1FB9 E1 C1               514 	AJMP	DO_CRC		;and do the CRC
+   1FBB                     515 CRCS:
+   1FBB 79 80               516 	MOV	R1,#DBYTES	;pointer for data
+   1FBD E7                  517 	MOV	A,@R1		;
+   1FBE FF                  518 	MOV	R7,A		;get the sector number
+   1FBF 74 05               519 	MOV	A,#SCRC		;function code 
+   1FC1                     520 DO_CRC:
+   1FC1 12 FF 03            521 	LCALL	PGM_MTP		;and perform the function
+   1FC4 20 D5 CF            522 	JB	F0,ERR		;exit if an error occured
+   1FC7 EC                  523 	MOV	A,R4		;get CRC bits 31:24 
+   1FC8 F1 F4               524 	ACALL	OUTBYT		;and print
+   1FCA ED                  525 	MOV	A,R5		;get CRC bits 23:16 
+   1FCB F1 F4               526 	ACALL	OUTBYT		;and print
+   1FCD EE                  527 	MOV	A,R6		;get CRC bits 15:8 
+   1FCE F1 F4               528 	ACALL	OUTBYT		;and print
+   1FD0 EF                  529 	MOV	A,R7		;get CRC bits 7:0 
+   1FD1 F1 F4               530 	ACALL	OUTBYT		;and print
+   1FD3 E1 24               531 	AJMP	EOF		;and we're done
+                            532 
+                            533 
+                            534 ; Ouput CRLF over serial line
+   1FD5                     535 CRLF:	
+   1FD5 74 0D               536 	MOV	A,#0h0D
+   1FD7 D1 95               537 	ACALL	CO
+   1FD9 74 0A               538 	MOV	A,#0h0A
+   1FDB D1 95               539 	ACALL	CO
+   1FDD 22                  540 	RET
+                            541 
+                            542 
+                            543 ; set a new baud rate
+   1FDE                     544 SETBR:
+   1FDE 74 2E               545 	MOV	A,#('.)		;respond with okay status before
+   1FE0 D1 95               546 	ACALL	CO		;changing the baud rate (i.e.- at the old baud rate)
+   1FE2 79 FF               547 	MOV	R1,#0h0FF	;
+   1FE4 D9 FE               548 	DJNZ	R1,.	;wait before proceeding	
+   1FE6 D9 FE               549 	DJNZ	R1,.	;wait before proceeding	
+   1FE8 C2 8E               550 	CLR	TR1			;stop the timer
+   1FEA 79 80               551 	MOV	R1,#DBYTES	;pointer for data
+   1FEC 87 8D               552 	MOV	TH1,@R1		;get baud rate
+   1FEE 87 8B               553 	MOV	TL1,@R1		;get baud rate
+   1FF0 D2 8E               554 	SETB	TR1		;start the timer
+   1FF2 E1 24               555 	AJMP	EOF		;and we're done
+                            556 
+                            557 ; output the byte in A as 2 ascii hex digits
+   1FF4                     558 OUTBYT:	
+   1FF4 FC                  559 	MOV	R4,A		;"push acc"
+   1FF5 C4                  560 	SWAP	A
+ASxxxx Assembler V01.70 + NoICE + SDCC mods + Flat24 Feb-1999  (Intel 8051), page 11.
+
+
+
+   1FF6 D1 BB               561 	ACALL	HEX2A
+   1FF8 D1 95               562 	ACALL	CO
+   1FFA EC                  563 	MOV	A,R4		;"pop acc"
+   1FFB D1 BB               564 	ACALL	HEX2A
+   1FFD D1 95               565 	ACALL	CO
+   1FFF 22                  566 	RET
+                            567 
+                            568 
+                            569 
+                            570 

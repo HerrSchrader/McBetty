@@ -1,0 +1,4 @@
+infrared/ir_selector.thumb.o: infrared/ir_selector.c infrared/infrared.h \
+  infrared/codes.h infrared/encoders.h display/lcd.h display/fonty.h \
+  keyboard/keyboard.h infrared/ir_selector.h flash/bfs.h \
+  infrared/ir_capture.h

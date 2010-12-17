@@ -1,0 +1,2 @@
+isr.o: isr.c isr.h global.h kernel/pt.h kernel/lc.h \
+  kernel/lc-addrlabels.h serial/serial.h arm_exc.h lpc2220.h

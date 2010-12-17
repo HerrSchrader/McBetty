@@ -1,0 +1,62 @@
+/*
+    infrared codes for ITT seleco 108
+    Copyright (C) 2007  Ch. Klippel <ck@mamalala.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+{
+	0x000, // A	->
+	0x000, // B	->
+	0x000, // C	->
+	0x000, // D	->
+	0x000, // Betty	->
+	0x000, // Exit	->
+	0x1C0, // Up	->	Play
+	0x330, // Down	->	Stop
+	0x210, // Left	->	Rewind
+	0x1F0, // Right	->	Forward
+	0x230, // OK	->	Enter
+	0x2E0, // Vol+	->	Vol+
+	0x2F0, // Vol-	->	Vol-
+	0x3F0, // Mute	->	Muting
+	0x070, // Prog+	->	Prog+
+	0x080, // Prog-	->	Prog-
+	0x100, // 1	->	1
+	0x110, // 2	->	2
+	0x120, // 3	->	3
+	0x130, // 4	->	4
+	0x140, // 5	->	5
+	0x150, // 6	->	6
+	0x160, // 7	->	7
+	0x170, // 8	->	8
+	0x180, // 9	->	9
+	0x190, // 0	->	0
+	0x1E0, // -/--	->	A/B
+	0x000, // AV	->
+	0x000, // Menu	->
+	0x000, // PiP	->
+	0x000, // A/B	->
+	0x000, // 16:9	->
+	0x0F0, // Info	->	VTX1
+	0x0D0, // VTX1	->	VTX2
+	0x200, // VTX2	->	VTX3
+	0x000, // VTX3	->	VTX4
+	0x000, // Blue	->
+	0x000, // Yello	->
+	0x000, // Green	->
+	0x1D0, // Red	->	Pause
+	0x000, // TV	->
+	0x010  // Power	->	Power
+},

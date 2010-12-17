@@ -1,0 +1,62 @@
+/*
+    infrared codes for SPACEENC seleco 027
+    Copyright (C) 2007  Ch. Klippel <ck@mamalala.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+{
+	0x00, // A	->
+	0x00, // B	->
+	0x00, // C	->
+	0x00, // D	->
+	0x00, // Betty	->
+	0x00, // Exit	->
+	0x1C, // Up	->	Play
+	0x1E, // Down	->	Stop
+	0x1A, // Left	->	Rewind
+	0x1B, // Right	->	Forward
+	0x07, // OK	->	Enter
+	0x01, // Vol+	->	Vol+
+	0x02, // Vol-	->	Vol-
+	0x05, // Mute	->	Muting
+	0x03, // Prog+	->	Prog+
+	0x04, // Prog-	->	Prog-
+	0x10, // 1	->	1
+	0x11, // 2	->	2
+	0x12, // 3	->	3
+	0x13, // 4	->	4
+	0x14, // 5	->	5
+	0x15, // 6	->	6
+	0x16, // 7	->	7
+	0x17, // 8	->	8
+	0x18, // 9	->	9
+	0x19, // 0	->	0
+	0x00, // -/--	->
+	0x00, // AV	->
+	0x00, // Menu	->
+	0x00, // PiP	->
+	0x1F, // A/B	->	A/B
+	0x00, // 16:9	->
+	0x28, // Info	->	Info
+	0x3F, // VTX1	->	VTX1
+	0x0B, // VTX2	->	VTX3
+	0x0D, // VTX3	->	VTX4
+	0x00, // Blue	->
+	0x00, // Yello	->
+	0x00, // Green	->
+	0x1D, // Red	->	Pause
+	0x00, // TV	->
+	0x0E  // Power	->	Power
+},

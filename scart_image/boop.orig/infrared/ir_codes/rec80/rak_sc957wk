@@ -1,0 +1,62 @@
+/*
+    infrared codes for REC80 rak sc957wk
+    Copyright (C) 2007  Ch. Klippel <ck@mamalala.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+{
+	0x80F64A1C, // A	->	Subwoofer
+	0x8024981C, // B	->	Auto Off
+	0x802A961C, // C	->	Sleep
+	0x800EA40A, // D	->	Disc
+	0x80208A0A, // Betty	->	Program
+	0x8009A30A, // Exit	->	Cancel
+	0x80B60A1C, // Up	->	Up
+	0x80BA061C, // Down	->	Down
+	0x80F5491C, // Left	->	SkipBack/Rewind
+	0x80F64A1C, // Right	->	SkipForward/FastForward
+	0x80000000, // OK	->
+	0x80802000, // Vol+	->	Vol+
+	0x80812100, // Vol-	->	Vol-
+	0x80923200, // Mute	->	Muting
+	0x80000000, // Prog+	->
+	0x80000000, // Prog-	->
+	0x80AC101C, // 1	->	1
+	0x80AD111C, // 2	->	2
+	0x80AE121C, // 3	->	3
+	0x80AF131C, // 4	->	4
+	0x80A8141C, // 5	->	5
+	0x80A9151C, // 6	->	6
+	0x80AA161C, // 7	->	7
+	0x80AB171C, // 8	->	8
+	0x80A4181C, // 9	->	9
+	0x80A5191C, // 0	->	0
+	0x8038841C, // -/--	->	>10
+	0x80000000, // AV	->
+	0x80BC001C, // Menu	->	Stop
+	0x80ED470A, // PiP	->	Repeat
+	0x80E74D0A, // A/B	->	Random
+	0x80813110, // 16:9	->	3D AI
+	0x80000000, // Info	->	CD
+	0x80000000, // VTX1	->	Tuner
+	0x80000000, // VTX2	->	Aux
+	0x80338310, // VTX3	->	EQ
+	0x80813110, // Blue	->	Tape
+	0x80349400, // Yello	->	CD
+	0x8000A404, // Green	->	Tuner
+	0x803A9A00, // Red	->	Aux
+	0x80000000, // TV	->
+	0x80813D1C  // Power	->	Standby
+},

@@ -1,0 +1,39 @@
+#########################################
+Source code and binary for Music player Client for Betty.
+
+To compile the source resulting in muc_rom.bin:
+   make
+
+To flash Betty with the firmware (serial flash connection over /dev/ttyUSB0):
+   make resident
+
+Currently implemented:
+- Shows current title and artist, volume, current playtime and total playtime.
+- Shows status (play, pause, stop).
+
+- McBetty has 3 screens. The keys can have different functions in each screen:
+	The playlist screen gives a scrollable list of playlists.
+	<Cursor up/down> or <Prog+/Prog-> scroll to a playlist,
+	<OK> selects that playlist.
+	<Exit> leaves the screen without selecting anything.
+	We are currently limited to 30 playlists.
+
+	The tracklist screen shows all tracks in the current playlist.
+	<Cursor up/down> or <Prog+/Prog-> scroll to a track,
+	<Exit> leaves the screen without selecting anything.
+	<OK> selects that track to play.
+ 
+	The playing screen shows information about the currently playing track.
+	<Prog+/-> selects the next/previous track.
+	<Cursor Left/Right> skips backward/forward a few seconds in the current track.
+	<Volume+/-> increase/decrease the volume.
+	<Mute> toggles the volume to and from 0.
+	<Green> start playing.
+	<Yellow> toggles pause.
+	<Red> stops playing.
+	<PiP> toggles the "Random" mode.
+	<A/B> toggles the "Repeat" mode.
+	<16:9> toggles the "Single" mode (if version of MPD supports it)
+	<Betty> switches to the playlist screen
+	<Exit> switches to the tracklist screen
+	

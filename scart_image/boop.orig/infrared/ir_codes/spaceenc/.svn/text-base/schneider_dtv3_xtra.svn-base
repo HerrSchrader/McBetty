@@ -1,0 +1,55 @@
+/*
+    infrared codes for SPACEENC schneider dtv3
+    Copyright (C) 2007  Ch. Klippel <ck@mamalala.net>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+const unsigned int dtv3_codes[15] = 
+{
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x00000000,
+	0x0000003F,		// Vol+
+	0x0008007E,		// Vol-
+	0x0000207F,		// Chan+
+	0x000840FC,		// Chan-
+	0x90000027,		// White
+	0x2000004F,		// Blue
+	0x08000067,		// Yellow
+	0xC000000F,		// Green
+	0x8000001F,		// Red
+	0x30000087		// Power
+};
+
+const unsigned char dtv3_pre[15] =
+{
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0x00,
+	0xFF,			// Vol+
+	0x7F,			// Vol-
+	0xCF,			// Chan+
+	0xCF,			// Chan-
+	0xFF,			// White
+	0xFF,			// Blue
+	0xFF,			// Yellow
+	0xFF,			// Green
+	0xFF,			// Red
+	0xFF			// Power
+};

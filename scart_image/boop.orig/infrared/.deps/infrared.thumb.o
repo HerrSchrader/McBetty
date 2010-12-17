@@ -1,0 +1,3 @@
+infrared/infrared.thumb.o: infrared/infrared.c infrared/infrared.h \
+  infrared/infraredirq.h interrupt/irq.h lpc2220.h keyboard/keyboard.h \
+  infrared/encoders.h infrared/codes.h infrared/ir_selector.h

@@ -1,0 +1,18 @@
+###############################################################
+#####
+##### Makefile.local.linuxARM for boop
+##### Created in the early morninghours
+#####
+##### Copy this to Makefile.local and modify for your Linux
+##### installation
+#####
+###############################################################
+
+ARMBASE = /opt/armtool/4.1.1
+INCLUDEPATH = $(ARMBASE)/include
+LIBPATH = $(ARMBASE)/lib/gcc/arm-elf/4.1.1/interwork
+ARMPATH = $(ARMBASE)/bin
+TOOLPREFIX = arm-elf-
+LPCTOOL = lpctool -d /dev/ttyUSB0
+
+######################## EOF ##################################

@@ -1,0 +1,2 @@
+adc/adcirq.thumb.o: adc/adcirq.c interrupt/irq.h adc/adcirq.h adc/adc.h \
+  lpc2220.h

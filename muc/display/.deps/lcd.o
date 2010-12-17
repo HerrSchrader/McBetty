@@ -1,0 +1,3 @@
+display/lcd.o: display/lcd.c global.h kernel/pt.h kernel/lc.h \
+  kernel/lc-addrlabels.h serial/serial.h lpc2220.h kernel/kernel.h \
+  kernel/pt.h display/lcd.h display/fonty.h

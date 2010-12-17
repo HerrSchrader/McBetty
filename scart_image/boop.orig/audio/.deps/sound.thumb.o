@@ -1,0 +1,2 @@
+audio/sound.thumb.o: audio/sound.c interrupt/irq.h audio/sound.h \
+  audio/soundirq.h lpc2220.h

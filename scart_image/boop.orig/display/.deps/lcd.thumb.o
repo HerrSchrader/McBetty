@@ -1,0 +1,2 @@
+display/lcd.thumb.o: display/lcd.c lpc2220.h display/lcd.h \
+  display/fonty.h display/boop_logo adc/adc.h

@@ -1,0 +1,3 @@
+infrared/ir_rc6.thumbunopt.o: infrared/ir_rc6.c lpc2220.h \
+  infrared/infrared.h infrared/ir_rc6.h infrared/encoders.h \
+  infrared/codes.h

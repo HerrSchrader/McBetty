@@ -1,0 +1,3 @@
+keyboard/keyboard.thumb.o: keyboard/keyboard.c keyboard/keyboard.h \
+  keyboard/keyirq.h lpc2220.h timer/timerfuncs.h timer/timerirq.h \
+  display/backlight.h interrupt/irq.h

@@ -1,0 +1,23 @@
+###############################################################
+#####
+##### Makefile.local.WinSDCC for betty_scart
+#####
+##### Makefile.local.WinSDCC
+#####
+###############################################################
+
+###############################################################
+#####
+##### PATHS (default installation)
+#####
+##### You can put your path-config into Makefile.local 
+##### to override these defaults
+#####
+###############################################################
+
+SDCCBASE=F:/Tools/SDCC
+INCLUDEPATH=$(SDCCBASE)/include
+SDCCPATH=$(SDCCBASE)/bin
+
+######################## EOF ##################################
+
