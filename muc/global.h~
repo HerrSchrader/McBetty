@@ -143,8 +143,6 @@ int rand(void);
 
 char *cache_entry(STR_CACHE *pc, int pos);
 void cache_init(STR_CACHE *pc);
-void cache_inc_first(STR_CACHE *pc);
-void cache_dec_first(STR_CACHE *pc);
 void cache_empty(STR_CACHE *pc, int pos);
 void cache_store(STR_CACHE *pc, int pos, char *content);
 int cache_find_empty(STR_CACHE *pc);
