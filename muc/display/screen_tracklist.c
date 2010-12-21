@@ -86,6 +86,9 @@
 */
 #define WL_SIZE 12
 
+/* Number of lines in the track scroll list */
+#define TL_SIZE (WL_SIZE - 1) 
+
 /* The window list */
 static struct Window win[WL_SIZE];
 
@@ -170,7 +173,7 @@ tracklist_screen_init(Screen *this_screen){
 	win[0].flags |= WINFLG_CENTER;
 	cur_start_row += WL_SMALL_HEIGHT;
 	
-	init_scroll_list(&track_list, &(win[1]), win_txt[1], WIN_TXT_SIZE, WL_SIZE - 1, &track_info, cur_start_row);
+	init_scroll_list(&track_list, &(win[1]), win_txt[1], WIN_TXT_SIZE, TL_SIZE, &track_info, cur_start_row);
 	
 	win_new_text(&win[0], "Choose a track");
 	
@@ -216,7 +219,17 @@ tracklist_keypress(Screen *track_screen, int cur_key, UserReq *req){
 				view_tracklist_changed();
 			};
 			break;
-		
+			
+		case KEY_Left:
+			track_list.first_info_idx = tracklist_range_set(track_list.first_info_idx-TL_SIZE, last_info_idx(&track_list)-TL_SIZE );
+			view_tracklist_changed();
+			break;
+					
+		case KEY_Right:
+			track_list.first_info_idx = tracklist_range_set(track_list.first_info_idx+TL_SIZE, last_info_idx(&track_list)+TL_SIZE );
+			view_tracklist_changed();
+			break;
+			
 		default:
 			break;
 	};

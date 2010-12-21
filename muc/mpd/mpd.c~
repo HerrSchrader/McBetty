@@ -139,6 +139,7 @@ process_plcount(char *s){
 	};
 };
 
+static void
 process_plname(char *s){
 	/* Compare with "playlist: " */
 	if (strstart(response, "playlist: "))

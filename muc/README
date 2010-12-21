@@ -12,19 +12,21 @@ Currently implemented:
 - Shows status (play, pause, stop).
 
 - McBetty has 3 screens. The keys can have different functions in each screen:
+	
 	The playlist screen gives a scrollable list of playlists.
-	<Cursor up/down> or <Prog+/Prog-> scroll to a playlist,
+	<Cursor up/down> or <Prog+/Prog-> scroll one line up or down to a specific playlist,
 	<OK> selects that playlist.
+	<Cursor left/right> scrolls 11 playlists up or down.
 	<Exit> leaves the screen without selecting anything.
-	We are currently limited to 30 playlists.
 
 	The tracklist screen shows all tracks in the current playlist.
 	<Cursor up/down> or <Prog+/Prog-> scroll to a track,
 	<Exit> leaves the screen without selecting anything.
+	<Cursor left/right> scrolls 11 tracks up or down.
 	<OK> selects that track to play.
  
 	The playing screen shows information about the currently playing track.
-	<Prog+/-> selects the next/previous track.
+	<Cursor up/down> or <Prog+/-> selects the next/previous track.
 	<Cursor Left/Right> skips backward/forward a few seconds in the current track.
 	<Volume+/-> increase/decrease the volume.
 	<Mute> toggles the volume to and from 0.

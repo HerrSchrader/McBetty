@@ -119,7 +119,7 @@ playing_screen_init(Screen *this_screen) {
 	
 #define VOL_ROW 114	
 	/* The speaker indicator is on the same line as volume text */
-	win_init(&speaker_win, VOL_ROW, 0, 24, 30, 0, win_txt[5]);
+	win_init(&speaker_win, VOL_ROW, 15, 18, 15, 0, win_txt[5]);
 	speaker_win.font = BIGFONT;
 	win_new_text(&speaker_win, "\xB8");	// speaker icon on
 	

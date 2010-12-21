@@ -146,7 +146,7 @@ tracklist_range_set(int start_pos, int end_pos){
 		start_pos = end_pos - num_entries + 1;
 	};
 	
-	if (start_pos < 0 ) start_pos = 0;
+	start_pos = max(0, start_pos);
 	
 	if (end_pos > last_pos(&tracklist))			// user wants more information than we currently have
 		cache_shift_up(&tracklist, end_pos - last_pos(&tracklist));
@@ -602,17 +602,19 @@ mpd_get_random(){
 */
 void
 mpd_set_random(int rnd){
-	mpd_status.random = rnd;
+	if (mpd_status.random != rnd){
+		mpd_status.random = rnd;
+		model_changed(RANDOM_CHANGED);
+	};
 };
 
 /* This function is called if we successfully issued a "random x" command and got "OK".
-	We can then safely assume that random is set as the user_status wanted it.
+	We can then safely assume that random is set the same as the user_status wanted it.
 */
 void
 mpd_random_ok(){
-	mpd_status.random = user_status.random;
+	mpd_set_random(user_status.random);
 	user_status.random = -1;
-	model_changed(RANDOM_CHANGED);
 };
 
 void
@@ -631,14 +633,16 @@ mpd_get_repeat(){
 
 void
 mpd_set_repeat(int rpt){
-	mpd_status.repeat = rpt;
+	if (mpd_status.repeat != rpt){
+		mpd_status.repeat = rpt;
+		model_changed(REPEAT_CHANGED);
+	};
 };
 
 void
 mpd_repeat_ok(){
-	mpd_status.repeat = user_status.repeat;
+	mpd_set_repeat (user_status.repeat);
 	user_status.repeat = -1;
-	model_changed(REPEAT_CHANGED);
 };
 
 void
@@ -668,14 +672,16 @@ mpd_get_single(){
 
 void
 mpd_set_single(int sgl){
-	mpd_status.single = sgl;
+	if (mpd_status.single != sgl){
+		mpd_status.single = sgl;
+		model_changed(SINGLE_CHANGED);
+	};	
 };
 
 void
 mpd_single_ok(){
-	mpd_status.single = user_status.single;
+	mpd_set_single (user_status.single);
 	user_status.single = -1;
-	model_changed(SINGLE_CHANGED);
 };
 
 void
@@ -929,20 +935,10 @@ mpd_load_ok(){
 	user_status.cur_playlist = -1;			// wish fulfilled
 	user_status.playlistlength = -1;
 	
-// The following lines are useful if we implement an APPEND_PLAYLIST command.
-#if 0
-	/* After loading a playlist, MPD does not change its state, but the playlist has been expanded */
-	/* If we knew the previous playlistlength, we know which tracks we must update */
-		
-	if (mpd_status.playlistlength >= 0)
-			tracks_unknown(mpd_status.playlistlength);	// all songs after the old ones are unknown
-		else
-#endif			
-
 	set_playlistlength(-1);				// the new playlistlength is unknown
 	tracks_unknown(0);					// update all tracks
 	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR_AND_LOAD command!
-};	
+};
 
 
 /* The user wants a new playlist. 

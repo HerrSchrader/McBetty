@@ -617,7 +617,7 @@ inform_view(int model_changed){
 		view_tracklist_changed();
 
 	if (model_changed & PL_NAMES_CHANGED){
-		view_playlist_changed();
+		view_playlists_changed();
 	};
 
 	model_reset_changed();

@@ -281,12 +281,10 @@ void
 playing_keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
-		case KEY_Down:
 		case KEY_Yellow:
 			user_toggle_pause();
 			break;
 			
-		case KEY_Up:
 		case KEY_Green:
 			user_wants_state(PLAY);
 			break;
@@ -316,11 +314,14 @@ playing_keypress(Screen *this_screen, int cur_key, UserReq *req){
 			break;
 
 			/* Inform the controller that the user wants the next song */
+
+		case KEY_Down:
 		case KEY_Pplus:
 			user_wants_next();
 			break;
 			
 			/* Inform the controller that the user wants the previous song */
+		case KEY_Up:
 		case KEY_Pminus:
 			user_wants_prev();	
 			break;

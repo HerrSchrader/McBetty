@@ -112,14 +112,15 @@ RF_send(unsigned char* b, int payload_cnt) {
 	We do this by keeping a variable send_token, which allows sending messages as long as it is not 0.
 	Each send consumes 1 token.
 	A task regularily produces 1 token per SEND_BANDWIDTH seconds.
-	We initialize send_token with around 200 so that we can send more at start up.
-	We also limit the token to 1000, so Worst case is betty gone wild sends 1000 messages in rapid 
+	We initialize send_token with around 2000 so that we can send more at start up.
+	We may need a lot of tokens when reading long playlists, so 2000 is not too much.
+	We also limit the token to 2000, so Worst case is betty gone wild sends 2000 messages in rapid 
 	succession, but after that is throttled to 1 message per SEND_BANDWIDTH seconds.
 */
 
-#define SEND_BANDWIDTH	(5*TICKS_PER_SEC)
-#define MAX_SEND_TOKEN	1000
-#define INIT_SEND_TOKEN	200
+#define SEND_BANDWIDTH	(2*TICKS_PER_SEC)
+#define MAX_SEND_TOKEN	2000
+#define INIT_SEND_TOKEN	2000
 
 static int send_token = INIT_SEND_TOKEN;
 
