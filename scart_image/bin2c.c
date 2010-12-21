@@ -17,6 +17,11 @@
 	 
           if (argc > 1)
 		printf("/* Generated automatically by bin2c */\n\n");
+		
+		printf("/* UCFG1 configuration register */\n");
+		printf("/*   Watchdog + extra safety enabled, Reset disabled, Brown Out enabled */\n");
+		printf("const unsigned char scart_UCFG1 = 0xB7;\n\n");
+
 		printf("/* bootstat register */\n");
 		printf("const unsigned char scart_bootstat = 0x00;\n\n");
 

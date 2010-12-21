@@ -180,3 +180,129 @@ int rand(){
 	return(seed&65535);
 };
 
+
+/* ==================================== String cache functions ========================================= */
+
+/* Given a string pos, we return the index into str[] corresponding to this number.
+	If the number is outside of our list, we return -1.
+*/
+int
+cache_index(STR_CACHE *pc, int pos){
+	int idx;
+
+	if ( (pos < pc->first_pos) || (pos > last_pos(pc)) )
+		return -1;
+		
+	idx = pc->first_idx + pos - pc->first_pos;
+	if (idx >= CACHE_LIM)
+		idx -= CACHE_LIM;	
+	return idx;
+};
+
+/* We are given a string pos. We return the corresponding string 
+	or NULL if the pos is outside our cache.
+	NULL might also mean we do not have information about that string.
+*/
+char *
+cache_entry(STR_CACHE *pc, int pos){
+	int i = cache_index(pc, pos);
+	if (i < 0) return NULL;
+	return pc->str[i];
+};
+
+/* 
+	Given a string, store this info in our cache (if it fits) 
+	If the string is NULL, a NULL is stored else the string is copied length-limited by CACHE_ENTRY_LEN.
+*/
+void
+cache_store(STR_CACHE *pc, int pos, char *content){
+	int idx;
+	
+	idx = cache_index(pc, pos);
+	if (idx < 0)
+		return;
+	if (NULL == content)
+		pc->str[idx] = NULL;
+	else {
+		strn_cpy(pc->cache_entry[idx], content, CACHE_ENTRY_LEN); 
+		pc->str[idx] = pc->cache_entry[idx];
+	};	
+};
+
+/* All the cache entries starting at pos are made empty (unknown). */
+void 
+cache_empty(STR_CACHE *pc, int pos){
+	int i;
+	
+	if (pos > last_pos(pc)) 
+		return;				/* not in our cache */
+	
+	pos = max(pc->first_pos, pos);		/* Need not start before begin of cache */
+
+	for (i=pos; i <= last_pos(pc); i++)
+		cache_store(pc, i, NULL);
+};
+
+void
+cache_init(STR_CACHE *pc){
+	pc->first_idx = 0;
+	pc->first_pos = 0;
+	cache_empty(pc, 0);
+};
+	
+/* We are shifting the start of our tracklist up by 1 position.
+	I.e. if the cache started at pos 17, it now starts at pos 18
+	We are not changing most of the information in str[], only the start (and end) of the array.
+	We are setting the information of the previous first track to NULL, because it is no longer valid.
+		(That information now belongs to the new last track)
+*/
+static void
+cache_inc_first(STR_CACHE *pc){
+	pc->first_pos++;
+	pc->str[pc->first_idx] = NULL;
+	pc->first_idx++;
+	if (pc->first_idx > CACHE_MAX)
+		pc->first_idx = 0;
+};
+
+/* We are shifting the start of our tracklist down by 1 pos 
+	I.e. if the cache started at pos 17, it now starts at pos 16
+	We are not changing most of the information in tracklist[], only the start (and end) of the array.
+	We are setting the information of the new first track no. to NULL, because we do not know it.
+*/
+static void
+cache_dec_first(STR_CACHE *pc){
+	pc->first_pos--;
+	pc->first_idx--;
+	if (pc->first_idx < 0)
+		pc->first_idx = CACHE_MAX;
+	pc->str[pc->first_idx] = NULL;
+};
+
+void
+cache_shift_up(STR_CACHE *pc, int diff){
+	for (;diff > 0; diff --)
+		cache_inc_first(pc);
+};
+
+void
+cache_shift_down(STR_CACHE *pc, int diff){
+	for (;diff > 0; diff --)
+		cache_dec_first(pc);
+};
+
+/* Returns the first empty pos in our cache 
+	or -1 if every pos has a non-NULL entry.
+*/
+int
+cache_find_empty(STR_CACHE *pc){
+	int pos;
+	for (pos=pc->first_pos; pos <= last_pos(pc); pos++)
+		if (cache_entry(pc, pos) == NULL)
+			return pos;
+	return -1;	
+}
+
+/* ==================================== End of string cache functions ========================================= */
+
+

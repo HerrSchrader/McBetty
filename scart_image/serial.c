@@ -54,8 +54,15 @@ void initSerial(unsigned short baud) {
 }
 
 
+/* Potentially infinite waiting time ! */
+void send_byte(unsigned char h) {
+        while (!TI);
+        TI = 0; 
+        SBUF = h;  
+}
 
 
+#if 0
 void send_string(const unsigned char* string) {
  
         unsigned char i=0;
@@ -76,12 +83,6 @@ void send_bytes(unsigned char* h, unsigned char l) {
                 TI = 0; 
                 SBUF = h[i++];
         } 
-}
-
-void send_byte(unsigned char h) {
-        while (!TI);
-        TI = 0; 
-        SBUF = h;  
 }
 
 void send_hex(unsigned char c) {
@@ -105,7 +106,7 @@ void send_hex(unsigned char c) {
         SBUF = cn;
         
 } 
-
+#endif
 
 
 

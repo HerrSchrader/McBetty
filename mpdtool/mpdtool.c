@@ -66,9 +66,6 @@
 
 #define BUFFER_SIZE 1024
 
-
-#define BAUDRATE B38400
-
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
 #define FALSE 0
 #define TRUE 1
@@ -153,6 +150,46 @@ double timer_diff(double tmr){
 /* Print time difference since init of tmr to stderr */
 void prt_timer(double tmr){
 	fprintf (stderr,"[%.1lf ] ", timer_diff(tmr) );
+};
+
+/* 
+	Initialize the serial line 
+*/
+void
+init_serial(int serial_fd, int baudrate, int time_out){
+	struct termios newtio;
+
+
+	bzero(&newtio, sizeof(newtio));
+	/* 
+		BAUDRATE: Set bps rate. You could also use cfsetispeed and cfsetospeed.
+		CRTSCTS : output hardware flow control (only used if the cable has
+			all necessary lines. See sect. 7 of Serial-HOWTO)
+		CS8     : 8n1 (8bit,no parity,1 stopbit)
+		CLOCAL  : local connection, no modem contol
+		CREAD   : enable receiving characters
+	*/
+	newtio.c_cflag = baudrate | CS8 | CLOCAL | CREAD;
+
+	/*
+	IGNPAR  : ignore bytes with parity errors
+	otherwise make device raw (no other input processing)
+	*/
+	newtio.c_iflag = IGNPAR;
+
+	newtio.c_oflag = 0;			// Raw output.
+			
+	/* set input mode (non-canonical, no echo,...) 
+	disable all echo functionality, and don't send signals to calling program
+	*/
+	newtio.c_lflag = 0;
+ 
+	newtio.c_cc[VTIME]    = time_out;	/* time out after 20 seconds */
+	newtio.c_cc[VMIN]     = 0;		/* non-blocking read */
+	
+	/* now clean the modem line and activate the settings for the port */
+	tcflush(serial_fd, TCIFLUSH);
+	tcsetattr(serial_fd,TCSANOW,&newtio);
 };
 
 /* General routine to send a buffer with bytes_to_send bytes to the given file descriptor.
@@ -265,36 +302,26 @@ void reboot_scart(int serial_fd){
 	char *s;
 	char buffer[BUFFER_SIZE];
 	int i, len;
-	struct termios oldtio,newtio;
+	struct termios oldtio;
 	
-	tcgetattr(serial_fd,&oldtio); /* save current port settings */
-
-	bzero(&newtio, sizeof(newtio));
-
-	newtio.c_cflag = B19200 | CS8 | CLOCAL | CREAD;
-	newtio.c_iflag = IGNPAR;
-	newtio.c_oflag = 0;
-	newtio.c_lflag = 0;
- 
-	newtio.c_cc[VTIME]    = 50;   /* time out after 5 seconds */
-	newtio.c_cc[VMIN]     = 0;   /* non-blocking read */
-	
-	/* now clean the modem line and activate the settings for the port */
-	tcflush(serial_fd, TCIFLUSH);
-	tcsetattr(serial_fd,TCSANOW,&newtio);
-	
+	tcgetattr(serial_fd,&oldtio); 			/* save current port settings */
+	init_serial(serial_fd, B19200, 50);
+//	init_serial(serial_fd, B9600, 20);
+		
 	printf("Sending break\n");
 	/* Send a break to reset device into ISP mode */
-	tcsendbreak(serial_fd,3);
+	tcsendbreak(serial_fd,5);
+	tcdrain(serial_fd);
 
-	tcflush(serial_fd, TCIFLUSH);
+	tcflush(serial_fd, TCIOFLUSH);
 	
 	usleep(1000000);
-	tcflush(serial_fd, TCIFLUSH);
+	tcflush(serial_fd, TCIOFLUSH);
 	usleep(1000000);
 	
 	/* Send an uppercase U to negotiate baud rate */
 	buffer[0] = 'U';
+	
 	buffer[1] = 0;
 	
 	/* Send U to serial line */
@@ -399,11 +426,13 @@ serial_output (char *buf){
 }
 
 /*
-	Send at most TX_MAX bytes to serial
+	Send at most MAX_TX bytes to serial
 	Given is ser_out_buf with ser_out_len bytes in it.
 
 	Waits for ACK if MAX_TX bytes have been written.
 	Returns when waiting or buffer empty.
+	Waiting means setting the global flag wait_ack to 1.
+	The serial input routine will reset that flag when it sees an ACK
 */
 
 #define MAX_TX 16
@@ -433,8 +462,12 @@ send_to_serial(int serial_fd){
 		/* Did our write fail completely ? */
 		if (num == -1) {
 			perror("send_to_serial()");
-			continue;
+			return;
 		};
+		
+		/* When num == 0 we might enter an infinite loop */
+		if (num == 0)
+			return;
 		
 		/* Now num is the number of bytes really written. Can be shorter than expected */
 		ser_out_len -= num;
@@ -466,7 +499,7 @@ send_to_serial(int serial_fd){
 	Our buffer must be long enough to read multiple lines.
 	We can safely assume that commands are below 256 characters (limitation of scart hardware).
 	The EOT character will not be included in the returned buffer.
-	Null terminates the buffer so that it is a valid C string.
+	The buffer is null terminated so that it is a valid C string.
 	Sets flag ack_received if a ACK character was received.
 	Does not store ACK character.
 */
@@ -475,13 +508,16 @@ read_from_serial (int fd){
 	int res;		 
 	
 	res = read(fd, ser_in_buf+ser_in_len, 1);
-	if (res == 0) return;
+	if (res == 0){ 
+		fprintf(stderr,"empty ser_in \n");
+		return;
+	}
 	
 	if (res < 0){
 		printf("Error on read from serial line, errno = %d\n", errno);
 		return;
 	};	
-	
+
 	switch (ser_in_buf[ser_in_len]) {
 		case EOT:
 			ser_in_buf[ser_in_len]='\0';			// Null terminate string 
@@ -501,24 +537,30 @@ read_from_serial (int fd){
 	return;
 };
 	
-
-void 
-read_from_mpd (int fd){
+/* 
+	Read a byte from mpd socket into mpd_line_buf 
+	Returns 0 if end-of-file was reached
+	Returns < 0 if error occured
+	Return 1 if byte was read
+*/
+int 
+read_from_mpd (int mpd_fd){
 	int res;		 
 	
-	res = read(fd, mpd_line_buf+mpd_line_len, 1);
-	if (res == 0) return;
+	res = read(mpd_fd, mpd_line_buf+mpd_line_len, 1);
+	if (res == 0)
+		return res;
 	
 	if (res < 0){
 		printf("Error on read from mpd, errno = %d\n", errno);
-		return;
+		return res;
 	};	
-	
+
 	switch (mpd_line_buf[mpd_line_len]) {
 		case '\n':
 			mpd_line_buf[++mpd_line_len]=0;			// Null terminate string 
-			response_line_complete = 1;			// Set flag
-			return;
+			response_line_complete = 1;				// Set flag
+			break;
 			
 		default:
 			if (mpd_line_len < BUFFER_SIZE - 2) 
@@ -526,9 +568,9 @@ read_from_mpd (int fd){
 			else
 				fprintf(stderr, "Error, too many characters from mpd!\n");	
 	};
-	return;
+	return 1;
 };
-	
+
 /* 
 	Wait for input, either from serial line or from MPD socket
 	Uses select so does sleep when nothing to do
@@ -539,36 +581,49 @@ wait_for_input(int serialfd, int socketfd, int milliseconds){
 	fd_set readfds;
 	int numfds;
 	int res;
+	int cnt = 0;
 	
-	tv.tv_sec = milliseconds / 1000;
-	tv.tv_usec = (milliseconds % 1000) * 1000;
+	/* We try until we have a byte or a time-out or an error */
+	while (cnt == 0) {
+		tv.tv_sec = milliseconds / 1000;
+		tv.tv_usec = (milliseconds % 1000) * 1000;
 
-	FD_ZERO(&readfds);
-	if (serialfd != -1)
-		FD_SET(serialfd, &readfds);
-	if (socketfd != -1)
-		FD_SET(socketfd, &readfds);
+		FD_ZERO(&readfds);
+		if (serialfd != -1)
+			FD_SET(serialfd, &readfds);
+		if (socketfd != -1)
+			FD_SET(socketfd, &readfds);
 
-	numfds = max (serialfd + 1, socketfd + 1);
+		numfds = max (serialfd + 1, socketfd + 1);
 	
-	// don't care about writefds and exceptfds:
-	res = select(numfds, &readfds, NULL, NULL, &tv);
+		// don't care about writefds and exceptfds:
+		res = select(numfds, &readfds, NULL, NULL, &tv);
 	
-	if (res == -1){
-		perror("select()");
-		return 0;
-	};
+		if (res == -1){
+			perror("select()");
+			return 0;
+		};
 	
-	if (res == 0) {
-		return 0;
-	};
+		if (res == 0)
+			return 0;				// time out
 	
-	if ( (serialfd != -1) && FD_ISSET(serialfd, &readfds) )
-        read_from_serial(serialfd);
+		if ( (serialfd != -1) && FD_ISSET(serialfd, &readfds) ){
+//			fprintf(stderr,"Reading from serial\n");
+        	read_from_serial(serialfd);
+			cnt = 1;
+		}
 	
-	if ( (socketfd != -1) && FD_ISSET(socketfd, &readfds) )
-        read_from_mpd(socketfd);
-
+		if ( (socketfd != -1) && FD_ISSET(socketfd, &readfds) ){
+//			fprintf(stderr,"Reading from socket\n");
+        	res = read_from_mpd(socketfd);
+			if (res < 0)
+				return 0;
+			if (res == 0)						// EOF but select() will return 1 anyway
+				socketfd = -1;					// ignore socket 
+			if (res > 0)
+				return 1;
+		}
+	}
     return 1;
 } 
 
@@ -623,13 +678,13 @@ open_mpd_connection(int *mpd_socket,  struct sockaddr_in *pserverName, int seria
 
 		// Maybe we were too slow and Betty sent another command
 		if (cmd_complete){
-			fprintf(stderr, "  Betty sent new command. Sending to MPD cancelled.\n");
+			fprintf(stderr, "  Betty sent new command.\n");
 			close_mpd_socket(mpd_socket);
 			return 0;
 		};
 		
 		if (res == 0){
-			fprintf(stderr, "  No answer when connecting to MPD. Sending to MPD cancelled.\n");
+			fprintf(stderr, "  No answer when connecting to MPD.\n");
 			close_mpd_socket(mpd_socket);
 			return 0;
 		};	
@@ -637,7 +692,6 @@ open_mpd_connection(int *mpd_socket,  struct sockaddr_in *pserverName, int seria
 	
 	if (strncmp(mpd_line_buf, "OK", 2) != 0) {
 		fprintf(stderr,"  Bad initial response from mpd: %s\n", mpd_line_buf);	
-		fprintf(stderr, "  Sending to MPD cancelled.\n");
 		close_mpd_socket(mpd_socket);
 		return 0;
 	};	
@@ -645,116 +699,13 @@ open_mpd_connection(int *mpd_socket,  struct sockaddr_in *pserverName, int seria
 	return 1;
 };
 
-/* 
-	This routine sends a command from serial_in_buf to mpd.
-	If the socket is -1, it tries to connect to mpd.
-	When the connection is successful, the variable *client_socket is set to the connection.
-	The content of the serial input buffer is sent to mpd.
-	The serial input buffer is reset to allow more input from Betty.
-	Returns TRUE iff successful, else 0.
-*/
-int
-send_to_mpd (int *client_socket, struct sockaddr_in *pserverName){
-	int i, status, buf_len;
-	char buf[BUFFER_SIZE + 1];
-	
-	/* Copy the command in ser_in_buf() to local buf() to free ser_in_buf */
-	buf_len = ser_in_len;
-	for (i=0; i < ser_in_len; i++)
-		buf[i] = ser_in_buf[i];
-	
-	reset_ser_in();		// reset the serial input buffer, ready to get next command
-	status = open_mpd_connection(client_socket, pserverName, serial_fd);
-	if (0 == status) 
-		return 0;
 
-	reset_mpd_line();			
-	return (write_all(*client_socket, buf, buf_len));
-};
+struct sockaddr_in serverName = { 0 };
 
-
-/* 
-	The MPD protocol is line oriented (terminated by '\n')!
-	Normally a single line is a complete command.
-	Only when the first line is "command_line_begin\n" does the command end
-	when the line "command_line_end\n" is seen.
-	
-	Our half duplex radio connection adds an extra EOT character at the end of a command.
-	We use that here to detect when a command is finished.
-	
-*/
-
-int main(int argc, char *argv[])
-{
-	int res, filter_lsinfo, client_socket, remote_port;
+void
+init_mpd(char *remote_host, int remote_port){
 	struct hostent *host_ptr = NULL;
-	struct sockaddr_in serverName = { 0 };
-	char *remote_host = NULL;
-	char *serial_device;
-	struct termios oldtio,newtio;
-	int time_out_lim = 1, time_out_cnt = 0;
-	double total_tmr;
-	double response_tmr;
 	
-	if (4 != argc)
- 	{
-		fprintf(stderr, "Usage: %s <serial_device> <serverHost> <serverPort>\n", argv[0]);
-		exit(1);
-	};
-	
-	/* Initialize total program run time */
-	init_timer(&total_tmr);
-	
-	serial_device = argv[1];
-	remote_host = argv[2];
-	remote_port = atoi(argv[3]);
-
-/*
-	Open modem device for reading and writing and not as controlling tty
-	because we don't want to get killed if linenoise sends CTRL-C.
-*/
-	serial_fd = open(serial_device, O_RDWR | O_NOCTTY ); 
-	if (serial_fd <0) {perror(serial_device); exit(-1); }
-	
-	tcgetattr(serial_fd,&oldtio); /* save current port settings */
-
-	bzero(&newtio, sizeof(newtio));
-	/* 
-		BAUDRATE: Set bps rate. You could also use cfsetispeed and cfsetospeed.
-		CRTSCTS : output hardware flow control (only used if the cable has
-			all necessary lines. See sect. 7 of Serial-HOWTO)
-		CS8     : 8n1 (8bit,no parity,1 stopbit)
-		CLOCAL  : local connection, no modem contol
-		CREAD   : enable receiving characters
-	*/
-	newtio.c_cflag = BAUDRATE | CS8 | CLOCAL | CREAD;
-
-	/*
-	IGNPAR  : ignore bytes with parity errors
-	ICRNL   : map CR to NL (otherwise a CR input on the other computer
-	will not terminate input)
-	IXOFF    : enable XON/XOFF flow control on input
-	otherwise make device raw (no other input processing)
-	*/
-	newtio.c_iflag = IGNPAR | IXOFF | IXON;
-
-	newtio.c_oflag = 0;			// Raw output.
-			
-	/* set input mode (non-canonical, no echo,...) 
-	disable all echo functionality, and don't send signals to calling program
-	*/
-	newtio.c_lflag = 0;
- 
-	newtio.c_cc[VTIME]    = 250;   /* time out after 20 seconds */
-	newtio.c_cc[VMIN]     = 0;   /* non-blocking read */
-	
-	/* now clean the modem line and activate the settings for the port */
-	tcflush(serial_fd, TCIFLUSH);
-	tcsetattr(serial_fd,TCSANOW,&newtio);
- 
-	/* Reset the transmitting device so we have a defined state */
-//	reset_transmitter(serial_fd);
-
 	/*
 	 * need to resolve the remote server name or
 	 * IP address 
@@ -773,6 +724,259 @@ int main(int argc, char *argv[])
 	serverName.sin_port = htons(remote_port);
 	(void) memcpy(&serverName.sin_addr, host_ptr->h_addr, host_ptr->h_length);
 
+};
+
+/* 
+	These commands are important and can be emulated if not present
+*/
+#define LISTPLAYLISTS_CMD	(1 << 0)
+#define PLAYLISTNAME_CMD (1 << 1)
+#define PLAYLISTCOUNT_CMD (1 << 2)
+
+int mpd_cmds;
+
+/* Here we set a bit if a response has to be modified before it is sent to Betty 
+	The bits are the same as in mpd_cmds.
+*/
+
+int mpd_emu;
+
+/* Some emulated cmds need to remember an argument.
+	Store it here.
+*/
+int mpd_emu_arg;
+
+int mpd_emu_cnt;
+
+/* 
+Find out version of mpd and which commands it understands
+*/
+void
+discover_mpd(int *mpd_socket){
+	int response_finished;
+	
+	mpd_cmds = 0;
+	
+	if ( 0 == open_mpd_connection(mpd_socket, &serverName, -1) ){
+		return;
+	};
+	reset_mpd_line();
+	
+	write_all(*mpd_socket, "commands\n", strlen("commands\n") );
+	
+	response_finished = 0;
+	
+	while (!response_finished) {
+		wait_for_input(-1, *mpd_socket, 0);
+		if (response_line_complete){
+
+			// Convert line to iso8859-15	
+//			utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
+			fprintf(stderr, "  MPD: %s", mpd_line_buf);
+			
+			if (0 == strncmp(mpd_line_buf, "command: listplaylists", strlen("command: listplaylists")) )	
+				mpd_cmds |= LISTPLAYLISTS_CMD;
+				
+			// check for "OK" or "ACK"
+			if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) ){
+				response_finished = 1;
+				fprintf(stderr,"\n");
+			};
+	
+			reset_mpd_line();
+		};
+	}
+	
+	
+	if ( 0 == open_mpd_connection(mpd_socket, &serverName, -1) ){
+		return;
+	};
+	reset_mpd_line();
+	
+	write_all(*mpd_socket, "lsinfo\n", strlen("lsinfo\n") );
+	
+	response_finished = 0;
+	
+	while (!response_finished) {
+		wait_for_input(-1, *mpd_socket, 0);
+		if (response_line_complete){
+
+			// Convert line to iso8859-15	
+//			utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
+			fprintf(stderr, "  MPD: %s", mpd_line_buf);
+				
+			// check for "OK" or "ACK"
+			if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) ){
+				response_finished = 1;
+				fprintf(stderr,"\n");
+			};
+	
+			reset_mpd_line();
+		};
+	}
+	mpd_emu = 0;
+			
+};
+
+/* Copy the command in ser_in_buf() to local buf() to free ser_in_buf */	
+void
+copy_serial_in(char *buf){
+	strcpy(buf, ser_in_buf);
+	reset_ser_in();		// reset the serial input buffer, ready to get next command
+};	
+
+/* 
+	This routine sends a command string from buf to mpd.
+	If the socket is -1, it tries to connect to mpd.
+	When the connection is successful, the variable *client_socket is set to the connection.
+	The mpd_line_buf is reset to allow fresh input from MPD afterwards.
+	Returns TRUE iff successful, else 0.
+*/
+int
+send_to_mpd (int *mpd_socket, struct sockaddr_in *pserverName, char *buf){
+	if ( 0 == open_mpd_connection(mpd_socket, pserverName, serial_fd) ){
+		fprintf(stderr,"Sending to MPD cancelled.\n");
+		return 0;
+	};
+	reset_mpd_line();
+	return (write_all(*mpd_socket, buf, strlen(buf)));
+};	
+
+
+/* Copy the serial input buffer to the given mpd_input_buffer buf.
+	Commands which are not available are emulated if possible
+	Resets serial input buffer.
+*/
+void
+translate_to_mpd(char *buf){
+
+	/* Just to make sure we have a valid C-string */
+	buf[BUFFER_SIZE] = 0;
+	
+	/* The command "playlistname x" is our own invention.
+		It returns the name of playlist number x (x starts with 0).
+		We emulate it by sending "listplaylists" and counting the responses. 
+	*/
+	if (0 == strncmp(buf, "playlistname ", strlen("playlistname ")) ){
+		strcpy(buf, "lsinfo\n");
+		mpd_emu |= PLAYLISTNAME_CMD;
+		mpd_emu_arg = atoi(buf + strlen("playlistname "));
+		mpd_emu_cnt = 0;
+	} else 
+		mpd_emu &= ~PLAYLISTNAME_CMD;
+		
+	/* The command "playlistcount" is our own invention.
+		It returns the number of playlists known to MPD.
+		We emulate it by sending "lsinfo" and counting the responses. 
+	*/
+	if (0 == strncmp(buf, "playlistcount\n", strlen("playlistcount\n")) ){
+		strcpy(buf, "lsinfo\n");
+		mpd_emu |= PLAYLISTCOUNT_CMD;
+		mpd_emu_cnt = 0;
+	} else 
+		mpd_emu &= ~PLAYLISTCOUNT_CMD;
+
+	/* The listplaylists command is not available in older versions of mpd */
+	if ( (0 == (mpd_cmds && LISTPLAYLISTS_CMD)) && (0 == strncmp(buf, "listplaylists\n", 14)) ){
+		strcpy(buf, "lsinfo\n");
+		mpd_emu |= LISTPLAYLISTS_CMD;
+	} else 
+		mpd_emu &= ~LISTPLAYLISTS_CMD;
+		
+};
+
+void
+translate_to_serial(){
+	
+	// Convert line to iso8859-15			
+	utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
+	
+	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through	
+	if (mpd_emu & PLAYLISTNAME_CMD){
+		if ( (strncmp(mpd_line_buf, "playlist:", 9) == 0) ){
+			if (mpd_emu_cnt == mpd_emu_arg) 
+				serial_output(mpd_line_buf);
+			mpd_emu_cnt++;
+		} else if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || 
+					(0 == strncmp(mpd_line_buf, "ACK", 3)) )
+				serial_output(mpd_line_buf);
+	}
+	// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
+	else if (mpd_emu & LISTPLAYLISTS_CMD){
+		if ( (strncmp(mpd_line_buf, "playlist:", 9) == 0) ||
+			(0 == strncmp(mpd_line_buf, "OK", 2)) || 
+			(0 == strncmp(mpd_line_buf, "ACK", 3)) )
+				serial_output(mpd_line_buf);
+	}
+	// If the PLAYLISTCOUNT emulation is on, we count playlist: entries and return the total number
+	else if (mpd_emu & PLAYLISTCOUNT_CMD){
+		if  (0 == strncmp(mpd_line_buf, "playlist:", 9)) {
+			mpd_emu_cnt++;
+		} else if (0 == strncmp(mpd_line_buf, "OK", 2)) {
+			sprintf(mpd_line_buf, "playlistcount: %d\nOK\n",mpd_emu_cnt);
+			serial_output(mpd_line_buf);
+			sprintf(mpd_line_buf, "OK\n");
+		} else if 	(0 == strncmp(mpd_line_buf, "ACK", 3)) {
+				serial_output(mpd_line_buf);
+		}
+	}	else  {	
+		// put the line in serial output buffer	
+		serial_output(mpd_line_buf);	
+	};	
+};
+
+
+/* 
+	The MPD protocol is line oriented (terminated by '\n')!
+	Normally a single line is a complete command.
+	Only when the first line is "command_line_begin\n" does the command end
+	when the line "command_line_end\n" is seen.
+	
+	Our half duplex radio connection adds an extra EOT character at the end of a command.
+	We use that here to detect when a command is finished.
+	
+*/
+
+int main(int argc, char *argv[])
+{
+	int res, client_socket;
+	char *serial_device;
+	struct termios oldtio;
+	int time_out_lim = 1, time_out_cnt = 0;
+	double total_tmr;
+	double response_tmr;
+	char mpd_input_buf[BUFFER_SIZE+1];
+	
+	
+	if (4 != argc)
+ 	{
+		fprintf(stderr, "Usage: %s <serial_device> <serverHost> <serverPort>\n", argv[0]);
+		exit(1);
+	};
+	
+	/* Initialize total program run time */
+	init_timer(&total_tmr);
+	
+	serial_device = argv[1];
+	
+/*
+	Open serial device for reading and writing and not as controlling tty
+	because we don't want to get killed if linenoise sends CTRL-C.
+*/
+	serial_fd = open(serial_device, O_RDWR | O_NOCTTY ); 
+	if (serial_fd <0) {perror(serial_device); exit(-1); }
+	
+	tcgetattr(serial_fd,&oldtio); 	/* save current port settings */
+	init_serial(serial_fd, B38400, 250);
+	
+	/* Reset the transmitting device so we have a defined state */
+//	reset_transmitter(serial_fd);
+	
+	init_mpd(argv[2], atoi(argv[3]));
+	client_socket = -1;
+	
+	discover_mpd(&client_socket);
+	
 	/*
 		This main loop has to be very error tolerant.	
 		The idea is to get a command from serial line (terminated by EOT),
@@ -797,7 +1001,6 @@ int main(int argc, char *argv[])
 				
 	*/
 	
-	client_socket = -1;	
 	response_line_complete = 0;
 
 	wait_ack = 0;
@@ -810,43 +1013,42 @@ int main(int argc, char *argv[])
 		
 		// if nothing to do, wait for some time (61 secs) for input	
 		if (! cmd_complete){
+//			fprintf(stderr, "Waiting for input ...");
 			res = wait_for_input(serial_fd, client_socket, 61000);
-		
+//			fprintf(stderr,".\n");
 			// if still no input, check if scart adapter (and Betty) is alive.
 			if (res == 0) {
 				/* No (more) input for some time. Forget all previous bytes */
 				fprintf(stderr,"No command from Betty for some time.\n");
 				reset_ser_in();
 				if (++time_out_cnt >= time_out_lim){
-					reboot_scart(serial_fd);
+//					reboot_scart(serial_fd);
 					time_out_cnt = 0;
 					time_out_lim *= 2;
 				};
 				continue;
 			};
+//			fprintf(stderr," => %d\n", res);
 		};
 		// if we got input from MPD here, something must be wrong.
 		
 		// read more bytes until command is complete
 		if (!cmd_complete) continue;
 		
-		prt_timer(total_tmr);
-		fprintf(stderr, "BETTY: %s", ser_in_buf);
+		prt_timer(total_tmr); fprintf(stderr, "BETTY: %s", ser_in_buf);
+		
+		/* Free serial input buffer */
+		copy_serial_in(mpd_input_buf);
+		
+		translate_to_mpd (mpd_input_buf);
+		
+		prt_timer(total_tmr); fprintf(stderr, "BETTY: %s", mpd_input_buf);
 		
 		// got a complete input via serial line
 		// send it to MPD, if necessary check initial response from mpd
 		// resets serial input buffer
-		res = send_to_mpd (&client_socket, &serverName);
-			
-		// NOTE Not transparent transmission. We interpret the messages here.
-		// The lsinfo command gets too much information from mpd.
-		// Betty only wants to see lines beginning with "playlist:"
-		// So we set a flag to filter unwanted lines from transmission over radio link to save bandwidth
-		if (0 == strncmp(ser_in_buf, "lsinfo\n", 7))
-			filter_lsinfo = 1;
-		else 
-			filter_lsinfo = 0;
-	
+		res = send_to_mpd (&client_socket, &serverName, mpd_input_buf);
+
 		// reset the serial output buffer
 		// All previous bytes are not a response to this command
 		reset_ser_out();
@@ -878,24 +1080,14 @@ int main(int argc, char *argv[])
 					prt_timer(total_tmr);
 					fprintf(stderr,"MPD response is too late\n");
 					close_mpd_socket(&client_socket);
+					break;
 				}
 			};
 			
 			if (response_line_complete){
-
-				// Convert line to iso8859-15	
-				utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
+				translate_to_serial();
 				fprintf(stderr, "  MPD: %s", mpd_line_buf);
-			
-				// If the lsinfo filter is on, we let only 3 types of output lines go through
-				if (filter_lsinfo) {
-					if ( (strncmp(mpd_line_buf, "playlist:", 9) == 0) ||
-			 			(0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) )
-							serial_output(mpd_line_buf);
-				} else {	
-					// put the line in serial output buffer	
-					serial_output(mpd_line_buf);	
-				};
+
 				// check for "OK" or "ACK"
 				if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) ){
 					response_finished = 1;
@@ -909,19 +1101,24 @@ int main(int argc, char *argv[])
 		};
 	
 		/* Send out all unsent bytes to serial buffer (as long as there is not another cmd) */
-		// TODO potentially infinite waiting time here if scart adapter hangs
 		while ( (!cmd_complete)  && (ser_out_len != 0) ){
 			// Poll for a new command from serial
 			res = wait_for_input(serial_fd, client_socket, 0);
+			
 			// if there are bytes in the output buffer, send them to serial if it is ready
 			send_to_serial(serial_fd);
+			
+			if (timer_diff(response_tmr) > 10.0){
+					prt_timer(total_tmr);
+					fprintf(stderr,"Sending response to SCART hangs\n");
+					break;
+				}
 		};	
 		reset_ser_out();
 	};
 	
-
-	/* restore the old port settings */
+	/* Restore old serial port settings */
 	tcsetattr(serial_fd,TCSANOW,&oldtio);
-
+	tcflush(serial_fd, TCIOFLUSH);	
 	return 0;
 }

@@ -454,6 +454,52 @@ int main(int argc, char *argv[])
 	really_write_sector(serial_fd, 5);
 	really_write_sector(serial_fd, 6);
 
+	// The configuration bytes are defined and set in bin2c.c !!! 
+	
+	
+	/* Write Configuration Byte UCFG1 */
+	sprintf(buffer, ":0200000200%02X", scart_UCFG1);
+	checksum(buffer);	
+	if (0 != send_string(serial_fd, buffer, buffer2)) {
+		return(20);	;
+	};
+		
+	/* Read UCFG1 */
+	s=":0100000300FC";
+	printf("UCFG1    \t= ");
+	if (0 != send_string(serial_fd,s, buffer2)) {
+		exit(-20);	;
+	};
+	printf("%s\n",buffer2);	
+	
+
+	/* Write Boot Vector Byte */
+	sprintf(buffer, ":0200000202%02X", scart_bootvec);
+	checksum(buffer);	
+	if (0 != send_string(serial_fd, buffer, buffer2)) {
+		return(20);	;
+	};
+	s=":0100000302FA";
+	printf("Boot Vector \t= ");
+	if (0 != send_string(serial_fd,s,buffer2)) {
+		exit(-20);	;
+	};
+	printf("%s\n",buffer2);
+				
+	
+	/* Write Boot Status Byte */	
+	sprintf(buffer, ":0200000203%02X", scart_bootstat);
+	checksum(buffer);	
+	if (0 != send_string(serial_fd, buffer, buffer2)) {
+		return(20);	;
+	};
+	s=":0100000303F9";
+	printf("Status Byte \t= ");
+	if (0 != send_string(serial_fd,s,buffer2)) {
+		exit(-20);	;
+	};
+	printf("%s\n",buffer2);					
+	
 	/* Reset the device */
 	printf("\nResetting device\n");
 	s=":00000008F8";

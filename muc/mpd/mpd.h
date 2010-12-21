@@ -48,7 +48,9 @@ enum USER_CMD {
 	LOAD_CMD,
 	RANDOM_CMD,
 	REPEAT_CMD,
-	SINGLE_CMD
+	SINGLE_CMD,
+	PLAYLISTCOUNT_CMD,
+	PLAYLISTNAME_CMD
 };
 
 extern int playlist_changed;

@@ -152,6 +152,14 @@ volatile __bit got_etx;
 volatile __bit got_eot;
 
 
+void
+feed_wd(){
+	EA = 0;
+	WFEED1 = 0xA5;
+	WFEED2 = 0x5A;
+	EA = 1;
+}
+
 void buffer_init(){
 	bufcnt = 0;			// Number of bytes in the buffer
 	bufnxt = 0;			// Index of next free place in buffer
@@ -628,6 +636,9 @@ void main(void) {
 	
 	while (1) {						/* Forever: */
 		
+		feed_wd();
+		
+		/* Check if mpdtool has sent ETX. Sends ACK if there is room in buffer */
 		check_etx();
 		
 		/* Our radio link is only half duplex. We decide here if we receive or transmit 
@@ -638,7 +649,6 @@ void main(void) {
 		
 		if (radio_mode == RADIO_RX)
 			/* Test and handle input over wireless */
-			//check_radio_packet();
 			check_radio_input();
 			
 		else

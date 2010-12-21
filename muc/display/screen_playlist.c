@@ -69,12 +69,15 @@ screen_enter(){
 	/* We always want to start with the first playlist name, because the user might have got lost previously. */
 	playlist_list.first_info_idx = 0;
 	select(&playlist_list, 0);
-
+	
+	playlists_range_set( playlist_list.first_info_idx, last_info_idx(&playlist_list) );
+	
 	/* A lot of things might have changed since we were called last.
 		So better reread the information from mpd 
 	*/
-	view_playlist_changed();
+	view_playlist_changed(&playlist_list);
 	
+
 	screen_visible(PLAYLIST_SCREEN, 1);
 	screen_redraw(PLAYLIST_SCREEN);	
 };
@@ -111,7 +114,7 @@ playlist_keypress(Screen *pl_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
 		case KEY_OK:
-			user_wants_playlist( playlist_list.sel_win );
+			user_wants_playlist(info_idx(&playlist_list, playlist_list.sel_win ) );
 			switch_screen(PLAYLIST_SCREEN, PLAYING_SCREEN);
 			break;
 			
@@ -121,7 +124,7 @@ playlist_keypress(Screen *pl_screen, int cur_key, UserReq *req){
 				sel_win_up(&playlist_list);
 			else {					// We want to scroll past the upper end of the window list
 				if ( info_idx(&playlist_list, 0)  > 0){		// We have information to show
-					playlist_list.first_info_idx -= 1;
+					playlist_list.first_info_idx = playlists_range_set(playlist_list.first_info_idx-1, last_info_idx(&playlist_list)-1 );
 					view_playlist_changed();
 				};
 			};
@@ -132,7 +135,7 @@ playlist_keypress(Screen *pl_screen, int cur_key, UserReq *req){
 			if ( playlist_list.sel_win < (playlist_list.num_windows - 1) )
 				sel_win_down(&playlist_list);
 			else{					// We want to scroll past the lower end of the window list
-				playlist_list.first_info_idx += 1;
+				playlist_list.first_info_idx = playlists_range_set(playlist_list.first_info_idx+1, last_info_idx(&playlist_list)+1 );
 				view_playlist_changed();
 			};	
 			break;

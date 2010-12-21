@@ -7,18 +7,6 @@
 enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 
 
-/* MPD gives a 0-based answer on song. 
- * We need 4 extra values here:
-  -1 for unknown (or don't care)
-  -2 for MPD has no current song
-  -3 for user wants next song
-  -4 for user wants previous song
-*/
-#define PREV_SONG		-4
-#define NEXT_SONG		-3
-#define NO_SONG			-2
-#define SONG_UNKNOWN	-1
-
 /* These are the possible values for model_changed_flags */
 #define VOLUME_CHANGED		(1<<0)
 #define TITLE_CHANGED		(1<<1)
@@ -34,31 +22,39 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define ERROR_FLAG			(1<<11)
 
 
-/* Maximum length of a tracklist entry including trailing 0 
-	We expect to have a lot of those entries, so we keep them small
-*/
-#define TL_ENTRY_LEN 64
-
 // Length of artist and title strings each, some songs and some albums really have long titles
 #define TITLE_LEN 150
 
+/* MPD gives a 0-based answer on song pos. 
+ * We need 4 extra values here:
+  -1 for unknown (or don't care)
+  -2 for MPD has no current song
+  -3 for user wants next song
+  -4 for user wants previous song
+*/
+#define PREV_SONG		-4
+#define NEXT_SONG		-3
+#define NO_SONG			-2
+#define SONG_UNKNOWN	-1
+
 struct STATUS {
-	int playlistlength;			// -1 if unknown
+	int	num_playlists;			// total number of playlists known by MPD (-1 if unknown to us)
+	int cur_playlist;			// index to currently loaded playlist (or -1 if unknown)
+	int playlistlength;			// length (number of songs) of the current playlist (-1 if unknown)
 	int volume;					// -1 if unknown
 	int old_volume;				// -1 if unknown, volume before a mute command, used to unmute
-	int pos; 					// current song position in the playlist. Starts with 0!
-	enum PLAYSTATE state;
-	int8_t	random;
-	int8_t repeat;
-	int8_t single;
-	int songid;					// mpd's internal id of the current song
+	int pos; 					// current song position in the playlist. Starts with 0! For values below 0 see above.
+	enum PLAYSTATE state;		// PLAY, PAUSE, STOP or UNKNOWN
+	int8_t	random;				// 1 if random mode is on
+	int8_t repeat;				// 1 if repeat mode is on
+	int8_t single;				// 1 if single mode is on
+	int songid;					// MPD's internal id of the current song
 	char artist_buf[TITLE_LEN];	// If cur_artist points here, this is the artist tag, else irrelevant 
 	char title_buf[TITLE_LEN];	// If cur_title points here, this is the title tag, else irrelevant 
 	char *cur_artist;			// NULL if not known, else points to info in artist_buf;
 	char *cur_title;			// NULL if not known, else points to info in title_buf;
 	int time_elapsed;			// in seconds
 	int time_total;				// in seconds
-	int cur_playlist;			// index to currently loaded playlist (or -1), not used in mpd_status, only in user_status
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
 	unsigned int last_status;	// system time when we last got a valid status answer
 };
@@ -86,6 +82,7 @@ void user_toggle_mute(void);
 void mpd_want_volume_add(int chg);
 int	mpd_get_volume();
 void mpd_set_volume(int vol);
+void user_wants_volume_add(int chg);
 
 void user_wants_playlist(int idx);
 

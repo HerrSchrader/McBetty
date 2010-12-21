@@ -488,7 +488,7 @@
                             488 ;	-----------------------------------------
                             489 ;	 function spi_rw
                             490 ;	-----------------------------------------
-   0497                     491 _spi_rw:
+   041B                     491 _spi_rw:
                     0002    492 	ar2 = 0x02
                     0003    493 	ar3 = 0x03
                     0004    494 	ar4 = 0x04
@@ -497,49 +497,49 @@
                     0007    497 	ar7 = 0x07
                     0000    498 	ar0 = 0x00
                     0001    499 	ar1 = 0x01
-   0497 AA 82               500 	mov	r2,dpl
+   041B AA 82               500 	mov	r2,dpl
                             501 ;	cc1100.c:118: for (z= 8; z > 0; z--) {
-   0499 7B 08               502 	mov	r3,#0x08
-   049B                     503 00106$:
-   049B EB                  504 	mov	a,r3
-   049C 60 04               505 	jz	00112$
-   049E 7C 01               506 	mov	r4,#0x01
-   04A0 80 02               507 	sjmp	00113$
-   04A2                     508 00112$:
-   04A2 7C 00               509 	mov	r4,#0x00
-   04A4                     510 00113$:
-   04A4 EC                  511 	mov	a,r4
-   04A5 60 16               512 	jz	00109$
+   041D 7B 08               502 	mov	r3,#0x08
+   041F                     503 00106$:
+   041F EB                  504 	mov	a,r3
+   0420 60 04               505 	jz	00112$
+   0422 7C 01               506 	mov	r4,#0x01
+   0424 80 02               507 	sjmp	00113$
+   0426                     508 00112$:
+   0426 7C 00               509 	mov	r4,#0x00
+   0428                     510 00113$:
+   0428 EC                  511 	mov	a,r4
+   0429 60 16               512 	jz	00109$
                             513 ;	cc1100.c:119: SCK = 0;
-   04A7 C2 97               514 	clr	_P1_7
+   042B C2 97               514 	clr	_P1_7
                             515 ;	cc1100.c:120: if (write & 0x80)
-   04A9 EA                  516 	mov	a,r2
-   04AA 30 E7 04            517 	jnb	acc.7,00102$
+   042D EA                  516 	mov	a,r2
+   042E 30 E7 04            517 	jnb	acc.7,00102$
                             518 ;	cc1100.c:121: MOSI1 = 1;
-   04AD D2 96               519 	setb	_P1_6
-   04AF 80 02               520 	sjmp	00103$
-   04B1                     521 00102$:
+   0431 D2 96               519 	setb	_P1_6
+   0433 80 02               520 	sjmp	00103$
+   0435                     521 00102$:
                             522 ;	cc1100.c:123: MOSI1 = 0;
-   04B1 C2 96               523 	clr	_P1_6
-   04B3                     524 00103$:
+   0435 C2 96               523 	clr	_P1_6
+   0437                     524 00103$:
                             525 ;	cc1100.c:124: SCK = 1;
-   04B3 D2 97               526 	setb	_P1_7
+   0437 D2 97               526 	setb	_P1_7
                             527 ;	cc1100.c:125: write <<=1;
                             528 ;	cc1100.c:126: if (MISO1)
                             529 ;	cc1100.c:127: write |= 0x01;
-   04B5 EA                  530 	mov	a,r2
-   04B6 A2 95               531 	mov	c,_P1_5
-   04B8 3A                  532 	addc	a,r2
-   04B9 FA                  533 	mov	r2,a
+   0439 EA                  530 	mov	a,r2
+   043A A2 95               531 	mov	c,_P1_5
+   043C 3A                  532 	addc	a,r2
+   043D FA                  533 	mov	r2,a
                             534 ;	cc1100.c:118: for (z= 8; z > 0; z--) {
-   04BA 1B                  535 	dec	r3
-   04BB 80 DE               536 	sjmp	00106$
-   04BD                     537 00109$:
+   043E 1B                  535 	dec	r3
+   043F 80 DE               536 	sjmp	00106$
+   0441                     537 00109$:
                             538 ;	cc1100.c:129: SCK = 0;
-   04BD C2 97               539 	clr	_P1_7
+   0441 C2 97               539 	clr	_P1_7
                             540 ;	cc1100.c:131: return(write);  
-   04BF 8A 82               541 	mov	dpl,r2
-   04C1 22                  542 	ret
+   0443 8A 82               541 	mov	dpl,r2
+   0445 22                  542 	ret
                             543 ;------------------------------------------------------------
                             544 ;Allocation info for local variables in function 'cc1100_init'
                             545 ;------------------------------------------------------------
@@ -549,57 +549,57 @@
                             549 ;	-----------------------------------------
                             550 ;	 function cc1100_init
                             551 ;	-----------------------------------------
-   04C2                     552 _cc1100_init:
+   0446                     552 _cc1100_init:
                             553 ;	cc1100.c:139: SCK = 1;
-   04C2 D2 97               554 	setb	_P1_7
+   0446 D2 97               554 	setb	_P1_7
                             555 ;	cc1100.c:140: MOSI1 = 0;
-   04C4 C2 96               556 	clr	_P1_6
+   0448 C2 96               556 	clr	_P1_6
                             557 ;	cc1100.c:141: CS = 0;
-   04C6 C2 81               558 	clr	_P0_1
+   044A C2 81               558 	clr	_P0_1
                             559 ;	cc1100.c:142: while(i) {
-   04C8 7A FF               560 	mov	r2,#0xFF
-   04CA                     561 00101$:
-   04CA EA                  562 	mov	a,r2
-   04CB 60 03               563 	jz	00103$
+   044C 7A FF               560 	mov	r2,#0xFF
+   044E                     561 00101$:
+   044E EA                  562 	mov	a,r2
+   044F 60 03               563 	jz	00103$
                             564 ;	cc1100.c:143: i--;
-   04CD 1A                  565 	dec	r2
-   04CE 80 FA               566 	sjmp	00101$
-   04D0                     567 00103$:
+   0451 1A                  565 	dec	r2
+   0452 80 FA               566 	sjmp	00101$
+   0454                     567 00103$:
                             568 ;	cc1100.c:145: CS = 1;
-   04D0 D2 81               569 	setb	_P0_1
+   0454 D2 81               569 	setb	_P0_1
                             570 ;	cc1100.c:147: while(i) {
-   04D2 7A FF               571 	mov	r2,#0xFF
-   04D4                     572 00104$:
-   04D4 EA                  573 	mov	a,r2
-   04D5 60 03               574 	jz	00106$
+   0456 7A FF               571 	mov	r2,#0xFF
+   0458                     572 00104$:
+   0458 EA                  573 	mov	a,r2
+   0459 60 03               574 	jz	00106$
                             575 ;	cc1100.c:148: i--;
-   04D7 1A                  576 	dec	r2
-   04D8 80 FA               577 	sjmp	00104$
-   04DA                     578 00106$:
+   045B 1A                  576 	dec	r2
+   045C 80 FA               577 	sjmp	00104$
+   045E                     578 00106$:
                             579 ;	cc1100.c:150: CS = 0;
-   04DA C2 81               580 	clr	_P0_1
+   045E C2 81               580 	clr	_P0_1
                             581 ;	cc1100.c:151: SCK = 0; 
-   04DC C2 97               582 	clr	_P1_7
+   0460 C2 97               582 	clr	_P1_7
                             583 ;	cc1100.c:152: while (MISO1);  
-   04DE                     584 00107$:
-   04DE 20 95 FD            585 	jb	_P1_5,00107$
+   0462                     584 00107$:
+   0462 20 95 FD            585 	jb	_P1_5,00107$
                             586 ;	cc1100.c:153: spi_rw(SRES);
-   04E1 75 82 30            587 	mov	dpl,#0x30
-   04E4 12 04 97            588 	lcall	_spi_rw
+   0465 75 82 30            587 	mov	dpl,#0x30
+   0468 12 04 1B            588 	lcall	_spi_rw
                             589 ;	cc1100.c:154: while (MISO1);
-   04E7                     590 00110$:
-   04E7 20 95 FD            591 	jb	_P1_5,00110$
+   046B                     590 00110$:
+   046B 20 95 FD            591 	jb	_P1_5,00110$
                             592 ;	cc1100.c:156: cc1100_write(0x00, conf, 0x2f);
-   04EA 75 14 59            593 	mov	_cc1100_write_PARM_2,#_conf
-   04ED 75 15 06            594 	mov	(_cc1100_write_PARM_2 + 1),#(_conf >> 8)
-   04F0 75 16 80            595 	mov	(_cc1100_write_PARM_2 + 2),#0x80
-   04F3 75 17 2F            596 	mov	_cc1100_write_PARM_3,#0x2F
-   04F6 75 82 00            597 	mov	dpl,#0x00
-   04F9 12 05 05            598 	lcall	_cc1100_write
+   046E 75 14 DD            593 	mov	_cc1100_write_PARM_2,#_conf
+   0471 75 15 05            594 	mov	(_cc1100_write_PARM_2 + 1),#(_conf >> 8)
+   0474 75 16 80            595 	mov	(_cc1100_write_PARM_2 + 2),#0x80
+   0477 75 17 2F            596 	mov	_cc1100_write_PARM_3,#0x2F
+   047A 75 82 00            597 	mov	dpl,#0x00
+   047D 12 04 89            598 	lcall	_cc1100_write
                             599 ;	cc1100.c:157: cc1100_write1(PATABLE, PA_VALUE);	
-   04FC 75 18 60            600 	mov	_cc1100_write1_PARM_2,#0x60
-   04FF 75 82 3E            601 	mov	dpl,#0x3E
-   0502 02 05 46            602 	ljmp	_cc1100_write1
+   0480 75 18 60            600 	mov	_cc1100_write1_PARM_2,#0x60
+   0483 75 82 3E            601 	mov	dpl,#0x3E
+   0486 02 04 CA            602 	ljmp	_cc1100_write1
                             603 ;------------------------------------------------------------
                             604 ;Allocation info for local variables in function 'cc1100_write'
                             605 ;------------------------------------------------------------
@@ -613,53 +613,53 @@
                             613 ;	-----------------------------------------
                             614 ;	 function cc1100_write
                             615 ;	-----------------------------------------
-   0505                     616 _cc1100_write:
-   0505 AA 82               617 	mov	r2,dpl
+   0489                     616 _cc1100_write:
+   0489 AA 82               617 	mov	r2,dpl
                             618 ;	cc1100.c:166: CS = 0;
-   0507 C2 81               619 	clr	_P0_1
+   048B C2 81               619 	clr	_P0_1
                             620 ;	cc1100.c:167: while (MISO1);
-   0509                     621 00101$:
-   0509 20 95 FD            622 	jb	_P1_5,00101$
+   048D                     621 00101$:
+   048D 20 95 FD            622 	jb	_P1_5,00101$
                             623 ;	cc1100.c:168: status = spi_rw(addr | WRITE | BURST);
-   050C 74 40               624 	mov	a,#0x40
-   050E 4A                  625 	orl	a,r2
-   050F F5 82               626 	mov	dpl,a
-   0511 12 04 97            627 	lcall	_spi_rw
-   0514 AA 82               628 	mov	r2,dpl
+   0490 74 40               624 	mov	a,#0x40
+   0492 4A                  625 	orl	a,r2
+   0493 F5 82               626 	mov	dpl,a
+   0495 12 04 1B            627 	lcall	_spi_rw
+   0498 AA 82               628 	mov	r2,dpl
                             629 ;	cc1100.c:169: for (i=0; i < length; i++) 
-   0516 7B 00               630 	mov	r3,#0x00
-   0518                     631 00104$:
-   0518 C3                  632 	clr	c
-   0519 EB                  633 	mov	a,r3
-   051A 95 17               634 	subb	a,_cc1100_write_PARM_3
-   051C 50 23               635 	jnc	00107$
+   049A 7B 00               630 	mov	r3,#0x00
+   049C                     631 00104$:
+   049C C3                  632 	clr	c
+   049D EB                  633 	mov	a,r3
+   049E 95 17               634 	subb	a,_cc1100_write_PARM_3
+   04A0 50 23               635 	jnc	00107$
                             636 ;	cc1100.c:170: spi_rw(dat[i]); 
-   051E EB                  637 	mov	a,r3
-   051F 25 14               638 	add	a,_cc1100_write_PARM_2
-   0521 FC                  639 	mov	r4,a
-   0522 E4                  640 	clr	a
-   0523 35 15               641 	addc	a,(_cc1100_write_PARM_2 + 1)
-   0525 FD                  642 	mov	r5,a
-   0526 AE 16               643 	mov	r6,(_cc1100_write_PARM_2 + 2)
-   0528 8C 82               644 	mov	dpl,r4
-   052A 8D 83               645 	mov	dph,r5
-   052C 8E F0               646 	mov	b,r6
-   052E 12 06 39            647 	lcall	__gptrget
-   0531 F5 82               648 	mov	dpl,a
-   0533 C0 02               649 	push	ar2
-   0535 C0 03               650 	push	ar3
-   0537 12 04 97            651 	lcall	_spi_rw
-   053A D0 03               652 	pop	ar3
-   053C D0 02               653 	pop	ar2
+   04A2 EB                  637 	mov	a,r3
+   04A3 25 14               638 	add	a,_cc1100_write_PARM_2
+   04A5 FC                  639 	mov	r4,a
+   04A6 E4                  640 	clr	a
+   04A7 35 15               641 	addc	a,(_cc1100_write_PARM_2 + 1)
+   04A9 FD                  642 	mov	r5,a
+   04AA AE 16               643 	mov	r6,(_cc1100_write_PARM_2 + 2)
+   04AC 8C 82               644 	mov	dpl,r4
+   04AE 8D 83               645 	mov	dph,r5
+   04B0 8E F0               646 	mov	b,r6
+   04B2 12 05 BD            647 	lcall	__gptrget
+   04B5 F5 82               648 	mov	dpl,a
+   04B7 C0 02               649 	push	ar2
+   04B9 C0 03               650 	push	ar3
+   04BB 12 04 1B            651 	lcall	_spi_rw
+   04BE D0 03               652 	pop	ar3
+   04C0 D0 02               653 	pop	ar2
                             654 ;	cc1100.c:169: for (i=0; i < length; i++) 
-   053E 0B                  655 	inc	r3
-   053F 80 D7               656 	sjmp	00104$
-   0541                     657 00107$:
+   04C2 0B                  655 	inc	r3
+   04C3 80 D7               656 	sjmp	00104$
+   04C5                     657 00107$:
                             658 ;	cc1100.c:171: CS = 1;
-   0541 D2 81               659 	setb	_P0_1
+   04C5 D2 81               659 	setb	_P0_1
                             660 ;	cc1100.c:173: return(status);
-   0543 8A 82               661 	mov	dpl,r2
-   0545 22                  662 	ret
+   04C7 8A 82               661 	mov	dpl,r2
+   04C9 22                  662 	ret
                             663 ;------------------------------------------------------------
                             664 ;Allocation info for local variables in function 'cc1100_write1'
                             665 ;------------------------------------------------------------
@@ -671,27 +671,27 @@
                             671 ;	-----------------------------------------
                             672 ;	 function cc1100_write1
                             673 ;	-----------------------------------------
-   0546                     674 _cc1100_write1:
-   0546 AA 82               675 	mov	r2,dpl
+   04CA                     674 _cc1100_write1:
+   04CA AA 82               675 	mov	r2,dpl
                             676 ;	cc1100.c:180: CS = 0;
-   0548 C2 81               677 	clr	_P0_1
+   04CC C2 81               677 	clr	_P0_1
                             678 ;	cc1100.c:181: while (MISO1);
-   054A                     679 00101$:
-   054A 20 95 FD            680 	jb	_P1_5,00101$
+   04CE                     679 00101$:
+   04CE 20 95 FD            680 	jb	_P1_5,00101$
                             681 ;	cc1100.c:182: status = spi_rw(addr | WRITE); 
-   054D 8A 82               682 	mov	dpl,r2
-   054F 12 04 97            683 	lcall	_spi_rw
-   0552 AA 82               684 	mov	r2,dpl
+   04D1 8A 82               682 	mov	dpl,r2
+   04D3 12 04 1B            683 	lcall	_spi_rw
+   04D6 AA 82               684 	mov	r2,dpl
                             685 ;	cc1100.c:183: spi_rw(dat); 
-   0554 85 18 82            686 	mov	dpl,_cc1100_write1_PARM_2
-   0557 C0 02               687 	push	ar2
-   0559 12 04 97            688 	lcall	_spi_rw
-   055C D0 02               689 	pop	ar2
+   04D8 85 18 82            686 	mov	dpl,_cc1100_write1_PARM_2
+   04DB C0 02               687 	push	ar2
+   04DD 12 04 1B            688 	lcall	_spi_rw
+   04E0 D0 02               689 	pop	ar2
                             690 ;	cc1100.c:184: CS = 1;
-   055E D2 81               691 	setb	_P0_1
+   04E2 D2 81               691 	setb	_P0_1
                             692 ;	cc1100.c:186: return(status);
-   0560 8A 82               693 	mov	dpl,r2
-   0562 22                  694 	ret
+   04E4 8A 82               693 	mov	dpl,r2
+   04E6 22                  694 	ret
                             695 ;------------------------------------------------------------
                             696 ;Allocation info for local variables in function 'cc1100_read'
                             697 ;------------------------------------------------------------
@@ -705,61 +705,61 @@
                             705 ;	-----------------------------------------
                             706 ;	 function cc1100_read
                             707 ;	-----------------------------------------
-   0563                     708 _cc1100_read:
-   0563 AA 82               709 	mov	r2,dpl
+   04E7                     708 _cc1100_read:
+   04E7 AA 82               709 	mov	r2,dpl
                             710 ;	cc1100.c:194: CS = 0;
-   0565 C2 81               711 	clr	_P0_1
+   04E9 C2 81               711 	clr	_P0_1
                             712 ;	cc1100.c:195: while (MISO1);
-   0567                     713 00101$:
-   0567 20 95 FD            714 	jb	_P1_5,00101$
+   04EB                     713 00101$:
+   04EB 20 95 FD            714 	jb	_P1_5,00101$
                             715 ;	cc1100.c:196: status = spi_rw(addr | READ);
-   056A 74 80               716 	mov	a,#0x80
-   056C 4A                  717 	orl	a,r2
-   056D F5 82               718 	mov	dpl,a
-   056F 12 04 97            719 	lcall	_spi_rw
-   0572 AA 82               720 	mov	r2,dpl
+   04EE 74 80               716 	mov	a,#0x80
+   04F0 4A                  717 	orl	a,r2
+   04F1 F5 82               718 	mov	dpl,a
+   04F3 12 04 1B            719 	lcall	_spi_rw
+   04F6 AA 82               720 	mov	r2,dpl
                             721 ;	cc1100.c:197: for (i=0; i < length; i++)
-   0574 7B 00               722 	mov	r3,#0x00
-   0576                     723 00104$:
-   0576 C3                  724 	clr	c
-   0577 EB                  725 	mov	a,r3
-   0578 95 1C               726 	subb	a,_cc1100_read_PARM_3
-   057A 50 33               727 	jnc	00107$
+   04F8 7B 00               722 	mov	r3,#0x00
+   04FA                     723 00104$:
+   04FA C3                  724 	clr	c
+   04FB EB                  725 	mov	a,r3
+   04FC 95 1C               726 	subb	a,_cc1100_read_PARM_3
+   04FE 50 33               727 	jnc	00107$
                             728 ;	cc1100.c:198: dat[i]=spi_rw(0x00);
-   057C EB                  729 	mov	a,r3
-   057D 25 19               730 	add	a,_cc1100_read_PARM_2
-   057F FC                  731 	mov	r4,a
-   0580 E4                  732 	clr	a
-   0581 35 1A               733 	addc	a,(_cc1100_read_PARM_2 + 1)
-   0583 FD                  734 	mov	r5,a
-   0584 AE 1B               735 	mov	r6,(_cc1100_read_PARM_2 + 2)
-   0586 75 82 00            736 	mov	dpl,#0x00
-   0589 C0 02               737 	push	ar2
-   058B C0 03               738 	push	ar3
-   058D C0 04               739 	push	ar4
-   058F C0 05               740 	push	ar5
-   0591 C0 06               741 	push	ar6
-   0593 12 04 97            742 	lcall	_spi_rw
-   0596 AF 82               743 	mov	r7,dpl
-   0598 D0 06               744 	pop	ar6
-   059A D0 05               745 	pop	ar5
-   059C D0 04               746 	pop	ar4
-   059E D0 03               747 	pop	ar3
-   05A0 D0 02               748 	pop	ar2
-   05A2 8C 82               749 	mov	dpl,r4
-   05A4 8D 83               750 	mov	dph,r5
-   05A6 8E F0               751 	mov	b,r6
-   05A8 EF                  752 	mov	a,r7
-   05A9 12 06 20            753 	lcall	__gptrput
+   0500 EB                  729 	mov	a,r3
+   0501 25 19               730 	add	a,_cc1100_read_PARM_2
+   0503 FC                  731 	mov	r4,a
+   0504 E4                  732 	clr	a
+   0505 35 1A               733 	addc	a,(_cc1100_read_PARM_2 + 1)
+   0507 FD                  734 	mov	r5,a
+   0508 AE 1B               735 	mov	r6,(_cc1100_read_PARM_2 + 2)
+   050A 75 82 00            736 	mov	dpl,#0x00
+   050D C0 02               737 	push	ar2
+   050F C0 03               738 	push	ar3
+   0511 C0 04               739 	push	ar4
+   0513 C0 05               740 	push	ar5
+   0515 C0 06               741 	push	ar6
+   0517 12 04 1B            742 	lcall	_spi_rw
+   051A AF 82               743 	mov	r7,dpl
+   051C D0 06               744 	pop	ar6
+   051E D0 05               745 	pop	ar5
+   0520 D0 04               746 	pop	ar4
+   0522 D0 03               747 	pop	ar3
+   0524 D0 02               748 	pop	ar2
+   0526 8C 82               749 	mov	dpl,r4
+   0528 8D 83               750 	mov	dph,r5
+   052A 8E F0               751 	mov	b,r6
+   052C EF                  752 	mov	a,r7
+   052D 12 05 A4            753 	lcall	__gptrput
                             754 ;	cc1100.c:197: for (i=0; i < length; i++)
-   05AC 0B                  755 	inc	r3
-   05AD 80 C7               756 	sjmp	00104$
-   05AF                     757 00107$:
+   0530 0B                  755 	inc	r3
+   0531 80 C7               756 	sjmp	00104$
+   0533                     757 00107$:
                             758 ;	cc1100.c:199: CS = 1;
-   05AF D2 81               759 	setb	_P0_1
+   0533 D2 81               759 	setb	_P0_1
                             760 ;	cc1100.c:201: return(status);
-   05B1 8A 82               761 	mov	dpl,r2
-   05B3 22                  762 	ret
+   0535 8A 82               761 	mov	dpl,r2
+   0537 22                  762 	ret
                             763 ;------------------------------------------------------------
                             764 ;Allocation info for local variables in function 'cc1100_read1'
                             765 ;------------------------------------------------------------
@@ -770,25 +770,25 @@
                             770 ;	-----------------------------------------
                             771 ;	 function cc1100_read1
                             772 ;	-----------------------------------------
-   05B4                     773 _cc1100_read1:
-   05B4 AA 82               774 	mov	r2,dpl
+   0538                     773 _cc1100_read1:
+   0538 AA 82               774 	mov	r2,dpl
                             775 ;	cc1100.c:208: CS = 0;
-   05B6 C2 81               776 	clr	_P0_1
+   053A C2 81               776 	clr	_P0_1
                             777 ;	cc1100.c:209: while (MISO1);
-   05B8                     778 00101$:
-   05B8 20 95 FD            779 	jb	_P1_5,00101$
+   053C                     778 00101$:
+   053C 20 95 FD            779 	jb	_P1_5,00101$
                             780 ;	cc1100.c:210: r = spi_rw(addr | READ);
-   05BB 74 80               781 	mov	a,#0x80
-   05BD 4A                  782 	orl	a,r2
-   05BE F5 82               783 	mov	dpl,a
-   05C0 12 04 97            784 	lcall	_spi_rw
+   053F 74 80               781 	mov	a,#0x80
+   0541 4A                  782 	orl	a,r2
+   0542 F5 82               783 	mov	dpl,a
+   0544 12 04 1B            784 	lcall	_spi_rw
                             785 ;	cc1100.c:211: r=spi_rw(0x00);
-   05C3 75 82 00            786 	mov	dpl,#0x00
-   05C6 12 04 97            787 	lcall	_spi_rw
+   0547 75 82 00            786 	mov	dpl,#0x00
+   054A 12 04 1B            787 	lcall	_spi_rw
                             788 ;	cc1100.c:212: CS = 1;
-   05C9 D2 81               789 	setb	_P0_1
+   054D D2 81               789 	setb	_P0_1
                             790 ;	cc1100.c:214: return(r);
-   05CB 22                  791 	ret
+   054F 22                  791 	ret
                             792 ;------------------------------------------------------------
                             793 ;Allocation info for local variables in function 'cc1100_strobe'
                             794 ;------------------------------------------------------------
@@ -799,20 +799,20 @@
                             799 ;	-----------------------------------------
                             800 ;	 function cc1100_strobe
                             801 ;	-----------------------------------------
-   05CC                     802 _cc1100_strobe:
-   05CC AA 82               803 	mov	r2,dpl
+   0550                     802 _cc1100_strobe:
+   0550 AA 82               803 	mov	r2,dpl
                             804 ;	cc1100.c:221: CS = 0;
-   05CE C2 81               805 	clr	_P0_1
+   0552 C2 81               805 	clr	_P0_1
                             806 ;	cc1100.c:222: while (MISO1);
-   05D0                     807 00101$:
-   05D0 20 95 FD            808 	jb	_P1_5,00101$
+   0554                     807 00101$:
+   0554 20 95 FD            808 	jb	_P1_5,00101$
                             809 ;	cc1100.c:223: status = spi_rw(cmd);
-   05D3 8A 82               810 	mov	dpl,r2
-   05D5 12 04 97            811 	lcall	_spi_rw
+   0557 8A 82               810 	mov	dpl,r2
+   0559 12 04 1B            811 	lcall	_spi_rw
                             812 ;	cc1100.c:224: CS = 1;
-   05D8 D2 81               813 	setb	_P0_1
+   055C D2 81               813 	setb	_P0_1
                             814 ;	cc1100.c:226: return(status);
-   05DA 22                  815 	ret
+   055E 22                  815 	ret
                             816 ;------------------------------------------------------------
                             817 ;Allocation info for local variables in function 'cc1100_read_status_reg_otf'
                             818 ;------------------------------------------------------------
@@ -824,38 +824,38 @@
                             824 ;	-----------------------------------------
                             825 ;	 function cc1100_read_status_reg_otf
                             826 ;	-----------------------------------------
-   05DB                     827 _cc1100_read_status_reg_otf:
-   05DB AA 82               828 	mov	r2,dpl
+   055F                     827 _cc1100_read_status_reg_otf:
+   055F AA 82               828 	mov	r2,dpl
                             829 ;	cc1100.c:236: res1 = cc1100_read1(reg | BURST);
-   05DD 74 40               830 	mov	a,#0x40
-   05DF 4A                  831 	orl	a,r2
-   05E0 F5 82               832 	mov	dpl,a
-   05E2 C0 02               833 	push	ar2
-   05E4 12 05 B4            834 	lcall	_cc1100_read1
-   05E7 AB 82               835 	mov	r3,dpl
-   05E9 D0 02               836 	pop	ar2
+   0561 74 40               830 	mov	a,#0x40
+   0563 4A                  831 	orl	a,r2
+   0564 F5 82               832 	mov	dpl,a
+   0566 C0 02               833 	push	ar2
+   0568 12 05 38            834 	lcall	_cc1100_read1
+   056B AB 82               835 	mov	r3,dpl
+   056D D0 02               836 	pop	ar2
                             837 ;	cc1100.c:237: while ( (res2=cc1100_read1(reg | BURST)) != res1)
-   05EB 43 02 40            838 	orl	ar2,#0x40
-   05EE                     839 00101$:
-   05EE 8A 82               840 	mov	dpl,r2
-   05F0 C0 02               841 	push	ar2
-   05F2 C0 03               842 	push	ar3
-   05F4 12 05 B4            843 	lcall	_cc1100_read1
-   05F7 AC 82               844 	mov	r4,dpl
-   05F9 D0 03               845 	pop	ar3
-   05FB D0 02               846 	pop	ar2
-   05FD EC                  847 	mov	a,r4
-   05FE FD                  848 	mov	r5,a
-   05FF B5 03 02            849 	cjne	a,ar3,00108$
-   0602 80 04               850 	sjmp	00103$
-   0604                     851 00108$:
+   056F 43 02 40            838 	orl	ar2,#0x40
+   0572                     839 00101$:
+   0572 8A 82               840 	mov	dpl,r2
+   0574 C0 02               841 	push	ar2
+   0576 C0 03               842 	push	ar3
+   0578 12 05 38            843 	lcall	_cc1100_read1
+   057B AC 82               844 	mov	r4,dpl
+   057D D0 03               845 	pop	ar3
+   057F D0 02               846 	pop	ar2
+   0581 EC                  847 	mov	a,r4
+   0582 FD                  848 	mov	r5,a
+   0583 B5 03 02            849 	cjne	a,ar3,00108$
+   0586 80 04               850 	sjmp	00103$
+   0588                     851 00108$:
                             852 ;	cc1100.c:238: res1 = res2;
-   0604 8D 03               853 	mov	ar3,r5
-   0606 80 E6               854 	sjmp	00101$
-   0608                     855 00103$:
+   0588 8D 03               853 	mov	ar3,r5
+   058A 80 E6               854 	sjmp	00101$
+   058C                     855 00103$:
                             856 ;	cc1100.c:239: return res2;
-   0608 8D 82               857 	mov	dpl,r5
-   060A 22                  858 	ret
+   058C 8D 82               857 	mov	dpl,r5
+   058E 22                  858 	ret
                             859 ;------------------------------------------------------------
                             860 ;Allocation info for local variables in function 'switch_to_idle'
                             861 ;------------------------------------------------------------
@@ -864,68 +864,68 @@
                             864 ;	-----------------------------------------
                             865 ;	 function switch_to_idle
                             866 ;	-----------------------------------------
-   060B                     867 _switch_to_idle:
+   058F                     867 _switch_to_idle:
                             868 ;	cc1100.c:245: cc1100_strobe(SIDLE);
-   060B 75 82 36            869 	mov	dpl,#0x36
-   060E 12 05 CC            870 	lcall	_cc1100_strobe
+   058F 75 82 36            869 	mov	dpl,#0x36
+   0592 12 05 50            870 	lcall	_cc1100_strobe
                             871 ;	cc1100.c:246: while ((cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) != MARCSTATE_IDLE);
-   0611                     872 00101$:
-   0611 75 82 F5            873 	mov	dpl,#0xF5
-   0614 12 05 DB            874 	lcall	_cc1100_read_status_reg_otf
-   0617 E5 82               875 	mov	a,dpl
-   0619 54 1F               876 	anl	a,#0x1F
-   061B FA                  877 	mov	r2,a
-   061C BA 01 F2            878 	cjne	r2,#0x01,00101$
-   061F 22                  879 	ret
+   0595                     872 00101$:
+   0595 75 82 F5            873 	mov	dpl,#0xF5
+   0598 12 05 5F            874 	lcall	_cc1100_read_status_reg_otf
+   059B E5 82               875 	mov	a,dpl
+   059D 54 1F               876 	anl	a,#0x1F
+   059F FA                  877 	mov	r2,a
+   05A0 BA 01 F2            878 	cjne	r2,#0x01,00101$
+   05A3 22                  879 	ret
                             880 	.area CSEG    (CODE)
                             881 	.area CONST   (CODE)
-   0659                     882 _conf:
-   0659 06                  883 	.db #0x06	; 6
-   065A 2E                  884 	.db #0x2E	; 46
-   065B 07                  885 	.db #0x07	; 7
-   065C 00                  886 	.db #0x00	; 0
-   065D D3                  887 	.db #0xD3	; 211
-   065E 91                  888 	.db #0x91	; 145
-   065F FF                  889 	.db #0xFF	; 255
-   0660 0E                  890 	.db #0x0E	; 14
-   0661 05                  891 	.db #0x05	; 5
-   0662 01                  892 	.db #0x01	; 1
-   0663 06                  893 	.db #0x06	; 6
-   0664 08                  894 	.db #0x08	; 8
-   0665 00                  895 	.db #0x00	; 0
-   0666 10                  896 	.db #0x10	; 16
-   0667 09                  897 	.db #0x09	; 9
-   0668 F4                  898 	.db #0xF4	; 244
-   0669 CA                  899 	.db #0xCA	; 202
-   066A 75                  900 	.db #0x75	; 117	u
-   066B 83                  901 	.db #0x83	; 131
-   066C 31                  902 	.db #0x31	; 49
-   066D E5                  903 	.db #0xE5	; 229
-   066E 34                  904 	.db #0x34	; 52
-   066F 07                  905 	.db #0x07	; 7
-   0670 00                  906 	.db #0x00	; 0
-   0671 18                  907 	.db #0x18	; 24
-   0672 16                  908 	.db #0x16	; 22
-   0673 6C                  909 	.db #0x6C	; 108	l
-   0674 43                  910 	.db #0x43	; 67	C
-   0675 40                  911 	.db #0x40	; 64
-   0676 91                  912 	.db #0x91	; 145
-   0677 46                  913 	.db #0x46	; 70	F
-   0678 50                  914 	.db #0x50	; 80	P
-   0679 78                  915 	.db #0x78	; 120	x
-   067A 56                  916 	.db #0x56	; 86	V
-   067B 10                  917 	.db #0x10	; 16
-   067C E9                  918 	.db #0xE9	; 233
-   067D 2A                  919 	.db #0x2A	; 42
-   067E 00                  920 	.db #0x00	; 0
-   067F 1F                  921 	.db #0x1F	; 31
-   0680 41                  922 	.db #0x41	; 65	A
-   0681 00                  923 	.db #0x00	; 0
-   0682 59                  924 	.db #0x59	; 89	Y
-   0683 7F                  925 	.db #0x7F	; 127
-   0684 3F                  926 	.db #0x3F	; 63
-   0685 81                  927 	.db #0x81	; 129
-   0686 35                  928 	.db #0x35	; 53
-   0687 09                  929 	.db #0x09	; 9
+   05DD                     882 _conf:
+   05DD 06                  883 	.db #0x06	; 6
+   05DE 2E                  884 	.db #0x2E	; 46
+   05DF 07                  885 	.db #0x07	; 7
+   05E0 00                  886 	.db #0x00	; 0
+   05E1 D3                  887 	.db #0xD3	; 211
+   05E2 91                  888 	.db #0x91	; 145
+   05E3 FF                  889 	.db #0xFF	; 255
+   05E4 0E                  890 	.db #0x0E	; 14
+   05E5 05                  891 	.db #0x05	; 5
+   05E6 01                  892 	.db #0x01	; 1
+   05E7 06                  893 	.db #0x06	; 6
+   05E8 08                  894 	.db #0x08	; 8
+   05E9 00                  895 	.db #0x00	; 0
+   05EA 10                  896 	.db #0x10	; 16
+   05EB 09                  897 	.db #0x09	; 9
+   05EC F4                  898 	.db #0xF4	; 244
+   05ED CA                  899 	.db #0xCA	; 202
+   05EE 75                  900 	.db #0x75	; 117	u
+   05EF 83                  901 	.db #0x83	; 131
+   05F0 31                  902 	.db #0x31	; 49
+   05F1 E5                  903 	.db #0xE5	; 229
+   05F2 34                  904 	.db #0x34	; 52
+   05F3 07                  905 	.db #0x07	; 7
+   05F4 00                  906 	.db #0x00	; 0
+   05F5 18                  907 	.db #0x18	; 24
+   05F6 16                  908 	.db #0x16	; 22
+   05F7 6C                  909 	.db #0x6C	; 108	l
+   05F8 43                  910 	.db #0x43	; 67	C
+   05F9 40                  911 	.db #0x40	; 64
+   05FA 91                  912 	.db #0x91	; 145
+   05FB 46                  913 	.db #0x46	; 70	F
+   05FC 50                  914 	.db #0x50	; 80	P
+   05FD 78                  915 	.db #0x78	; 120	x
+   05FE 56                  916 	.db #0x56	; 86	V
+   05FF 10                  917 	.db #0x10	; 16
+   0600 E9                  918 	.db #0xE9	; 233
+   0601 2A                  919 	.db #0x2A	; 42
+   0602 00                  920 	.db #0x00	; 0
+   0603 1F                  921 	.db #0x1F	; 31
+   0604 41                  922 	.db #0x41	; 65	A
+   0605 00                  923 	.db #0x00	; 0
+   0606 59                  924 	.db #0x59	; 89	Y
+   0607 7F                  925 	.db #0x7F	; 127
+   0608 3F                  926 	.db #0x3F	; 63
+   0609 81                  927 	.db #0x81	; 129
+   060A 35                  928 	.db #0x35	; 53
+   060B 09                  929 	.db #0x09	; 9
                             930 	.area XINIT   (CODE)
                             931 	.area CABS    (ABS,CODE)

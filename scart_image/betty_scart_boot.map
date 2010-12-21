@@ -92,9 +92,9 @@ BOOT11f00                          0000   0100 =    256. bytes (ABS,CON,CODE)
        0C:  00FE  l_BOOT11e00                      
        0C:  0100  l_BOOT11f00                      
        0C:  0100  l_IRAM                           
-       0C:  05CC  l_CSEG                           
-       0C:  0659  s_CONST                          
-       0C:  0688  s_XINIT                          
+       0C:  0550  l_CSEG                           
+       0C:  05DD  s_CONST                          
+       0C:  060C  s_XINIT                          
 
 ASxxxx Linker V02.00 + NoICE + sdld,  page 3.
 Hexadecimal
@@ -525,7 +525,6 @@ OSEG                               001D   0001 =      1. bytes (REL,OVR)
       Value  Global                              Global Defined In Module
       -----  ---------------------------------   ------------------------
             001D  __gptrput_PARM_2                 
-            001D  _send_bytes_PARM_2               
 
 ASxxxx Linker V02.00 + NoICE + sdld,  page 28.
 Hexadecimal
@@ -671,59 +670,57 @@ Hexadecimal
 
 Area                               Addr   Size   Decimal Bytes (Attributes)
 --------------------------------   ----   ----   ------- ----- ------------
-CSEG                               008D   05CC =   1484. bytes (REL,CON,CODE)
+CSEG                               008D   0550 =   1360. bytes (REL,CON,CODE)
 
       Value  Global                              Global Defined In Module
       -----  ---------------------------------   ------------------------
-       0C:  008D  _buffer_init                     
-       0C:  0097  _serial_isr                      
-       0C:  00EC  _buffer_out                      
-       0C:  010B  _has_room                        
-       0C:  0129  _rx_overflow_reset               
-       0C:  0144  _start_rx                        
-       0C:  0160  _start_tx                        
-       0C:  0176  _tx_finished                     
-       0C:  019B  _re_enter_rx                     
-       0C:  01AB  _handle_tx                       
-       0C:  021B  _check_etx                       
-       0C:  022E  _check_radio_packet              
-       0C:  029D  _check_radio_input               
-       0C:  0335  _main                            
-       0C:  0395  _initSerial                      
-       0C:  03F3  _send_string                     
-       0C:  042C  _send_bytes                      
-       0C:  0458  _send_byte                       
-       0C:  0462  _send_hex                        
-       0C:  0497  _spi_rw                          
-       0C:  04C2  _cc1100_init                     
-       0C:  0505  _cc1100_write                    
-       0C:  0546  _cc1100_write1                   
-       0C:  0563  _cc1100_read                     
-       0C:  05B4  _cc1100_read1                    
-       0C:  05CC  _cc1100_strobe                   
-       0C:  05DB  _cc1100_read_status_reg_otf      
-       0C:  060B  _switch_to_idle                  
-       0C:  0620  __gptrput                        
-       0C:  0639  __gptrget                        
-       0C:  0655  __sdcc_external_startup          
+       0C:  008D  _feed_wd                         
+       0C:  0098  _buffer_init                     
+       0C:  00A2  _serial_isr                      
+       0C:  00F7  _buffer_out                      
+       0C:  0116  _has_room                        
+       0C:  0134  _rx_overflow_reset               
+       0C:  014F  _start_rx                        
+       0C:  016B  _start_tx                        
+       0C:  0181  _tx_finished                     
+       0C:  01A6  _re_enter_rx                     
+       0C:  01B6  _handle_tx                       
+       0C:  0226  _check_etx                       
+       0C:  0239  _check_radio_packet              
+       0C:  02A8  _check_radio_input               
+       0C:  0340  _main                            
+       0C:  03B3  _initSerial                      
+       0C:  0411  _send_byte                       
+       0C:  041B  _spi_rw                          
+       0C:  0446  _cc1100_init                     
+       0C:  0489  _cc1100_write                    
+       0C:  04CA  _cc1100_write1                   
+       0C:  04E7  _cc1100_read                     
+       0C:  0538  _cc1100_read1                    
+       0C:  0550  _cc1100_strobe                   
+       0C:  055F  _cc1100_read_status_reg_otf      
+       0C:  058F  _switch_to_idle                  
+       0C:  05A4  __gptrput                        
+       0C:  05BD  __gptrget                        
+       0C:  05D9  __sdcc_external_startup          
 
 ASxxxx Linker V02.00 + NoICE + sdld,  page 43.
 Hexadecimal
 
 Area                               Addr   Size   Decimal Bytes (Attributes)
 --------------------------------   ----   ----   ------- ----- ------------
-CONST                              0659   002F =     47. bytes (REL,CON,CODE)
+CONST                              05DD   002F =     47. bytes (REL,CON,CODE)
 
       Value  Global                              Global Defined In Module
       -----  ---------------------------------   ------------------------
-       0C:  0659  _conf                            
+       0C:  05DD  _conf                            
 
 ASxxxx Linker V02.00 + NoICE + sdld,  page 44.
 Hexadecimal
 
 Area                               Addr   Size   Decimal Bytes (Attributes)
 --------------------------------   ----   ----   ------- ----- ------------
-XINIT                              0688   0000 =      0. bytes (REL,CON,CODE)
+XINIT                              060C   0000 =      0. bytes (REL,CON,CODE)
 
       Value  Global                              Global Defined In Module
       -----  ---------------------------------   ------------------------

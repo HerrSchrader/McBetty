@@ -152,6 +152,14 @@ volatile __bit got_etx;
 volatile __bit got_eot;
 
 
+void
+feed_wd(){
+	EA = 0;
+	WFEED1 = 0xA5;
+	WFEED2 = 0x5A;
+	EA = 1;
+}
+
 void buffer_init(){
 	bufcnt = 0;			// Number of bytes in the buffer
 	bufnxt = 0;			// Index of next free place in buffer
@@ -625,8 +633,18 @@ void main(void) {
 	buffer_init();
 		
 	start_rx();								// Start receiving via radio
+		
+	/* Init Watchdog Timer */
+	WDL = 0xFF;			// WDT counter
+	EA = 0;
+	WDCON = 0xE5;		// Start WDT
+	WFEED1 = 0xA5;
+	WFEED2 = 0x5A;
+	EA = 1;
 	
 	while (1) {						/* Forever: */
+		
+		feed_wd();
 		
 		/* Check if mpdtool has sent ETX. Sends ACK if there is room in buffer */
 		check_etx();

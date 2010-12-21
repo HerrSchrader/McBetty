@@ -1,7 +1,7 @@
                               1 ;--------------------------------------------------------
                               2 ; File Created by SDCC : free open source ANSI-C Compiler
                               3 ; Version 2.9.7 #5820 (May  6 2010) (Linux)
-                              4 ; This file was generated Fri Dec 17 01:43:32 2010
+                              4 ; This file was generated Mon Dec 20 23:27:41 2010
                               5 ;--------------------------------------------------------
                               6 	.module serial
                               7 	.optsdcc -mmcs51 --model-small
@@ -9,732 +9,563 @@
                               9 ;--------------------------------------------------------
                              10 ; Public variables in this module
                              11 ;--------------------------------------------------------
-                             12 	.globl _send_bytes_PARM_2
-                             13 	.globl _TCR20_0
-                             14 	.globl _TCR20_1
-                             15 	.globl _TCR20_2
-                             16 	.globl _TCR20_3
-                             17 	.globl _TCR20_4
-                             18 	.globl _TCR20_5
-                             19 	.globl _TCR20_6
-                             20 	.globl _TCR20_7
-                             21 	.globl _P3_0
-                             22 	.globl _P3_1
-                             23 	.globl _P2_0
-                             24 	.globl _P2_1
-                             25 	.globl _P2_2
-                             26 	.globl _P2_3
-                             27 	.globl _P2_4
-                             28 	.globl _P2_5
-                             29 	.globl _P2_6
-                             30 	.globl _P2_7
-                             31 	.globl _P1_0
-                             32 	.globl _P1_1
-                             33 	.globl _P1_2
-                             34 	.globl _P1_3
-                             35 	.globl _P1_4
-                             36 	.globl _P1_5
-                             37 	.globl _P1_6
-                             38 	.globl _P1_7
-                             39 	.globl _P0_0
-                             40 	.globl _P0_1
-                             41 	.globl _P0_2
-                             42 	.globl _P0_3
-                             43 	.globl _P0_4
-                             44 	.globl _P0_5
-                             45 	.globl _P0_6
-                             46 	.globl _P0_7
-                             47 	.globl _I2CON_0
-                             48 	.globl _I2CON_2
-                             49 	.globl _I2CON_3
-                             50 	.globl _I2CON_4
-                             51 	.globl _I2CON_5
-                             52 	.globl _I2CON_6
-                             53 	.globl _SCON_0
-                             54 	.globl _SCON_1
-                             55 	.globl _SCON_2
-                             56 	.globl _SCON_3
-                             57 	.globl _SCON_4
-                             58 	.globl _SCON_5
-                             59 	.globl _SCON_6
-                             60 	.globl _SCON_7
-                             61 	.globl _IP0_0
-                             62 	.globl _IP0_1
-                             63 	.globl _IP0_2
-                             64 	.globl _IP0_3
-                             65 	.globl _IP0_4
-                             66 	.globl _IP0_5
-                             67 	.globl _IP0_6
-                             68 	.globl _IEN1_0
-                             69 	.globl _IEN1_1
-                             70 	.globl _IEN1_2
-                             71 	.globl _IEN1_3
-                             72 	.globl _IEN1_4
-                             73 	.globl _IEN1_6
-                             74 	.globl _IEN1_7
-                             75 	.globl _IEN0_0
-                             76 	.globl _IEN0_1
-                             77 	.globl _IEN0_2
-                             78 	.globl _IEN0_3
-                             79 	.globl _IEN0_4
-                             80 	.globl _IEN0_5
-                             81 	.globl _IEN0_6
-                             82 	.globl _IEN0_7
-                             83 	.globl _TCON_0
-                             84 	.globl _TCON_1
-                             85 	.globl _TCON_2
-                             86 	.globl _TCON_3
-                             87 	.globl _TCON_4
-                             88 	.globl _TCON_5
-                             89 	.globl _TCON_6
-                             90 	.globl _TCON_7
-                             91 	.globl _PSW_0
-                             92 	.globl _PSW_1
-                             93 	.globl _PSW_2
-                             94 	.globl _PSW_3
-                             95 	.globl _PSW_4
-                             96 	.globl _PSW_5
-                             97 	.globl _PSW_6
-                             98 	.globl _PSW_7
-                             99 	.globl _IP0H
-                            100 	.globl _WFEED2
-                            101 	.globl _WFEED1
-                            102 	.globl _WDL
-                            103 	.globl _WDCON
-                            104 	.globl _TRIM
-                            105 	.globl _TPCR2L
-                            106 	.globl _TPCR2H
-                            107 	.globl _TOR2L
-                            108 	.globl _TOR2H
-                            109 	.globl _TISE2
-                            110 	.globl _TIFR2
-                            111 	.globl _TICR2
-                            112 	.globl _TCR21
-                            113 	.globl _TCR20
-                            114 	.globl _TAMOD
-                            115 	.globl _SPDAT
-                            116 	.globl _SPSTAT
-                            117 	.globl _SPCTL
-                            118 	.globl _SSTAT
-                            119 	.globl _RTCL
-                            120 	.globl _RTCH
-                            121 	.globl _RTCCON
-                            122 	.globl _RSTSRC
-                            123 	.globl _PT0AD
-                            124 	.globl _PCONA
-                            125 	.globl _P3M2
-                            126 	.globl _P3M1
-                            127 	.globl _P2M2
-                            128 	.globl _P2M1
-                            129 	.globl _P1M2
-                            130 	.globl _P1M1
-                            131 	.globl _P0M2
-                            132 	.globl _P0M1
-                            133 	.globl _OCRDL
-                            134 	.globl _OCRDH
-                            135 	.globl _OCRCL
-                            136 	.globl _OCRCH
-                            137 	.globl _OCRBL
-                            138 	.globl _OCRBH
-                            139 	.globl _OCRAL
-                            140 	.globl _OCRAH
-                            141 	.globl _KBPATN
-                            142 	.globl _KBMASK
-                            143 	.globl _KBCON
-                            144 	.globl _IP1H
-                            145 	.globl _IP1
-                            146 	.globl _IEN1
-                            147 	.globl _ICRBL
-                            148 	.globl _ICRBH
-                            149 	.globl _ICRAL
-                            150 	.globl _ICRAH
-                            151 	.globl _I2STAT
-                            152 	.globl _I2SCLL
-                            153 	.globl _I2SCLH
-                            154 	.globl _I2DAT
-                            155 	.globl _I2CON
-                            156 	.globl _I2ADR
-                            157 	.globl _DIVM
-                            158 	.globl _DEEADR
-                            159 	.globl _DEEDAT
-                            160 	.globl _DEECON
-                            161 	.globl _CMP2
-                            162 	.globl _CMP1
-                            163 	.globl _CCCRD
-                            164 	.globl _CCCRC
-                            165 	.globl _CCCRB
-                            166 	.globl _CCCRA
-                            167 	.globl _BRGCON
-                            168 	.globl _BRGR1
-                            169 	.globl _BRGR0
-                            170 	.globl _TH2
-                            171 	.globl _TL2
-                            172 	.globl _SADEN
-                            173 	.globl _SADDR
-                            174 	.globl _AUXR1
-                            175 	.globl _SBUF
-                            176 	.globl _SCON
-                            177 	.globl _IP0
-                            178 	.globl _IEN0
-                            179 	.globl _TH1
-                            180 	.globl _TH0
-                            181 	.globl _TL1
-                            182 	.globl _TL0
-                            183 	.globl _TMOD
-                            184 	.globl _TCON
-                            185 	.globl _PCON
-                            186 	.globl _DPH
-                            187 	.globl _DPL
-                            188 	.globl _SP
-                            189 	.globl _B
-                            190 	.globl _ACC
-                            191 	.globl _PSW
-                            192 	.globl _P3
-                            193 	.globl _P2
-                            194 	.globl _P1
-                            195 	.globl _P0
-                            196 	.globl _initSerial
-                            197 	.globl _send_string
-                            198 	.globl _send_bytes
-                            199 	.globl _send_byte
-                            200 	.globl _send_hex
-                            201 ;--------------------------------------------------------
-                            202 ; special function registers
-                            203 ;--------------------------------------------------------
-                            204 	.area RSEG    (ABS,DATA)
-   0000                     205 	.org 0x0000
-                    0080    206 _P0	=	0x0080
-                    0090    207 _P1	=	0x0090
-                    00A0    208 _P2	=	0x00a0
-                    00B0    209 _P3	=	0x00b0
-                    00D0    210 _PSW	=	0x00d0
-                    00E0    211 _ACC	=	0x00e0
-                    00F0    212 _B	=	0x00f0
-                    0081    213 _SP	=	0x0081
-                    0082    214 _DPL	=	0x0082
-                    0083    215 _DPH	=	0x0083
-                    0087    216 _PCON	=	0x0087
-                    0088    217 _TCON	=	0x0088
-                    0089    218 _TMOD	=	0x0089
-                    008A    219 _TL0	=	0x008a
-                    008B    220 _TL1	=	0x008b
-                    008C    221 _TH0	=	0x008c
-                    008D    222 _TH1	=	0x008d
-                    00A8    223 _IEN0	=	0x00a8
-                    00B8    224 _IP0	=	0x00b8
-                    0098    225 _SCON	=	0x0098
-                    0099    226 _SBUF	=	0x0099
-                    00A2    227 _AUXR1	=	0x00a2
-                    00A9    228 _SADDR	=	0x00a9
-                    00B9    229 _SADEN	=	0x00b9
-                    00CC    230 _TL2	=	0x00cc
-                    00CD    231 _TH2	=	0x00cd
-                    00BE    232 _BRGR0	=	0x00be
-                    00BF    233 _BRGR1	=	0x00bf
-                    00BD    234 _BRGCON	=	0x00bd
-                    00EA    235 _CCCRA	=	0x00ea
-                    00EB    236 _CCCRB	=	0x00eb
-                    00EC    237 _CCCRC	=	0x00ec
-                    00ED    238 _CCCRD	=	0x00ed
-                    00AC    239 _CMP1	=	0x00ac
-                    00AD    240 _CMP2	=	0x00ad
-                    00F1    241 _DEECON	=	0x00f1
-                    00F2    242 _DEEDAT	=	0x00f2
-                    00F3    243 _DEEADR	=	0x00f3
-                    0095    244 _DIVM	=	0x0095
-                    00DB    245 _I2ADR	=	0x00db
-                    00D8    246 _I2CON	=	0x00d8
-                    00DA    247 _I2DAT	=	0x00da
-                    00DD    248 _I2SCLH	=	0x00dd
-                    00DC    249 _I2SCLL	=	0x00dc
-                    00D9    250 _I2STAT	=	0x00d9
-                    00AB    251 _ICRAH	=	0x00ab
-                    00AA    252 _ICRAL	=	0x00aa
-                    00AF    253 _ICRBH	=	0x00af
-                    00AE    254 _ICRBL	=	0x00ae
-                    00E8    255 _IEN1	=	0x00e8
-                    00F8    256 _IP1	=	0x00f8
-                    00F7    257 _IP1H	=	0x00f7
-                    0094    258 _KBCON	=	0x0094
-                    0086    259 _KBMASK	=	0x0086
-                    0093    260 _KBPATN	=	0x0093
-                    00EF    261 _OCRAH	=	0x00ef
-                    00EE    262 _OCRAL	=	0x00ee
-                    00FB    263 _OCRBH	=	0x00fb
-                    00FA    264 _OCRBL	=	0x00fa
-                    00FD    265 _OCRCH	=	0x00fd
-                    00FC    266 _OCRCL	=	0x00fc
-                    00FF    267 _OCRDH	=	0x00ff
-                    00FE    268 _OCRDL	=	0x00fe
-                    0084    269 _P0M1	=	0x0084
-                    0085    270 _P0M2	=	0x0085
-                    0091    271 _P1M1	=	0x0091
-                    0092    272 _P1M2	=	0x0092
-                    00A4    273 _P2M1	=	0x00a4
-                    00A5    274 _P2M2	=	0x00a5
-                    00B1    275 _P3M1	=	0x00b1
-                    00B2    276 _P3M2	=	0x00b2
-                    00B5    277 _PCONA	=	0x00b5
-                    00F6    278 _PT0AD	=	0x00f6
-                    00DF    279 _RSTSRC	=	0x00df
-                    00D1    280 _RTCCON	=	0x00d1
-                    00D2    281 _RTCH	=	0x00d2
-                    00D3    282 _RTCL	=	0x00d3
-                    00BA    283 _SSTAT	=	0x00ba
-                    00E2    284 _SPCTL	=	0x00e2
-                    00E1    285 _SPSTAT	=	0x00e1
-                    00E3    286 _SPDAT	=	0x00e3
-                    008F    287 _TAMOD	=	0x008f
-                    00C8    288 _TCR20	=	0x00c8
-                    00F9    289 _TCR21	=	0x00f9
-                    00C9    290 _TICR2	=	0x00c9
-                    00E9    291 _TIFR2	=	0x00e9
-                    00DE    292 _TISE2	=	0x00de
-                    00CF    293 _TOR2H	=	0x00cf
-                    00CE    294 _TOR2L	=	0x00ce
-                    00CB    295 _TPCR2H	=	0x00cb
-                    00CA    296 _TPCR2L	=	0x00ca
-                    0096    297 _TRIM	=	0x0096
-                    00A7    298 _WDCON	=	0x00a7
-                    00C1    299 _WDL	=	0x00c1
-                    00C2    300 _WFEED1	=	0x00c2
-                    00C3    301 _WFEED2	=	0x00c3
-                    00B7    302 _IP0H	=	0x00b7
-                            303 ;--------------------------------------------------------
-                            304 ; special function bits
-                            305 ;--------------------------------------------------------
-                            306 	.area RSEG    (ABS,DATA)
-   0000                     307 	.org 0x0000
-                    00D7    308 _PSW_7	=	0x00d7
-                    00D6    309 _PSW_6	=	0x00d6
-                    00D5    310 _PSW_5	=	0x00d5
-                    00D4    311 _PSW_4	=	0x00d4
-                    00D3    312 _PSW_3	=	0x00d3
-                    00D2    313 _PSW_2	=	0x00d2
-                    00D1    314 _PSW_1	=	0x00d1
-                    00D0    315 _PSW_0	=	0x00d0
-                    008F    316 _TCON_7	=	0x008f
-                    008E    317 _TCON_6	=	0x008e
-                    008D    318 _TCON_5	=	0x008d
-                    008C    319 _TCON_4	=	0x008c
-                    008B    320 _TCON_3	=	0x008b
-                    008A    321 _TCON_2	=	0x008a
-                    0089    322 _TCON_1	=	0x0089
-                    0088    323 _TCON_0	=	0x0088
-                    00AF    324 _IEN0_7	=	0x00af
-                    00AE    325 _IEN0_6	=	0x00ae
-                    00AD    326 _IEN0_5	=	0x00ad
-                    00AC    327 _IEN0_4	=	0x00ac
-                    00AB    328 _IEN0_3	=	0x00ab
-                    00AA    329 _IEN0_2	=	0x00aa
-                    00A9    330 _IEN0_1	=	0x00a9
-                    00A8    331 _IEN0_0	=	0x00a8
-                    00EF    332 _IEN1_7	=	0x00ef
-                    00EE    333 _IEN1_6	=	0x00ee
-                    00EC    334 _IEN1_4	=	0x00ec
-                    00EB    335 _IEN1_3	=	0x00eb
-                    00EA    336 _IEN1_2	=	0x00ea
-                    00E9    337 _IEN1_1	=	0x00e9
-                    00E8    338 _IEN1_0	=	0x00e8
-                    00BE    339 _IP0_6	=	0x00be
-                    00BD    340 _IP0_5	=	0x00bd
-                    00BC    341 _IP0_4	=	0x00bc
-                    00BB    342 _IP0_3	=	0x00bb
-                    00BA    343 _IP0_2	=	0x00ba
-                    00B9    344 _IP0_1	=	0x00b9
-                    00B8    345 _IP0_0	=	0x00b8
-                    009F    346 _SCON_7	=	0x009f
-                    009E    347 _SCON_6	=	0x009e
-                    009D    348 _SCON_5	=	0x009d
-                    009C    349 _SCON_4	=	0x009c
-                    009B    350 _SCON_3	=	0x009b
-                    009A    351 _SCON_2	=	0x009a
-                    0099    352 _SCON_1	=	0x0099
-                    0098    353 _SCON_0	=	0x0098
-                    00DE    354 _I2CON_6	=	0x00de
-                    00DD    355 _I2CON_5	=	0x00dd
-                    00DC    356 _I2CON_4	=	0x00dc
-                    00DB    357 _I2CON_3	=	0x00db
-                    00DA    358 _I2CON_2	=	0x00da
-                    00D8    359 _I2CON_0	=	0x00d8
-                    0087    360 _P0_7	=	0x0087
-                    0086    361 _P0_6	=	0x0086
-                    0085    362 _P0_5	=	0x0085
-                    0084    363 _P0_4	=	0x0084
-                    0083    364 _P0_3	=	0x0083
-                    0082    365 _P0_2	=	0x0082
-                    0081    366 _P0_1	=	0x0081
-                    0080    367 _P0_0	=	0x0080
-                    0097    368 _P1_7	=	0x0097
-                    0096    369 _P1_6	=	0x0096
-                    0095    370 _P1_5	=	0x0095
-                    0094    371 _P1_4	=	0x0094
-                    0093    372 _P1_3	=	0x0093
-                    0092    373 _P1_2	=	0x0092
-                    0091    374 _P1_1	=	0x0091
-                    0090    375 _P1_0	=	0x0090
-                    00A7    376 _P2_7	=	0x00a7
-                    00A6    377 _P2_6	=	0x00a6
-                    00A5    378 _P2_5	=	0x00a5
-                    00A4    379 _P2_4	=	0x00a4
-                    00A3    380 _P2_3	=	0x00a3
-                    00A2    381 _P2_2	=	0x00a2
-                    00A1    382 _P2_1	=	0x00a1
-                    00A0    383 _P2_0	=	0x00a0
-                    00B1    384 _P3_1	=	0x00b1
-                    00B0    385 _P3_0	=	0x00b0
-                    00CF    386 _TCR20_7	=	0x00cf
-                    00CE    387 _TCR20_6	=	0x00ce
-                    00CD    388 _TCR20_5	=	0x00cd
-                    00CC    389 _TCR20_4	=	0x00cc
-                    00CB    390 _TCR20_3	=	0x00cb
-                    00CA    391 _TCR20_2	=	0x00ca
-                    00C9    392 _TCR20_1	=	0x00c9
-                    00C8    393 _TCR20_0	=	0x00c8
-                            394 ;--------------------------------------------------------
-                            395 ; overlayable register banks
-                            396 ;--------------------------------------------------------
-                            397 	.area REG_BANK_0	(REL,OVR,DATA)
-   0000                     398 	.ds 8
+                             12 	.globl _TCR20_0
+                             13 	.globl _TCR20_1
+                             14 	.globl _TCR20_2
+                             15 	.globl _TCR20_3
+                             16 	.globl _TCR20_4
+                             17 	.globl _TCR20_5
+                             18 	.globl _TCR20_6
+                             19 	.globl _TCR20_7
+                             20 	.globl _P3_0
+                             21 	.globl _P3_1
+                             22 	.globl _P2_0
+                             23 	.globl _P2_1
+                             24 	.globl _P2_2
+                             25 	.globl _P2_3
+                             26 	.globl _P2_4
+                             27 	.globl _P2_5
+                             28 	.globl _P2_6
+                             29 	.globl _P2_7
+                             30 	.globl _P1_0
+                             31 	.globl _P1_1
+                             32 	.globl _P1_2
+                             33 	.globl _P1_3
+                             34 	.globl _P1_4
+                             35 	.globl _P1_5
+                             36 	.globl _P1_6
+                             37 	.globl _P1_7
+                             38 	.globl _P0_0
+                             39 	.globl _P0_1
+                             40 	.globl _P0_2
+                             41 	.globl _P0_3
+                             42 	.globl _P0_4
+                             43 	.globl _P0_5
+                             44 	.globl _P0_6
+                             45 	.globl _P0_7
+                             46 	.globl _I2CON_0
+                             47 	.globl _I2CON_2
+                             48 	.globl _I2CON_3
+                             49 	.globl _I2CON_4
+                             50 	.globl _I2CON_5
+                             51 	.globl _I2CON_6
+                             52 	.globl _SCON_0
+                             53 	.globl _SCON_1
+                             54 	.globl _SCON_2
+                             55 	.globl _SCON_3
+                             56 	.globl _SCON_4
+                             57 	.globl _SCON_5
+                             58 	.globl _SCON_6
+                             59 	.globl _SCON_7
+                             60 	.globl _IP0_0
+                             61 	.globl _IP0_1
+                             62 	.globl _IP0_2
+                             63 	.globl _IP0_3
+                             64 	.globl _IP0_4
+                             65 	.globl _IP0_5
+                             66 	.globl _IP0_6
+                             67 	.globl _IEN1_0
+                             68 	.globl _IEN1_1
+                             69 	.globl _IEN1_2
+                             70 	.globl _IEN1_3
+                             71 	.globl _IEN1_4
+                             72 	.globl _IEN1_6
+                             73 	.globl _IEN1_7
+                             74 	.globl _IEN0_0
+                             75 	.globl _IEN0_1
+                             76 	.globl _IEN0_2
+                             77 	.globl _IEN0_3
+                             78 	.globl _IEN0_4
+                             79 	.globl _IEN0_5
+                             80 	.globl _IEN0_6
+                             81 	.globl _IEN0_7
+                             82 	.globl _TCON_0
+                             83 	.globl _TCON_1
+                             84 	.globl _TCON_2
+                             85 	.globl _TCON_3
+                             86 	.globl _TCON_4
+                             87 	.globl _TCON_5
+                             88 	.globl _TCON_6
+                             89 	.globl _TCON_7
+                             90 	.globl _PSW_0
+                             91 	.globl _PSW_1
+                             92 	.globl _PSW_2
+                             93 	.globl _PSW_3
+                             94 	.globl _PSW_4
+                             95 	.globl _PSW_5
+                             96 	.globl _PSW_6
+                             97 	.globl _PSW_7
+                             98 	.globl _IP0H
+                             99 	.globl _WFEED2
+                            100 	.globl _WFEED1
+                            101 	.globl _WDL
+                            102 	.globl _WDCON
+                            103 	.globl _TRIM
+                            104 	.globl _TPCR2L
+                            105 	.globl _TPCR2H
+                            106 	.globl _TOR2L
+                            107 	.globl _TOR2H
+                            108 	.globl _TISE2
+                            109 	.globl _TIFR2
+                            110 	.globl _TICR2
+                            111 	.globl _TCR21
+                            112 	.globl _TCR20
+                            113 	.globl _TAMOD
+                            114 	.globl _SPDAT
+                            115 	.globl _SPSTAT
+                            116 	.globl _SPCTL
+                            117 	.globl _SSTAT
+                            118 	.globl _RTCL
+                            119 	.globl _RTCH
+                            120 	.globl _RTCCON
+                            121 	.globl _RSTSRC
+                            122 	.globl _PT0AD
+                            123 	.globl _PCONA
+                            124 	.globl _P3M2
+                            125 	.globl _P3M1
+                            126 	.globl _P2M2
+                            127 	.globl _P2M1
+                            128 	.globl _P1M2
+                            129 	.globl _P1M1
+                            130 	.globl _P0M2
+                            131 	.globl _P0M1
+                            132 	.globl _OCRDL
+                            133 	.globl _OCRDH
+                            134 	.globl _OCRCL
+                            135 	.globl _OCRCH
+                            136 	.globl _OCRBL
+                            137 	.globl _OCRBH
+                            138 	.globl _OCRAL
+                            139 	.globl _OCRAH
+                            140 	.globl _KBPATN
+                            141 	.globl _KBMASK
+                            142 	.globl _KBCON
+                            143 	.globl _IP1H
+                            144 	.globl _IP1
+                            145 	.globl _IEN1
+                            146 	.globl _ICRBL
+                            147 	.globl _ICRBH
+                            148 	.globl _ICRAL
+                            149 	.globl _ICRAH
+                            150 	.globl _I2STAT
+                            151 	.globl _I2SCLL
+                            152 	.globl _I2SCLH
+                            153 	.globl _I2DAT
+                            154 	.globl _I2CON
+                            155 	.globl _I2ADR
+                            156 	.globl _DIVM
+                            157 	.globl _DEEADR
+                            158 	.globl _DEEDAT
+                            159 	.globl _DEECON
+                            160 	.globl _CMP2
+                            161 	.globl _CMP1
+                            162 	.globl _CCCRD
+                            163 	.globl _CCCRC
+                            164 	.globl _CCCRB
+                            165 	.globl _CCCRA
+                            166 	.globl _BRGCON
+                            167 	.globl _BRGR1
+                            168 	.globl _BRGR0
+                            169 	.globl _TH2
+                            170 	.globl _TL2
+                            171 	.globl _SADEN
+                            172 	.globl _SADDR
+                            173 	.globl _AUXR1
+                            174 	.globl _SBUF
+                            175 	.globl _SCON
+                            176 	.globl _IP0
+                            177 	.globl _IEN0
+                            178 	.globl _TH1
+                            179 	.globl _TH0
+                            180 	.globl _TL1
+                            181 	.globl _TL0
+                            182 	.globl _TMOD
+                            183 	.globl _TCON
+                            184 	.globl _PCON
+                            185 	.globl _DPH
+                            186 	.globl _DPL
+                            187 	.globl _SP
+                            188 	.globl _B
+                            189 	.globl _ACC
+                            190 	.globl _PSW
+                            191 	.globl _P3
+                            192 	.globl _P2
+                            193 	.globl _P1
+                            194 	.globl _P0
+                            195 	.globl _initSerial
+                            196 	.globl _send_byte
+                            197 ;--------------------------------------------------------
+                            198 ; special function registers
+                            199 ;--------------------------------------------------------
+                            200 	.area RSEG    (ABS,DATA)
+   0000                     201 	.org 0x0000
+                    0080    202 _P0	=	0x0080
+                    0090    203 _P1	=	0x0090
+                    00A0    204 _P2	=	0x00a0
+                    00B0    205 _P3	=	0x00b0
+                    00D0    206 _PSW	=	0x00d0
+                    00E0    207 _ACC	=	0x00e0
+                    00F0    208 _B	=	0x00f0
+                    0081    209 _SP	=	0x0081
+                    0082    210 _DPL	=	0x0082
+                    0083    211 _DPH	=	0x0083
+                    0087    212 _PCON	=	0x0087
+                    0088    213 _TCON	=	0x0088
+                    0089    214 _TMOD	=	0x0089
+                    008A    215 _TL0	=	0x008a
+                    008B    216 _TL1	=	0x008b
+                    008C    217 _TH0	=	0x008c
+                    008D    218 _TH1	=	0x008d
+                    00A8    219 _IEN0	=	0x00a8
+                    00B8    220 _IP0	=	0x00b8
+                    0098    221 _SCON	=	0x0098
+                    0099    222 _SBUF	=	0x0099
+                    00A2    223 _AUXR1	=	0x00a2
+                    00A9    224 _SADDR	=	0x00a9
+                    00B9    225 _SADEN	=	0x00b9
+                    00CC    226 _TL2	=	0x00cc
+                    00CD    227 _TH2	=	0x00cd
+                    00BE    228 _BRGR0	=	0x00be
+                    00BF    229 _BRGR1	=	0x00bf
+                    00BD    230 _BRGCON	=	0x00bd
+                    00EA    231 _CCCRA	=	0x00ea
+                    00EB    232 _CCCRB	=	0x00eb
+                    00EC    233 _CCCRC	=	0x00ec
+                    00ED    234 _CCCRD	=	0x00ed
+                    00AC    235 _CMP1	=	0x00ac
+                    00AD    236 _CMP2	=	0x00ad
+                    00F1    237 _DEECON	=	0x00f1
+                    00F2    238 _DEEDAT	=	0x00f2
+                    00F3    239 _DEEADR	=	0x00f3
+                    0095    240 _DIVM	=	0x0095
+                    00DB    241 _I2ADR	=	0x00db
+                    00D8    242 _I2CON	=	0x00d8
+                    00DA    243 _I2DAT	=	0x00da
+                    00DD    244 _I2SCLH	=	0x00dd
+                    00DC    245 _I2SCLL	=	0x00dc
+                    00D9    246 _I2STAT	=	0x00d9
+                    00AB    247 _ICRAH	=	0x00ab
+                    00AA    248 _ICRAL	=	0x00aa
+                    00AF    249 _ICRBH	=	0x00af
+                    00AE    250 _ICRBL	=	0x00ae
+                    00E8    251 _IEN1	=	0x00e8
+                    00F8    252 _IP1	=	0x00f8
+                    00F7    253 _IP1H	=	0x00f7
+                    0094    254 _KBCON	=	0x0094
+                    0086    255 _KBMASK	=	0x0086
+                    0093    256 _KBPATN	=	0x0093
+                    00EF    257 _OCRAH	=	0x00ef
+                    00EE    258 _OCRAL	=	0x00ee
+                    00FB    259 _OCRBH	=	0x00fb
+                    00FA    260 _OCRBL	=	0x00fa
+                    00FD    261 _OCRCH	=	0x00fd
+                    00FC    262 _OCRCL	=	0x00fc
+                    00FF    263 _OCRDH	=	0x00ff
+                    00FE    264 _OCRDL	=	0x00fe
+                    0084    265 _P0M1	=	0x0084
+                    0085    266 _P0M2	=	0x0085
+                    0091    267 _P1M1	=	0x0091
+                    0092    268 _P1M2	=	0x0092
+                    00A4    269 _P2M1	=	0x00a4
+                    00A5    270 _P2M2	=	0x00a5
+                    00B1    271 _P3M1	=	0x00b1
+                    00B2    272 _P3M2	=	0x00b2
+                    00B5    273 _PCONA	=	0x00b5
+                    00F6    274 _PT0AD	=	0x00f6
+                    00DF    275 _RSTSRC	=	0x00df
+                    00D1    276 _RTCCON	=	0x00d1
+                    00D2    277 _RTCH	=	0x00d2
+                    00D3    278 _RTCL	=	0x00d3
+                    00BA    279 _SSTAT	=	0x00ba
+                    00E2    280 _SPCTL	=	0x00e2
+                    00E1    281 _SPSTAT	=	0x00e1
+                    00E3    282 _SPDAT	=	0x00e3
+                    008F    283 _TAMOD	=	0x008f
+                    00C8    284 _TCR20	=	0x00c8
+                    00F9    285 _TCR21	=	0x00f9
+                    00C9    286 _TICR2	=	0x00c9
+                    00E9    287 _TIFR2	=	0x00e9
+                    00DE    288 _TISE2	=	0x00de
+                    00CF    289 _TOR2H	=	0x00cf
+                    00CE    290 _TOR2L	=	0x00ce
+                    00CB    291 _TPCR2H	=	0x00cb
+                    00CA    292 _TPCR2L	=	0x00ca
+                    0096    293 _TRIM	=	0x0096
+                    00A7    294 _WDCON	=	0x00a7
+                    00C1    295 _WDL	=	0x00c1
+                    00C2    296 _WFEED1	=	0x00c2
+                    00C3    297 _WFEED2	=	0x00c3
+                    00B7    298 _IP0H	=	0x00b7
+                            299 ;--------------------------------------------------------
+                            300 ; special function bits
+                            301 ;--------------------------------------------------------
+                            302 	.area RSEG    (ABS,DATA)
+   0000                     303 	.org 0x0000
+                    00D7    304 _PSW_7	=	0x00d7
+                    00D6    305 _PSW_6	=	0x00d6
+                    00D5    306 _PSW_5	=	0x00d5
+                    00D4    307 _PSW_4	=	0x00d4
+                    00D3    308 _PSW_3	=	0x00d3
+                    00D2    309 _PSW_2	=	0x00d2
+                    00D1    310 _PSW_1	=	0x00d1
+                    00D0    311 _PSW_0	=	0x00d0
+                    008F    312 _TCON_7	=	0x008f
+                    008E    313 _TCON_6	=	0x008e
+                    008D    314 _TCON_5	=	0x008d
+                    008C    315 _TCON_4	=	0x008c
+                    008B    316 _TCON_3	=	0x008b
+                    008A    317 _TCON_2	=	0x008a
+                    0089    318 _TCON_1	=	0x0089
+                    0088    319 _TCON_0	=	0x0088
+                    00AF    320 _IEN0_7	=	0x00af
+                    00AE    321 _IEN0_6	=	0x00ae
+                    00AD    322 _IEN0_5	=	0x00ad
+                    00AC    323 _IEN0_4	=	0x00ac
+                    00AB    324 _IEN0_3	=	0x00ab
+                    00AA    325 _IEN0_2	=	0x00aa
+                    00A9    326 _IEN0_1	=	0x00a9
+                    00A8    327 _IEN0_0	=	0x00a8
+                    00EF    328 _IEN1_7	=	0x00ef
+                    00EE    329 _IEN1_6	=	0x00ee
+                    00EC    330 _IEN1_4	=	0x00ec
+                    00EB    331 _IEN1_3	=	0x00eb
+                    00EA    332 _IEN1_2	=	0x00ea
+                    00E9    333 _IEN1_1	=	0x00e9
+                    00E8    334 _IEN1_0	=	0x00e8
+                    00BE    335 _IP0_6	=	0x00be
+                    00BD    336 _IP0_5	=	0x00bd
+                    00BC    337 _IP0_4	=	0x00bc
+                    00BB    338 _IP0_3	=	0x00bb
+                    00BA    339 _IP0_2	=	0x00ba
+                    00B9    340 _IP0_1	=	0x00b9
+                    00B8    341 _IP0_0	=	0x00b8
+                    009F    342 _SCON_7	=	0x009f
+                    009E    343 _SCON_6	=	0x009e
+                    009D    344 _SCON_5	=	0x009d
+                    009C    345 _SCON_4	=	0x009c
+                    009B    346 _SCON_3	=	0x009b
+                    009A    347 _SCON_2	=	0x009a
+                    0099    348 _SCON_1	=	0x0099
+                    0098    349 _SCON_0	=	0x0098
+                    00DE    350 _I2CON_6	=	0x00de
+                    00DD    351 _I2CON_5	=	0x00dd
+                    00DC    352 _I2CON_4	=	0x00dc
+                    00DB    353 _I2CON_3	=	0x00db
+                    00DA    354 _I2CON_2	=	0x00da
+                    00D8    355 _I2CON_0	=	0x00d8
+                    0087    356 _P0_7	=	0x0087
+                    0086    357 _P0_6	=	0x0086
+                    0085    358 _P0_5	=	0x0085
+                    0084    359 _P0_4	=	0x0084
+                    0083    360 _P0_3	=	0x0083
+                    0082    361 _P0_2	=	0x0082
+                    0081    362 _P0_1	=	0x0081
+                    0080    363 _P0_0	=	0x0080
+                    0097    364 _P1_7	=	0x0097
+                    0096    365 _P1_6	=	0x0096
+                    0095    366 _P1_5	=	0x0095
+                    0094    367 _P1_4	=	0x0094
+                    0093    368 _P1_3	=	0x0093
+                    0092    369 _P1_2	=	0x0092
+                    0091    370 _P1_1	=	0x0091
+                    0090    371 _P1_0	=	0x0090
+                    00A7    372 _P2_7	=	0x00a7
+                    00A6    373 _P2_6	=	0x00a6
+                    00A5    374 _P2_5	=	0x00a5
+                    00A4    375 _P2_4	=	0x00a4
+                    00A3    376 _P2_3	=	0x00a3
+                    00A2    377 _P2_2	=	0x00a2
+                    00A1    378 _P2_1	=	0x00a1
+                    00A0    379 _P2_0	=	0x00a0
+                    00B1    380 _P3_1	=	0x00b1
+                    00B0    381 _P3_0	=	0x00b0
+                    00CF    382 _TCR20_7	=	0x00cf
+                    00CE    383 _TCR20_6	=	0x00ce
+                    00CD    384 _TCR20_5	=	0x00cd
+                    00CC    385 _TCR20_4	=	0x00cc
+                    00CB    386 _TCR20_3	=	0x00cb
+                    00CA    387 _TCR20_2	=	0x00ca
+                    00C9    388 _TCR20_1	=	0x00c9
+                    00C8    389 _TCR20_0	=	0x00c8
+                            390 ;--------------------------------------------------------
+                            391 ; overlayable register banks
+                            392 ;--------------------------------------------------------
+                            393 	.area REG_BANK_0	(REL,OVR,DATA)
+   0000                     394 	.ds 8
+                            395 ;--------------------------------------------------------
+                            396 ; internal ram data
+                            397 ;--------------------------------------------------------
+                            398 	.area DSEG    (DATA)
                             399 ;--------------------------------------------------------
-                            400 ; internal ram data
+                            400 ; overlayable items in internal ram 
                             401 ;--------------------------------------------------------
-                            402 	.area DSEG    (DATA)
-                            403 ;--------------------------------------------------------
-                            404 ; overlayable items in internal ram 
-                            405 ;--------------------------------------------------------
-                            406 	.area	OSEG    (OVR,DATA)
-                            407 	.area	OSEG    (OVR,DATA)
-                            408 	.area	OSEG    (OVR,DATA)
-   0000                     409 _send_bytes_PARM_2::
-   0000                     410 	.ds 1
-                            411 	.area	OSEG    (OVR,DATA)
-                            412 	.area	OSEG    (OVR,DATA)
+                            402 	.area	OSEG    (OVR,DATA)
+                            403 	.area	OSEG    (OVR,DATA)
+                            404 ;--------------------------------------------------------
+                            405 ; indirectly addressable internal ram data
+                            406 ;--------------------------------------------------------
+                            407 	.area ISEG    (DATA)
+                            408 ;--------------------------------------------------------
+                            409 ; absolute internal ram data
+                            410 ;--------------------------------------------------------
+                            411 	.area IABS    (ABS,DATA)
+                            412 	.area IABS    (ABS,DATA)
                             413 ;--------------------------------------------------------
-                            414 ; indirectly addressable internal ram data
+                            414 ; bit data
                             415 ;--------------------------------------------------------
-                            416 	.area ISEG    (DATA)
+                            416 	.area BSEG    (BIT)
                             417 ;--------------------------------------------------------
-                            418 ; absolute internal ram data
+                            418 ; paged external ram data
                             419 ;--------------------------------------------------------
-                            420 	.area IABS    (ABS,DATA)
-                            421 	.area IABS    (ABS,DATA)
-                            422 ;--------------------------------------------------------
-                            423 ; bit data
-                            424 ;--------------------------------------------------------
-                            425 	.area BSEG    (BIT)
-                            426 ;--------------------------------------------------------
-                            427 ; paged external ram data
-                            428 ;--------------------------------------------------------
-                            429 	.area PSEG    (PAG,XDATA)
-                            430 ;--------------------------------------------------------
-                            431 ; external ram data
-                            432 ;--------------------------------------------------------
-                            433 	.area XSEG    (XDATA)
-                            434 ;--------------------------------------------------------
-                            435 ; absolute external ram data
-                            436 ;--------------------------------------------------------
-                            437 	.area XABS    (ABS,XDATA)
-                            438 ;--------------------------------------------------------
-                            439 ; external initialized ram data
-                            440 ;--------------------------------------------------------
-                            441 	.area XISEG   (XDATA)
-                            442 	.area HOME    (CODE)
-                            443 	.area GSINIT0 (CODE)
-                            444 	.area GSINIT1 (CODE)
-                            445 	.area GSINIT2 (CODE)
-                            446 	.area GSINIT3 (CODE)
-                            447 	.area GSINIT4 (CODE)
-                            448 	.area GSINIT5 (CODE)
+                            420 	.area PSEG    (PAG,XDATA)
+                            421 ;--------------------------------------------------------
+                            422 ; external ram data
+                            423 ;--------------------------------------------------------
+                            424 	.area XSEG    (XDATA)
+                            425 ;--------------------------------------------------------
+                            426 ; absolute external ram data
+                            427 ;--------------------------------------------------------
+                            428 	.area XABS    (ABS,XDATA)
+                            429 ;--------------------------------------------------------
+                            430 ; external initialized ram data
+                            431 ;--------------------------------------------------------
+                            432 	.area XISEG   (XDATA)
+                            433 	.area HOME    (CODE)
+                            434 	.area GSINIT0 (CODE)
+                            435 	.area GSINIT1 (CODE)
+                            436 	.area GSINIT2 (CODE)
+                            437 	.area GSINIT3 (CODE)
+                            438 	.area GSINIT4 (CODE)
+                            439 	.area GSINIT5 (CODE)
+                            440 	.area GSINIT  (CODE)
+                            441 	.area GSFINAL (CODE)
+                            442 	.area CSEG    (CODE)
+                            443 ;--------------------------------------------------------
+                            444 ; global & static initialisations
+                            445 ;--------------------------------------------------------
+                            446 	.area HOME    (CODE)
+                            447 	.area GSINIT  (CODE)
+                            448 	.area GSFINAL (CODE)
                             449 	.area GSINIT  (CODE)
-                            450 	.area GSFINAL (CODE)
-                            451 	.area CSEG    (CODE)
+                            450 ;--------------------------------------------------------
+                            451 ; Home
                             452 ;--------------------------------------------------------
-                            453 ; global & static initialisations
-                            454 ;--------------------------------------------------------
-                            455 	.area HOME    (CODE)
-                            456 	.area GSINIT  (CODE)
-                            457 	.area GSFINAL (CODE)
-                            458 	.area GSINIT  (CODE)
-                            459 ;--------------------------------------------------------
-                            460 ; Home
-                            461 ;--------------------------------------------------------
-                            462 	.area HOME    (CODE)
-                            463 	.area HOME    (CODE)
-                            464 ;--------------------------------------------------------
-                            465 ; code
-                            466 ;--------------------------------------------------------
-                            467 	.area CSEG    (CODE)
-                            468 ;------------------------------------------------------------
-                            469 ;Allocation info for local variables in function 'initSerial'
-                            470 ;------------------------------------------------------------
-                            471 ;baud                      Allocated to registers r2 r3 
-                            472 ;------------------------------------------------------------
-                            473 ;	serial.c:22: void initSerial(unsigned short baud) {
-                            474 ;	-----------------------------------------
-                            475 ;	 function initSerial
-                            476 ;	-----------------------------------------
-   0000                     477 _initSerial:
-                    0002    478 	ar2 = 0x02
-                    0003    479 	ar3 = 0x03
-                    0004    480 	ar4 = 0x04
-                    0005    481 	ar5 = 0x05
-                    0006    482 	ar6 = 0x06
-                    0007    483 	ar7 = 0x07
-                    0000    484 	ar0 = 0x00
-                    0001    485 	ar1 = 0x01
-   0000 AA 82               486 	mov	r2,dpl
-   0002 AB 83               487 	mov	r3,dph
-                            488 ;	serial.c:25: SCON   = 0x52;		// 0101 0010 = Mode 8N1, enable reception, TxIntFlag=1 ? 
-   0004 75 98 52            489 	mov	_SCON,#0x52
-                            490 ;	serial.c:26: SSTAT |= 0x80;		// 1000 0000 = Double buffering mode
-   0007 43 BA 80            491 	orl	_SSTAT,#0x80
-                            492 ;	serial.c:27: switch (baud) {
-   000A BA 60 05            493 	cjne	r2,#0x60,00114$
-   000D BB 00 02            494 	cjne	r3,#0x00,00114$
-   0010 80 20               495 	sjmp	00101$
-   0012                     496 00114$:
-   0012 BA C0 05            497 	cjne	r2,#0xC0,00115$
-   0015 BB 00 02            498 	cjne	r3,#0x00,00115$
-   0018 80 20               499 	sjmp	00102$
-   001A                     500 00115$:
-   001A BA 80 05            501 	cjne	r2,#0x80,00116$
-   001D BB 01 02            502 	cjne	r3,#0x01,00116$
-   0020 80 20               503 	sjmp	00103$
-   0022                     504 00116$:
-   0022 BA 40 05            505 	cjne	r2,#0x40,00117$
-   0025 BB 02 02            506 	cjne	r3,#0x02,00117$
-   0028 80 20               507 	sjmp	00104$
-   002A                     508 00117$:
-                            509 ;	serial.c:29: case 96:
-   002A BA 80 2B            510 	cjne	r2,#0x80,00106$
-   002D BB 04 28            511 	cjne	r3,#0x04,00106$
-   0030 80 20               512 	sjmp	00105$
-   0032                     513 00101$:
-                            514 ;	serial.c:30: BRGR0  = 0x88; 
-   0032 75 BE 88            515 	mov	_BRGR0,#0x88
-                            516 ;	serial.c:31: BRGR1  = 0x02;
-   0035 75 BF 02            517 	mov	_BRGR1,#0x02
-                            518 ;	serial.c:32: break;
-                            519 ;	serial.c:33: case 192:
-   0038 80 1E               520 	sjmp	00106$
-   003A                     521 00102$:
-                            522 ;	serial.c:34: BRGR0  = 0xBC; 
-   003A 75 BE BC            523 	mov	_BRGR0,#0xBC
-                            524 ;	serial.c:35: BRGR1  = 0x02;
-   003D 75 BF 02            525 	mov	_BRGR1,#0x02
-                            526 ;	serial.c:36: break;
-                            527 ;	serial.c:37: case 384:
-   0040 80 16               528 	sjmp	00106$
-   0042                     529 00103$:
-                            530 ;	serial.c:38: BRGR0  = 0x56; 
-   0042 75 BE 56            531 	mov	_BRGR0,#0x56
-                            532 ;	serial.c:39: BRGR1  = 0x01;
-   0045 75 BF 01            533 	mov	_BRGR1,#0x01
-                            534 ;	serial.c:40: break;
-                            535 ;	serial.c:41: case 576:
-   0048 80 0E               536 	sjmp	00106$
-   004A                     537 00104$:
-                            538 ;	serial.c:42: BRGR0  = 0xDE; 
-   004A 75 BE DE            539 	mov	_BRGR0,#0xDE
-                            540 ;	serial.c:43: BRGR1  = 0x00;
-   004D 75 BF 00            541 	mov	_BRGR1,#0x00
-                            542 ;	serial.c:44: break;
-                            543 ;	serial.c:45: case 1152:
-   0050 80 06               544 	sjmp	00106$
-   0052                     545 00105$:
-                            546 ;	serial.c:46: BRGR0  = 0x67; 
-   0052 75 BE 67            547 	mov	_BRGR0,#0x67
-                            548 ;	serial.c:47: BRGR1  = 0x00;
-   0055 75 BF 00            549 	mov	_BRGR1,#0x00
-                            550 ;	serial.c:49: }
-   0058                     551 00106$:
-                            552 ;	serial.c:50: BRGCON = 0x03;		// Select the baud rate generator as timing source and enable it
-   0058 75 BD 03            553 	mov	_BRGCON,#0x03
-                            554 ;	serial.c:52: TI = 1;
-   005B D2 99               555 	setb	_SCON_1
-   005D 22                  556 	ret
-                            557 ;------------------------------------------------------------
-                            558 ;Allocation info for local variables in function 'send_string'
-                            559 ;------------------------------------------------------------
-                            560 ;string                    Allocated to registers r2 r3 r4 
-                            561 ;i                         Allocated to registers r5 
-                            562 ;------------------------------------------------------------
-                            563 ;	serial.c:59: void send_string(const unsigned char* string) {
-                            564 ;	-----------------------------------------
-                            565 ;	 function send_string
-                            566 ;	-----------------------------------------
-   005E                     567 _send_string:
-   005E AA 82               568 	mov	r2,dpl
-   0060 AB 83               569 	mov	r3,dph
-   0062 AC F0               570 	mov	r4,b
-                            571 ;	serial.c:63: while (string[i] != 0) {
-   0064 7D 00               572 	mov	r5,#0x00
-   0066                     573 00104$:
-   0066 ED                  574 	mov	a,r5
-   0067 2A                  575 	add	a,r2
-   0068 FE                  576 	mov	r6,a
-   0069 E4                  577 	clr	a
-   006A 3B                  578 	addc	a,r3
-   006B FF                  579 	mov	r7,a
-   006C 8C 00               580 	mov	ar0,r4
-   006E 8E 82               581 	mov	dpl,r6
-   0070 8F 83               582 	mov	dph,r7
-   0072 88 F0               583 	mov	b,r0
-   0074 12s00r00            584 	lcall	__gptrget
-   0077 60 1D               585 	jz	00107$
-                            586 ;	serial.c:64: while (!TI);		// Wait
-   0079                     587 00101$:
-                            588 ;	serial.c:65: TI = 0;
-   0079 10 99 02            589 	jbc	_SCON_1,00114$
-   007C 80 FB               590 	sjmp	00101$
-   007E                     591 00114$:
-                            592 ;	serial.c:66: SBUF = string[i++];		  
-   007E 8D 06               593 	mov	ar6,r5
-   0080 0D                  594 	inc	r5
-   0081 EE                  595 	mov	a,r6
-   0082 2A                  596 	add	a,r2
-   0083 FE                  597 	mov	r6,a
-   0084 E4                  598 	clr	a
-   0085 3B                  599 	addc	a,r3
-   0086 FF                  600 	mov	r7,a
-   0087 8C 00               601 	mov	ar0,r4
-   0089 8E 82               602 	mov	dpl,r6
-   008B 8F 83               603 	mov	dph,r7
-   008D 88 F0               604 	mov	b,r0
-   008F 12s00r00            605 	lcall	__gptrget
-   0092 F5 99               606 	mov	_SBUF,a
-   0094 80 D0               607 	sjmp	00104$
-   0096                     608 00107$:
-   0096 22                  609 	ret
-                            610 ;------------------------------------------------------------
-                            611 ;Allocation info for local variables in function 'send_bytes'
-                            612 ;------------------------------------------------------------
-                            613 ;l                         Allocated with name '_send_bytes_PARM_2'
-                            614 ;h                         Allocated to registers r2 r3 r4 
-                            615 ;i                         Allocated to registers r5 
-                            616 ;------------------------------------------------------------
-                            617 ;	serial.c:70: void send_bytes(unsigned char* h, unsigned char l) {
-                            618 ;	-----------------------------------------
-                            619 ;	 function send_bytes
-                            620 ;	-----------------------------------------
-   0097                     621 _send_bytes:
-   0097 AA 82               622 	mov	r2,dpl
-   0099 AB 83               623 	mov	r3,dph
-   009B AC F0               624 	mov	r4,b
-                            625 ;	serial.c:74: while (i<l) {
-   009D 7D 00               626 	mov	r5,#0x00
-   009F                     627 00104$:
-   009F C3                  628 	clr	c
-   00A0 ED                  629 	mov	a,r5
-   00A1 95*00               630 	subb	a,_send_bytes_PARM_2
-   00A3 50 1D               631 	jnc	00107$
-                            632 ;	serial.c:75: while (!TI);
-   00A5                     633 00101$:
-                            634 ;	serial.c:76: TI = 0; 
-   00A5 10 99 02            635 	jbc	_SCON_1,00114$
-   00A8 80 FB               636 	sjmp	00101$
-   00AA                     637 00114$:
-                            638 ;	serial.c:77: SBUF = h[i++];
-   00AA 8D 06               639 	mov	ar6,r5
-   00AC 0D                  640 	inc	r5
-   00AD EE                  641 	mov	a,r6
-   00AE 2A                  642 	add	a,r2
-   00AF FE                  643 	mov	r6,a
-   00B0 E4                  644 	clr	a
-   00B1 3B                  645 	addc	a,r3
-   00B2 FF                  646 	mov	r7,a
-   00B3 8C 00               647 	mov	ar0,r4
-   00B5 8E 82               648 	mov	dpl,r6
-   00B7 8F 83               649 	mov	dph,r7
-   00B9 88 F0               650 	mov	b,r0
-   00BB 12s00r00            651 	lcall	__gptrget
-   00BE F5 99               652 	mov	_SBUF,a
-   00C0 80 DD               653 	sjmp	00104$
-   00C2                     654 00107$:
-   00C2 22                  655 	ret
-                            656 ;------------------------------------------------------------
-                            657 ;Allocation info for local variables in function 'send_byte'
-                            658 ;------------------------------------------------------------
-                            659 ;h                         Allocated to registers r2 
-                            660 ;------------------------------------------------------------
-                            661 ;	serial.c:81: void send_byte(unsigned char h) {
-                            662 ;	-----------------------------------------
-                            663 ;	 function send_byte
-                            664 ;	-----------------------------------------
-   00C3                     665 _send_byte:
-   00C3 AA 82               666 	mov	r2,dpl
-                            667 ;	serial.c:82: while (!TI);
-   00C5                     668 00101$:
-                            669 ;	serial.c:83: TI = 0; 
-   00C5 10 99 02            670 	jbc	_SCON_1,00108$
-   00C8 80 FB               671 	sjmp	00101$
-   00CA                     672 00108$:
-                            673 ;	serial.c:84: SBUF = h;  
-   00CA 8A 99               674 	mov	_SBUF,r2
-   00CC 22                  675 	ret
-                            676 ;------------------------------------------------------------
-                            677 ;Allocation info for local variables in function 'send_hex'
-                            678 ;------------------------------------------------------------
-                            679 ;c                         Allocated to registers r2 
-                            680 ;cn                        Allocated to registers r3 
-                            681 ;------------------------------------------------------------
-                            682 ;	serial.c:87: void send_hex(unsigned char c) {
-                            683 ;	-----------------------------------------
-                            684 ;	 function send_hex
-                            685 ;	-----------------------------------------
-   00CD                     686 _send_hex:
-                            687 ;	serial.c:91: cn = (c>>4) & 0x0f;
-   00CD E5 82               688 	mov	a,dpl
-   00CF FA                  689 	mov	r2,a
-   00D0 C4                  690 	swap	a
-   00D1 54 0F               691 	anl	a,#0x0f
-   00D3 FB                  692 	mov	r3,a
-   00D4 53 03 0F            693 	anl	ar3,#0x0F
-                            694 ;	serial.c:92: cn += 0x30;
-   00D7 74 30               695 	mov	a,#0x30
-   00D9 2B                  696 	add	a,r3
-                            697 ;	serial.c:93: if (cn > 0x39)
-   00DA FB                  698 	mov  r3,a
-   00DB 24 C6               699 	add	a,#0xff - 0x39
-   00DD 50 04               700 	jnc	00103$
-                            701 ;	serial.c:94: cn += 0x07;
-   00DF 74 07               702 	mov	a,#0x07
-   00E1 2B                  703 	add	a,r3
-   00E2 FB                  704 	mov	r3,a
-                            705 ;	serial.c:95: while (!TI);
-   00E3                     706 00103$:
-                            707 ;	serial.c:96: TI = 0;
-   00E3 10 99 02            708 	jbc	_SCON_1,00120$
-   00E6 80 FB               709 	sjmp	00103$
-   00E8                     710 00120$:
-                            711 ;	serial.c:97: SBUF = cn;
-   00E8 8B 99               712 	mov	_SBUF,r3
-                            713 ;	serial.c:99: cn = c & 0x0f;
-   00EA 74 0F               714 	mov	a,#0x0F
-   00EC 5A                  715 	anl	a,r2
-   00ED FB                  716 	mov	r3,a
-                            717 ;	serial.c:100: cn += 0x30;
-   00EE 74 30               718 	mov	a,#0x30
-   00F0 2B                  719 	add	a,r3
-                            720 ;	serial.c:101: if (cn > 0x39)
-   00F1 FB                  721 	mov  r3,a
-   00F2 24 C6               722 	add	a,#0xff - 0x39
-   00F4 50 04               723 	jnc	00108$
-                            724 ;	serial.c:102: cn += 0x07;
-   00F6 74 07               725 	mov	a,#0x07
-   00F8 2B                  726 	add	a,r3
-   00F9 FB                  727 	mov	r3,a
-                            728 ;	serial.c:103: while (!TI);
-   00FA                     729 00108$:
-                            730 ;	serial.c:104: TI = 0;
-   00FA 10 99 02            731 	jbc	_SCON_1,00122$
-   00FD 80 FB               732 	sjmp	00108$
-   00FF                     733 00122$:
-                            734 ;	serial.c:105: SBUF = cn;
-   00FF 8B 99               735 	mov	_SBUF,r3
-   0101 22                  736 	ret
-                            737 	.area CSEG    (CODE)
-                            738 	.area CONST   (CODE)
-                            739 	.area XINIT   (CODE)
-                            740 	.area CABS    (ABS,CODE)
+                            453 	.area HOME    (CODE)
+                            454 	.area HOME    (CODE)
+                            455 ;--------------------------------------------------------
+                            456 ; code
+                            457 ;--------------------------------------------------------
+                            458 	.area CSEG    (CODE)
+                            459 ;------------------------------------------------------------
+                            460 ;Allocation info for local variables in function 'initSerial'
+                            461 ;------------------------------------------------------------
+                            462 ;baud                      Allocated to registers r2 r3 
+                            463 ;------------------------------------------------------------
+                            464 ;	serial.c:22: void initSerial(unsigned short baud) {
+                            465 ;	-----------------------------------------
+                            466 ;	 function initSerial
+                            467 ;	-----------------------------------------
+   0000                     468 _initSerial:
+                    0002    469 	ar2 = 0x02
+                    0003    470 	ar3 = 0x03
+                    0004    471 	ar4 = 0x04
+                    0005    472 	ar5 = 0x05
+                    0006    473 	ar6 = 0x06
+                    0007    474 	ar7 = 0x07
+                    0000    475 	ar0 = 0x00
+                    0001    476 	ar1 = 0x01
+   0000 AA 82               477 	mov	r2,dpl
+   0002 AB 83               478 	mov	r3,dph
+                            479 ;	serial.c:25: SCON   = 0x52;		// 0101 0010 = Mode 8N1, enable reception, TxIntFlag=1 ? 
+   0004 75 98 52            480 	mov	_SCON,#0x52
+                            481 ;	serial.c:26: SSTAT |= 0x80;		// 1000 0000 = Double buffering mode
+   0007 43 BA 80            482 	orl	_SSTAT,#0x80
+                            483 ;	serial.c:27: switch (baud) {
+   000A BA 60 05            484 	cjne	r2,#0x60,00114$
+   000D BB 00 02            485 	cjne	r3,#0x00,00114$
+   0010 80 20               486 	sjmp	00101$
+   0012                     487 00114$:
+   0012 BA C0 05            488 	cjne	r2,#0xC0,00115$
+   0015 BB 00 02            489 	cjne	r3,#0x00,00115$
+   0018 80 20               490 	sjmp	00102$
+   001A                     491 00115$:
+   001A BA 80 05            492 	cjne	r2,#0x80,00116$
+   001D BB 01 02            493 	cjne	r3,#0x01,00116$
+   0020 80 20               494 	sjmp	00103$
+   0022                     495 00116$:
+   0022 BA 40 05            496 	cjne	r2,#0x40,00117$
+   0025 BB 02 02            497 	cjne	r3,#0x02,00117$
+   0028 80 20               498 	sjmp	00104$
+   002A                     499 00117$:
+                            500 ;	serial.c:29: case 96:
+   002A BA 80 2B            501 	cjne	r2,#0x80,00106$
+   002D BB 04 28            502 	cjne	r3,#0x04,00106$
+   0030 80 20               503 	sjmp	00105$
+   0032                     504 00101$:
+                            505 ;	serial.c:30: BRGR0  = 0x88; 
+   0032 75 BE 88            506 	mov	_BRGR0,#0x88
+                            507 ;	serial.c:31: BRGR1  = 0x02;
+   0035 75 BF 02            508 	mov	_BRGR1,#0x02
+                            509 ;	serial.c:32: break;
+                            510 ;	serial.c:33: case 192:
+   0038 80 1E               511 	sjmp	00106$
+   003A                     512 00102$:
+                            513 ;	serial.c:34: BRGR0  = 0xBC; 
+   003A 75 BE BC            514 	mov	_BRGR0,#0xBC
+                            515 ;	serial.c:35: BRGR1  = 0x02;
+   003D 75 BF 02            516 	mov	_BRGR1,#0x02
+                            517 ;	serial.c:36: break;
+                            518 ;	serial.c:37: case 384:
+   0040 80 16               519 	sjmp	00106$
+   0042                     520 00103$:
+                            521 ;	serial.c:38: BRGR0  = 0x56; 
+   0042 75 BE 56            522 	mov	_BRGR0,#0x56
+                            523 ;	serial.c:39: BRGR1  = 0x01;
+   0045 75 BF 01            524 	mov	_BRGR1,#0x01
+                            525 ;	serial.c:40: break;
+                            526 ;	serial.c:41: case 576:
+   0048 80 0E               527 	sjmp	00106$
+   004A                     528 00104$:
+                            529 ;	serial.c:42: BRGR0  = 0xDE; 
+   004A 75 BE DE            530 	mov	_BRGR0,#0xDE
+                            531 ;	serial.c:43: BRGR1  = 0x00;
+   004D 75 BF 00            532 	mov	_BRGR1,#0x00
+                            533 ;	serial.c:44: break;
+                            534 ;	serial.c:45: case 1152:
+   0050 80 06               535 	sjmp	00106$
+   0052                     536 00105$:
+                            537 ;	serial.c:46: BRGR0  = 0x67; 
+   0052 75 BE 67            538 	mov	_BRGR0,#0x67
+                            539 ;	serial.c:47: BRGR1  = 0x00;
+   0055 75 BF 00            540 	mov	_BRGR1,#0x00
+                            541 ;	serial.c:49: }
+   0058                     542 00106$:
+                            543 ;	serial.c:50: BRGCON = 0x03;		// Select the baud rate generator as timing source and enable it
+   0058 75 BD 03            544 	mov	_BRGCON,#0x03
+                            545 ;	serial.c:52: TI = 1;
+   005B D2 99               546 	setb	_SCON_1
+   005D 22                  547 	ret
+                            548 ;------------------------------------------------------------
+                            549 ;Allocation info for local variables in function 'send_byte'
+                            550 ;------------------------------------------------------------
+                            551 ;h                         Allocated to registers r2 
+                            552 ;------------------------------------------------------------
+                            553 ;	serial.c:58: void send_byte(unsigned char h) {
+                            554 ;	-----------------------------------------
+                            555 ;	 function send_byte
+                            556 ;	-----------------------------------------
+   005E                     557 _send_byte:
+   005E AA 82               558 	mov	r2,dpl
+                            559 ;	serial.c:59: while (!TI);
+   0060                     560 00101$:
+                            561 ;	serial.c:60: TI = 0; 
+   0060 10 99 02            562 	jbc	_SCON_1,00108$
+   0063 80 FB               563 	sjmp	00101$
+   0065                     564 00108$:
+                            565 ;	serial.c:61: SBUF = h;  
+   0065 8A 99               566 	mov	_SBUF,r2
+   0067 22                  567 	ret
+                            568 	.area CSEG    (CODE)
+                            569 	.area CONST   (CODE)
+                            570 	.area XINIT   (CODE)
+                            571 	.area CABS    (ABS,CODE)

@@ -362,13 +362,8 @@ Symbol Table
     _WDL                                                        =  00C1 G
     _WFEED1                                                     =  00C2 G
     _WFEED2                                                     =  00C3 G
-    __gptrget                                                      **** GX
  17 _initSerial                                                    0000 GR
- 17 _send_byte                                                     00C3 GR
- 17 _send_bytes                                                    0097 GR
-  6 _send_bytes_PARM_2                                             0000 GR
- 17 _send_hex                                                      00CD GR
- 17 _send_string                                                   005E GR
+ 17 _send_byte                                                     005E GR
     a                                                              00E0 
     a.0                                                            00E0 
     a.1                                                            00E1 
@@ -564,7 +559,7 @@ Area Table
    3 RSEG1                                      size    0   flags 8
    4 REG_BANK_0                                 size    8   flags 4
    5 DSEG                                       size    0   flags 0
-   6 OSEG                                       size    1   flags 4
+   6 OSEG                                       size    0   flags 4
    7 ISEG                                       size    0   flags 0
    8 IABS                                       size    0   flags 8
    9 BSEG                                       size    0   flags 80
@@ -581,7 +576,7 @@ Area Table
   14 GSINIT5                                    size    0   flags 20
   15 GSINIT                                     size    0   flags 20
   16 GSFINAL                                    size    0   flags 20
-  17 CSEG                                       size  102   flags 20
+  17 CSEG                                       size   68   flags 20
   18 CONST                                      size    0   flags 20
   19 XINIT                                      size    0   flags 20
   1A CABS                                       size    0   flags 28

@@ -61,6 +61,8 @@ static int song_arg;
 /* Set by function track_list_needed() and read by handle_user_req() */
 static int req_track_no;
 
+static int req_pl_no;
+
 /* We gather a some information from the responses in this variable: */
 static struct STATUS ans_model;
 
@@ -126,10 +128,21 @@ process_currentsong_line(char *s){
 
 
 static void 
-process_lsinfo_line(char *s){
+process_plcount(char *s){
+	/* Compare with "playlistcount: " */
+	if (strstart(response, "playlistcount: "))
+		mpd_set_playlistcount(atoi(response+15));
+
+	/* Compare with "OK" */
+	if (strstart(response, "OK")) {
+		response_valid = 1;
+	};
+};
+
+process_plname(char *s){
 	/* Compare with "playlist: " */
 	if (strstart(response, "playlist: "))
-		mpd_set_playlistname(response+10);
+		model_store_playlistname(response+10, req_pl_no);
 
 	/* Compare with "OK" */
 	if (strstart(response, "OK")) {
@@ -217,7 +230,7 @@ process_status_line(char *s){
 		if (ans_model.pos == SONG_UNKNOWN)
 			mpd_set_pos (NO_SONG);
 		
-		mpd_set_last_status(system_time());
+		mpd_status_ok();
 		response_valid = 1;
 		return;
 	};
@@ -733,12 +746,7 @@ PT_THREAD (exec_action(struct pt *pt, enum USER_CMD cmd, int arg) ){
 		PT_EXIT(pt);
 	};	
 	
-	if (cmd == LSINFO_CMD){
-		start_reading_playlists();
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "lsinfo\n", process_lsinfo_line, NULL, 1));	
-		PT_EXIT(pt);
-	};	
-	
+
 // CLEAR command currently not used
 #if 0
 	if (cmd == CLEAR_CMD){
@@ -770,6 +778,18 @@ PT_THREAD (exec_action(struct pt *pt, enum USER_CMD cmd, int arg) ){
 	if (cmd == SINGLE_CMD){
 		compose_string (cmd_str, "single ", arg, CMDSTR_LEN);
 		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_sgl, NULL, 1));
+		PT_EXIT(pt);
+	};
+		
+	if (cmd == PLAYLISTCOUNT_CMD){
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "playlistcount\n", process_plcount, NULL, 1));
+		PT_EXIT(pt);
+	};
+		
+	if (cmd == PLAYLISTNAME_CMD){
+		compose_string (cmd_str, "playlistname ", arg, CMDSTR_LEN);
+		req_pl_no = arg;
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_plname, NULL, 1));
 		PT_EXIT(pt);
 	};
 		

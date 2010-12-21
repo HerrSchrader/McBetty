@@ -137,7 +137,7 @@ startup
  *(.startup)
                 0x00000000                . = ALIGN (0x4)
 
-.text           0x80000000    0x1bd5c
+.text           0x80000000    0x1bd94
  *(.text)
  .text          0x80000000      0x198 crt.o
                 0x80000000                _startup
@@ -442,451 +442,453 @@ startup
                 0x8000b338                setCBIntervall
                 0x8000b2f8                startCB
  .text          0x8000b358        0x0 tools/toolsmenu.thumb.o
- .text          0x8000b358      0xc04 tools/scart_icp.thumb.o
+ .text          0x8000b358      0xc38 tools/scart_icp.thumb.o
                 0x8000b4d0                scart_icp_header
                 0x8000b528                scart_icp
- .text          0x8000bf5c      0x1dc infrared/ir_itt.thumbunopt.o
-                0x8000c0c4                ITT_Repeat
-                0x8000c108                ITT_Stop
-                0x8000bf5c                ITT_LoadMap
-                0x8000c068                ITT_Send
-                0x8000bfdc                ITT_Init
- .text          0x8000c138      0x22c infrared/ir_nrc17.thumbunopt.o
-                0x8000c314                NRC17_Stop
-                0x8000c1c4                NRC17_Init
-                0x8000c138                NRC17_CopyMap
-                0x8000c268                NRC17_Send
-                0x8000c2d0                NRC17_Repeat
-                0x8000c17c                NRC17_LoadMap
- .text          0x8000c364      0x234 infrared/ir_raw.thumbunopt.o
-                0x8000c528                RAW_Stop
-                0x8000c51c                RAW_Repeat
-                0x8000c364                RAW_Init
-                0x8000c450                RAW_Send
- .text          0x8000c598      0x1a0 infrared/ir_rc5.thumbunopt.o
-                0x8000c598                RC5_Init
-                0x8000c6f0                RC5_Stop
-                0x8000c6a4                RC5_Repeat
-                0x8000c628                RC5_Send
- .text          0x8000c738      0x144 infrared/ir_rc6.thumbunopt.o
-                0x8000c7ec                RC6_Repeat
-                0x8000c738                RC6_Init
-                0x8000c840                RC6_Stop
-                0x8000c7bc                RC6_Send
- .text          0x8000c87c      0x18c infrared/ir_rca.thumbunopt.o
-                0x8000c87c                RCA_LoadMap
-                0x8000c93c                RCA_Send
-                0x8000c8b8                RCA_Init
-                0x8000c9ac                RCA_Repeat
-                0x8000c9c4                RCA_Stop
- .text          0x8000ca08      0x180 infrared/ir_rcmm.thumbunopt.o
-                0x8000cae8                RCMM_Send
-                0x8000ca08                RCMM_LoadMap
-                0x8000ca64                RCMM_Init
-                0x8000cb58                RCMM_Stop
-                0x8000cb18                RCMM_Repeat
- .text          0x8000cb88      0x188 infrared/ir_rec80.thumbunopt.o
-                0x8000ccac                REC80_Repeat
-                0x8000cbc4                REC80_Init
-                0x8000cc54                REC80_Send
-                0x8000cce0                REC80_Stop
-                0x8000cb88                REC80_LoadMap
- .text          0x8000cd10      0x164 infrared/ir_recs80.thumbunopt.o
-                0x8000ce3c                RECS80_Stop
-                0x8000cda8                RECS80_Send
-                0x8000cdfc                RECS80_Repeat
-                0x8000cd10                RECS80_Init
- .text          0x8000ce74      0x1ac infrared/ir_rf.thumbunopt.o
-                0x8000cfe4                IRRF_Stop
-                0x8000ce74                IRRF_Init
-                0x8000cf04                IRRF_Send
-                0x8000cf60                IRRF_Repeat
- .text          0x8000d020      0x170 infrared/ir_sirc.thumbunopt.o
-                0x8000d0b8                SIRC_Send
-                0x8000d160                SIRC_Stop
-                0x8000d120                SIRC_Repeat
-                0x8000d020                SIRC_Init
- .text          0x8000d190      0x29c infrared/ir_spaceenc.thumbunopt.o
-                0x8000d3fc                SPACEENC2_Stop
-                0x8000d2ec                SPACEENC_Send
-                0x8000d320                SPACEENC_Repeat
-                0x8000d268                SPACEENC_Init
-                0x8000d394                SPACEENC2_Send
-                0x8000d3b4                SPACEENC2_Repeat
-                0x8000d190                SPACEENC_LoadMap
-                0x8000d358                SPACEENC_Stop
- .text          0x8000d42c      0x114 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
-                0x8000d42c                __udivsi3
-                0x8000d42c                __aeabi_uidiv
-                0x8000d520                __aeabi_uidivmod
- .text          0x8000d540      0x148 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
-                0x8000d540                __aeabi_idiv
-                0x8000d540                __divsi3
-                0x8000d668                __aeabi_idivmod
- .text          0x8000d688        0x4 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
-                0x8000d688                __aeabi_ldiv0
-                0x8000d688                __aeabi_idiv0
+ .text          0x8000bf90      0x1dc infrared/ir_itt.thumbunopt.o
+                0x8000c0f8                ITT_Repeat
+                0x8000c13c                ITT_Stop
+                0x8000bf90                ITT_LoadMap
+                0x8000c09c                ITT_Send
+                0x8000c010                ITT_Init
+ .text          0x8000c16c      0x22c infrared/ir_nrc17.thumbunopt.o
+                0x8000c348                NRC17_Stop
+                0x8000c1f8                NRC17_Init
+                0x8000c16c                NRC17_CopyMap
+                0x8000c29c                NRC17_Send
+                0x8000c304                NRC17_Repeat
+                0x8000c1b0                NRC17_LoadMap
+ .text          0x8000c398      0x234 infrared/ir_raw.thumbunopt.o
+                0x8000c55c                RAW_Stop
+                0x8000c550                RAW_Repeat
+                0x8000c398                RAW_Init
+                0x8000c484                RAW_Send
+ .text          0x8000c5cc      0x1a0 infrared/ir_rc5.thumbunopt.o
+                0x8000c5cc                RC5_Init
+                0x8000c724                RC5_Stop
+                0x8000c6d8                RC5_Repeat
+                0x8000c65c                RC5_Send
+ .text          0x8000c76c      0x144 infrared/ir_rc6.thumbunopt.o
+                0x8000c820                RC6_Repeat
+                0x8000c76c                RC6_Init
+                0x8000c874                RC6_Stop
+                0x8000c7f0                RC6_Send
+ .text          0x8000c8b0      0x18c infrared/ir_rca.thumbunopt.o
+                0x8000c8b0                RCA_LoadMap
+                0x8000c970                RCA_Send
+                0x8000c8ec                RCA_Init
+                0x8000c9e0                RCA_Repeat
+                0x8000c9f8                RCA_Stop
+ .text          0x8000ca3c      0x180 infrared/ir_rcmm.thumbunopt.o
+                0x8000cb1c                RCMM_Send
+                0x8000ca3c                RCMM_LoadMap
+                0x8000ca98                RCMM_Init
+                0x8000cb8c                RCMM_Stop
+                0x8000cb4c                RCMM_Repeat
+ .text          0x8000cbbc      0x188 infrared/ir_rec80.thumbunopt.o
+                0x8000cce0                REC80_Repeat
+                0x8000cbf8                REC80_Init
+                0x8000cc88                REC80_Send
+                0x8000cd14                REC80_Stop
+                0x8000cbbc                REC80_LoadMap
+ .text          0x8000cd44      0x164 infrared/ir_recs80.thumbunopt.o
+                0x8000ce70                RECS80_Stop
+                0x8000cddc                RECS80_Send
+                0x8000ce30                RECS80_Repeat
+                0x8000cd44                RECS80_Init
+ .text          0x8000cea8      0x1ac infrared/ir_rf.thumbunopt.o
+                0x8000d018                IRRF_Stop
+                0x8000cea8                IRRF_Init
+                0x8000cf38                IRRF_Send
+                0x8000cf94                IRRF_Repeat
+ .text          0x8000d054      0x170 infrared/ir_sirc.thumbunopt.o
+                0x8000d0ec                SIRC_Send
+                0x8000d194                SIRC_Stop
+                0x8000d154                SIRC_Repeat
+                0x8000d054                SIRC_Init
+ .text          0x8000d1c4      0x29c infrared/ir_spaceenc.thumbunopt.o
+                0x8000d430                SPACEENC2_Stop
+                0x8000d320                SPACEENC_Send
+                0x8000d354                SPACEENC_Repeat
+                0x8000d29c                SPACEENC_Init
+                0x8000d3c8                SPACEENC2_Send
+                0x8000d3e8                SPACEENC2_Repeat
+                0x8000d1c4                SPACEENC_LoadMap
+                0x8000d38c                SPACEENC_Stop
+ .text          0x8000d460      0x114 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+                0x8000d460                __udivsi3
+                0x8000d460                __aeabi_uidiv
+                0x8000d554                __aeabi_uidivmod
+ .text          0x8000d574      0x148 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+                0x8000d574                __aeabi_idiv
+                0x8000d574                __divsi3
+                0x8000d69c                __aeabi_idivmod
+ .text          0x8000d6bc        0x4 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x8000d6bc                __aeabi_ldiv0
+                0x8000d6bc                __aeabi_idiv0
  *(.rodata)
- .rodata        0x8000d68c       0x10 main.o
-                0x8000d68c                hval
- .rodata        0x8000d69c        0x3 audio/soundirq.o
-                0x8000d69c                prevvoice
- *fill*         0x8000d69f        0x1 00
- .rodata        0x8000d6a0       0xe0 audio/sid.thumb.o
-                0x8000d73d                song3
-                0x8000d6dc                DecayReleaseRate
-                0x8000d6a0                notes
-                0x8000d6bc                AttackRate
-                0x8000d6fc                song2
- .rodata        0x8000d780       0x2f cc1100/cc1100.thumb.o
-                0x8000d780                conf
- .rodata        0x8000d7af        0x2 cc1100/rf.thumb.o
-                0x8000d7af                default_RFsettings
- .rodata        0x8000d7b1     0x1402 display/lcd.thumb.o
-                0x8000ebb2                b_h
-                0x8000ebb1                b_w
-                0x8000d7b1                b_data
- .rodata        0x8000ebb3     0x1347 display/fonty.thumb.o
-                0x8000ec3a                smooth_mt_bits
-                0x8000ef67                smooth_lt_bits
-                0x8000f294                smooth_mb_bits
-                0x8000ebb3                smooth_info
-                0x8000f8ee                charset_bits
-                0x8000f5c1                smooth_lb_bits
-                0x8000fef8                charset_dlines
-                0x8000fe68                charset_info
-                0x8000fef9                smooth_dlines
- *fill*         0x8000fefa        0x2 00
- .rodata        0x8000fefc       0x4c flash/flash.thumb.o
-                0x8000fefc                secaddr
- .rodata        0x8000ff48       0x48 games/gamesmenu.thumb.o
-                0x8000ff48                gamesMenuEntries
-                0x8000ff84                gamesMenu
- .rodata        0x8000ff90     0x7a34 games/sokoban.thumb.o
-                0x8000ff90                Sokoban_Levels
- .rodata        0x800179c4      0x26c games/connect4.thumb.o
-                0x800179dc                map
-                0x80017c28                drop_order
- .rodata        0x80017c30       0x5c gui/mainmenu.thumb.o
-                0x80017c80                mainMenu
-                0x80017c30                mainMenuEntries
- .rodata        0x80017c8c      0x1dc gui/testmenu.thumb.o
-                0x80017d10                itilemap
-                0x80017e5c                testMenu
-                0x80017d44                testMenuEntries
- .rodata        0x80017e68       0x7c gui/settingsmenu.thumb.o
-                0x80017e68                settingsMenu
-                0x80017e80                settingsMenuEntries
-                0x80017e74                default_settings
- .rodata        0x80017ee4       0x5f gui/controls.thumb.o
-                0x80017f14                TXTKey5
-                0x80017f40                TXTKey0
-                0x80017efc                TXTKey2
-                0x80017f24                TXTKey7
-                0x80017f04                TXTKey3
-                0x80017ee4                string_yes
-                0x80017f0c                TXTKey4
-                0x80017ee7                string_no
-                0x80017f36                TXTKey9
-                0x80017eec                string_ok
-                0x80017eef                TXTKey1
-                0x80017f2e                TXTKey8
-                0x80017f1c                TXTKey6
- *fill*         0x80017f43        0x1 00
- .rodata        0x80017f44       0x14 infrared/infrared.thumb.o
-                0x80017f44                defModule
- .rodata        0x80017f58      0x81c infrared/codes.thumb.o
-                0x8001856c                SIRC
-                0x800181d8                RC5
-                0x80018108                NRC17
-                0x80017f8c                ITT
-                0x800183a0                RCMM
-                0x8001863c                SPACEENC
-                0x800182a0                RC6
-                0x800183e4                REC80
-                0x80018760                RAW
-                0x8001835c                RCA
-                0x800184ac                RECS80
-                0x800186ac                IRRF
- .rodata        0x80018774      0x110 infrared/encoders.thumb.o
-                0x800187c0                encoders
- .rodata        0x80018884       0xc0 infrared/ir_capture.thumb.o
-                0x80018938                string_unknown
- .rodata        0x80018944       0x13 infrared/ir_selector.thumb.o
-                0x8001894d                default_irDevTab
- *fill*         0x80018957        0x1 00
- .rodata        0x80018958       0x84 rtc/rtc.thumb.o
-                0x800189c1                rtc_init
-                0x80018988                days
-                0x800189ce                rtc_timer_init
-                0x800189d8                default_date
-                0x800189d4                default_time
-                0x80018996                months
- .rodata        0x800189dc       0x20 tools/toolsmenu.thumb.o
-                0x800189f0                toolsMenu
-                0x800189dc                toolsMenuEntries
- .rodata        0x800189fc     0x2004 tools/scart_icp.thumb.o
-                0x8001a9fc                scart_bootstat
-                0x8001a9fd                scart_bootvec
-                0x8001a9fe                scart_image_startaddr
-                0x800189fc                scart_image
- .rodata        0x8001aa00       0x54 infrared/ir_itt.thumbunopt.o
-                0x8001aa14                ITT2_Module
-                0x8001aa00                ITT_Module
- .rodata        0x8001aa54       0x34 infrared/ir_nrc17.thumbunopt.o
-                0x8001aa54                NRC17_Module
- .rodata        0x8001aa88       0x1c infrared/ir_raw.thumbunopt.o
-                0x8001aa88                RAW_Module
- .rodata        0x8001aaa4       0x2c infrared/ir_rc5.thumbunopt.o
-                0x8001aaa4                RC5_Module
- .rodata        0x8001aad0       0x3c infrared/ir_rc6.thumbunopt.o
-                0x8001aad0                RC6_Module
- .rodata        0x8001ab0c       0x38 infrared/ir_rca.thumbunopt.o
-                0x8001ab0c                RCA_Module
- .rodata        0x8001ab44       0x34 infrared/ir_rcmm.thumbunopt.o
-                0x8001ab44                RCMM_Module
-                0x8001ab58                ir_times
- .rodata        0x8001ab78       0x38 infrared/ir_rec80.thumbunopt.o
-                0x8001ab78                REC80_Module
- .rodata        0x8001abb0       0x28 infrared/ir_recs80.thumbunopt.o
-                0x8001abb0                RECS80_Module
- .rodata        0x8001abd8       0x14 infrared/ir_rf.thumbunopt.o
-                0x8001abd8                IRRF_Module
- .rodata        0x8001abec       0x2c infrared/ir_sirc.thumbunopt.o
-                0x8001abec                SIRC_Module
- .rodata        0x8001ac18       0x90 infrared/ir_spaceenc.thumbunopt.o
-                0x8001ac78                SPACEENC2_Module
-                0x8001ac64                SPACEENC_Module
-                0x8001ac54                dtv3_pre
-                0x8001ac18                dtv3_codes
+ .rodata        0x8000d6c0       0x10 main.o
+                0x8000d6c0                hval
+ .rodata        0x8000d6d0        0x3 audio/soundirq.o
+                0x8000d6d0                prevvoice
+ *fill*         0x8000d6d3        0x1 00
+ .rodata        0x8000d6d4       0xe0 audio/sid.thumb.o
+                0x8000d771                song3
+                0x8000d710                DecayReleaseRate
+                0x8000d6d4                notes
+                0x8000d6f0                AttackRate
+                0x8000d730                song2
+ .rodata        0x8000d7b4       0x2f cc1100/cc1100.thumb.o
+                0x8000d7b4                conf
+ .rodata        0x8000d7e3        0x2 cc1100/rf.thumb.o
+                0x8000d7e3                default_RFsettings
+ .rodata        0x8000d7e5     0x1402 display/lcd.thumb.o
+                0x8000ebe6                b_h
+                0x8000ebe5                b_w
+                0x8000d7e5                b_data
+ .rodata        0x8000ebe7     0x1347 display/fonty.thumb.o
+                0x8000ec6e                smooth_mt_bits
+                0x8000ef9b                smooth_lt_bits
+                0x8000f2c8                smooth_mb_bits
+                0x8000ebe7                smooth_info
+                0x8000f922                charset_bits
+                0x8000f5f5                smooth_lb_bits
+                0x8000ff2c                charset_dlines
+                0x8000fe9c                charset_info
+                0x8000ff2d                smooth_dlines
+ *fill*         0x8000ff2e        0x2 00
+ .rodata        0x8000ff30       0x4c flash/flash.thumb.o
+                0x8000ff30                secaddr
+ .rodata        0x8000ff7c       0x48 games/gamesmenu.thumb.o
+                0x8000ff7c                gamesMenuEntries
+                0x8000ffb8                gamesMenu
+ .rodata        0x8000ffc4     0x7a34 games/sokoban.thumb.o
+                0x8000ffc4                Sokoban_Levels
+ .rodata        0x800179f8      0x26c games/connect4.thumb.o
+                0x80017a10                map
+                0x80017c5c                drop_order
+ .rodata        0x80017c64       0x5c gui/mainmenu.thumb.o
+                0x80017cb4                mainMenu
+                0x80017c64                mainMenuEntries
+ .rodata        0x80017cc0      0x1dc gui/testmenu.thumb.o
+                0x80017d44                itilemap
+                0x80017e90                testMenu
+                0x80017d78                testMenuEntries
+ .rodata        0x80017e9c       0x7c gui/settingsmenu.thumb.o
+                0x80017e9c                settingsMenu
+                0x80017eb4                settingsMenuEntries
+                0x80017ea8                default_settings
+ .rodata        0x80017f18       0x5f gui/controls.thumb.o
+                0x80017f48                TXTKey5
+                0x80017f74                TXTKey0
+                0x80017f30                TXTKey2
+                0x80017f58                TXTKey7
+                0x80017f38                TXTKey3
+                0x80017f18                string_yes
+                0x80017f40                TXTKey4
+                0x80017f1b                string_no
+                0x80017f6a                TXTKey9
+                0x80017f20                string_ok
+                0x80017f23                TXTKey1
+                0x80017f62                TXTKey8
+                0x80017f50                TXTKey6
+ *fill*         0x80017f77        0x1 00
+ .rodata        0x80017f78       0x14 infrared/infrared.thumb.o
+                0x80017f78                defModule
+ .rodata        0x80017f8c      0x81c infrared/codes.thumb.o
+                0x800185a0                SIRC
+                0x8001820c                RC5
+                0x8001813c                NRC17
+                0x80017fc0                ITT
+                0x800183d4                RCMM
+                0x80018670                SPACEENC
+                0x800182d4                RC6
+                0x80018418                REC80
+                0x80018794                RAW
+                0x80018390                RCA
+                0x800184e0                RECS80
+                0x800186e0                IRRF
+ .rodata        0x800187a8      0x110 infrared/encoders.thumb.o
+                0x800187f4                encoders
+ .rodata        0x800188b8       0xc0 infrared/ir_capture.thumb.o
+                0x8001896c                string_unknown
+ .rodata        0x80018978       0x13 infrared/ir_selector.thumb.o
+                0x80018981                default_irDevTab
+ *fill*         0x8001898b        0x1 00
+ .rodata        0x8001898c       0x84 rtc/rtc.thumb.o
+                0x800189f5                rtc_init
+                0x800189bc                days
+                0x80018a02                rtc_timer_init
+                0x80018a0c                default_date
+                0x80018a08                default_time
+                0x800189ca                months
+ .rodata        0x80018a10       0x20 tools/toolsmenu.thumb.o
+                0x80018a24                toolsMenu
+                0x80018a10                toolsMenuEntries
+ .rodata        0x80018a30     0x2006 tools/scart_icp.thumb.o
+                0x8001aa31                scart_bootstat
+                0x8001aa32                scart_bootvec
+                0x8001aa30                scart_UCFG1
+                0x8001aa34                scart_image_startaddr
+                0x80018a30                scart_image
+ *fill*         0x8001aa36        0x2 00
+ .rodata        0x8001aa38       0x54 infrared/ir_itt.thumbunopt.o
+                0x8001aa4c                ITT2_Module
+                0x8001aa38                ITT_Module
+ .rodata        0x8001aa8c       0x34 infrared/ir_nrc17.thumbunopt.o
+                0x8001aa8c                NRC17_Module
+ .rodata        0x8001aac0       0x1c infrared/ir_raw.thumbunopt.o
+                0x8001aac0                RAW_Module
+ .rodata        0x8001aadc       0x2c infrared/ir_rc5.thumbunopt.o
+                0x8001aadc                RC5_Module
+ .rodata        0x8001ab08       0x3c infrared/ir_rc6.thumbunopt.o
+                0x8001ab08                RC6_Module
+ .rodata        0x8001ab44       0x38 infrared/ir_rca.thumbunopt.o
+                0x8001ab44                RCA_Module
+ .rodata        0x8001ab7c       0x34 infrared/ir_rcmm.thumbunopt.o
+                0x8001ab7c                RCMM_Module
+                0x8001ab90                ir_times
+ .rodata        0x8001abb0       0x38 infrared/ir_rec80.thumbunopt.o
+                0x8001abb0                REC80_Module
+ .rodata        0x8001abe8       0x28 infrared/ir_recs80.thumbunopt.o
+                0x8001abe8                RECS80_Module
+ .rodata        0x8001ac10       0x14 infrared/ir_rf.thumbunopt.o
+                0x8001ac10                IRRF_Module
+ .rodata        0x8001ac24       0x2c infrared/ir_sirc.thumbunopt.o
+                0x8001ac24                SIRC_Module
+ .rodata        0x8001ac50       0x90 infrared/ir_spaceenc.thumbunopt.o
+                0x8001acb0                SPACEENC2_Module
+                0x8001ac9c                SPACEENC_Module
+                0x8001ac8c                dtv3_pre
+                0x8001ac50                dtv3_codes
  *(.rodata*)
  .rodata.str1.1
-                0x8001aca8        0xa main.o
+                0x8001ace0        0xa main.o
  .rodata.str1.1
-                0x8001acb2       0x1c adc/adc.thumb.o
+                0x8001acea       0x1c adc/adc.thumb.o
                                  0x25 (size before relaxing)
  .rodata.str1.1
-                0x8001acce       0x2b flash/flash.thumb.o
+                0x8001ad06       0x2b flash/flash.thumb.o
  .rodata.str1.1
-                0x8001acf9        0x4 flash/bfs.thumb.o
+                0x8001ad31        0x4 flash/bfs.thumb.o
  .rodata.str1.1
-                0x8001acfd       0x30 games/gamesmenu.thumb.o
+                0x8001ad35       0x30 games/gamesmenu.thumb.o
                                  0x4b (size before relaxing)
  .rodata.str1.1
-                0x8001ad2d       0x69 games/tic_tac_toe.thumb.o
+                0x8001ad65       0x69 games/tic_tac_toe.thumb.o
                                  0x75 (size before relaxing)
  .rodata.str1.1
-                0x8001ad96       0x53 games/sokoban.thumb.o
+                0x8001adce       0x53 games/sokoban.thumb.o
                                  0x7c (size before relaxing)
  .rodata.str1.1
-                0x8001ade9       0x9d games/connect4.thumb.o
+                0x8001ae21       0x9d games/connect4.thumb.o
                                  0xac (size before relaxing)
  .rodata.str1.1
-                0x8001ae86       0x51 gui/mainmenu.thumb.o
+                0x8001aebe       0x51 gui/mainmenu.thumb.o
                                  0x57 (size before relaxing)
  .rodata.str1.1
-                0x8001aed7      0x2e6 gui/testmenu.thumb.o
+                0x8001af0f      0x2e6 gui/testmenu.thumb.o
                                 0x30a (size before relaxing)
  .rodata.str1.1
-                0x8001b1bd       0xd8 gui/settingsmenu.thumb.o
+                0x8001b1f5       0xd8 gui/settingsmenu.thumb.o
                                  0xe4 (size before relaxing)
  .rodata.str1.1
-                0x8001b295        0x5 gui/controls.thumb.o
+                0x8001b2cd        0x5 gui/controls.thumb.o
                                   0x7 (size before relaxing)
  .rodata.str1.1
-                0x8001b29a       0x28 infrared/codes.thumb.o
+                0x8001b2d2       0x28 infrared/codes.thumb.o
  .rodata.str1.1
                 0x00000000       0x28 infrared/encoders.thumb.o
                                   0x6 (size before relaxing)
  .rodata.str1.1
-                0x8001b2c2      0x43b infrared/ir_capture.thumb.o
+                0x8001b2fa      0x43b infrared/ir_capture.thumb.o
                                 0x46b (size before relaxing)
  .rodata.str1.1
-                0x8001b6fd       0xb9 infrared/ir_selector.thumb.o
+                0x8001b735       0xb9 infrared/ir_selector.thumb.o
                                  0xcb (size before relaxing)
  .rodata.str1.1
-                0x8001b7b6       0x6b rtc/rtc.thumb.o
+                0x8001b7ee       0x6b rtc/rtc.thumb.o
  .rodata.str1.1
-                0x8001b821        0xa tools/toolsmenu.thumb.o
+                0x8001b859        0xa tools/toolsmenu.thumb.o
                                  0x10 (size before relaxing)
  .rodata.str1.1
-                0x8001b82b      0x2e2 tools/scart_icp.thumb.o
+                0x8001b863      0x2e2 tools/scart_icp.thumb.o
                                 0x2ef (size before relaxing)
  *(.glue_7)
- *fill*         0x8001bb0d        0x3 00
- .glue_7        0x8001bb10        0x0 crt.o
- .glue_7        0x8001bb10        0x0 main.o
- .glue_7        0x8001bb10        0x0 global.o
- .glue_7        0x8001bb10        0x0 audio/soundirq.o
- .glue_7        0x8001bb10        0x0 infrared/infraredirq.o
- .glue_7        0x8001bb10        0x0 interrupt/irq.o
- .glue_7        0x8001bb10        0x0 keyboard/keyirq.o
- .glue_7        0x8001bb10        0x0 timer/timerirq.o
- .glue_7        0x8001bb10        0x0 adc/adc.thumb.o
- .glue_7        0x8001bb10        0x0 adc/adcirq.thumb.o
- .glue_7        0x8001bb10        0x0 audio/sound.thumb.o
- .glue_7        0x8001bb10        0x0 audio/sid.thumb.o
- .glue_7        0x8001bb10        0x0 cc1100/cc1100.thumb.o
- .glue_7        0x8001bb10        0x0 cc1100/rf.thumb.o
- .glue_7        0x8001bb10        0x0 display/lcd.thumb.o
- .glue_7        0x8001bb10        0x0 display/fonty.thumb.o
- .glue_7        0x8001bb10        0x0 display/backlight.thumb.o
- .glue_7        0x8001bb10        0x0 flash/flash.thumb.o
- .glue_7        0x8001bb10        0x0 flash/bfs.thumb.o
- .glue_7        0x8001bb10        0x0 games/gamesmenu.thumb.o
- .glue_7        0x8001bb10        0x0 games/tic_tac_toe.thumb.o
- .glue_7        0x8001bb10        0x0 games/sokoban.thumb.o
- .glue_7        0x8001bb10        0x0 games/connect4.thumb.o
- .glue_7        0x8001bb10        0x0 gui/menu.thumb.o
- .glue_7        0x8001bb10        0x0 gui/mainmenu.thumb.o
- .glue_7        0x8001bb10        0x0 gui/testmenu.thumb.o
- .glue_7        0x8001bb10        0x0 gui/settingsmenu.thumb.o
- .glue_7        0x8001bb10        0x0 gui/controls.thumb.o
- .glue_7        0x8001bb10        0x0 infrared/infrared.thumb.o
- .glue_7        0x8001bb10        0x0 infrared/codes.thumb.o
- .glue_7        0x8001bb10        0x0 infrared/encoders.thumb.o
- .glue_7        0x8001bb10        0x0 infrared/ir_capture.thumb.o
- .glue_7        0x8001bb10        0x0 infrared/ir_selector.thumb.o
- .glue_7        0x8001bb10        0x0 keyboard/keyboard.thumb.o
- .glue_7        0x8001bb10        0x0 rtc/rtc.thumb.o
- .glue_7        0x8001bb10        0x0 rtc/i2c.thumb.o
- .glue_7        0x8001bb10        0x0 serial/serial.thumb.o
- .glue_7        0x8001bb10        0x0 timer/timerfuncs.thumb.o
- .glue_7        0x8001bb10        0x0 tools/toolsmenu.thumb.o
- .glue_7        0x8001bb10        0x0 tools/scart_icp.thumb.o
- .glue_7        0x8001bb10        0x0 infrared/ir_itt.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_nrc17.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_raw.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_rc5.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_rc6.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_rca.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_rcmm.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_rec80.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_recs80.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_rf.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_sirc.thumbunopt.o
- .glue_7        0x8001bb10        0x0 infrared/ir_spaceenc.thumbunopt.o
- .glue_7        0x8001bb10        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
- .glue_7        0x8001bb10        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
- .glue_7        0x8001bb10      0x204 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
-                0x8001bbc4                __initKeys_from_arm
-                0x8001bcc0                __setBacklight_from_arm
-                0x8001bc18                __enableWOR_from_arm
-                0x8001bc24                __initRTC_from_arm
-                0x8001bb7c                __printDate_from_arm
-                0x8001bc54                __initBacklight_from_arm
-                0x8001bb58                __getSetName_from_arm
-                0x8001bb70                __printTime_from_arm
-                0x8001bce4                __serial_tstc_from_arm
-                0x8001bb10                __RF_sendWOR_from_arm
-                0x8001bc48                __init_menu_from_arm
-                0x8001bbdc                __startSoundIRQ_from_arm
-                0x8001bcf0                __serial_getc_from_arm
-                0x8001bc00                __RF_init_from_arm
-                0x8001bb88                __showBat_from_arm
-                0x8001bc90                __BFS_SaveFile_from_arm
-                0x8001bb4c                __draw_logo_from_arm
-                0x8001bc6c                __load_RC_setting_from_arm
-                0x8001bccc                __menu_exec_from_arm
-                0x8001bc78                __load_RF_setting_from_arm
-                0x8001bba0                __serial_init_from_arm
-                0x8001bb34                __set_font_from_arm
-                0x8001bc30                __startRtcIRQ_from_arm
-                0x8001bb28                __RF_send_from_arm
-                0x8001bc84                __load_setting_from_arm
-                0x8001bc60                __BFS_Mount_from_arm
-                0x8001bbd0                __initSound_from_arm
-                0x8001bcfc                __serial_puts_from_arm
-                0x8001bcb4                __setEncoder_from_arm
-                0x8001bd08                __serial_putc_from_arm
-                0x8001bb1c                __switch_WOR_RX_from_arm
-                0x8001bbac                __startTimerIRQ_from_arm
-                0x8001bc9c                __eraseSector_from_arm
-                0x8001bbb8                __startADC_from_arm
-                0x8001bb94                __lcd_init_from_arm
-                0x8001bca8                __EncIsValid_from_arm
-                0x8001bb40                __lcd_fill_from_arm
-                0x8001bcd8                __getCode_from_arm
-                0x8001bbe8                __initIR_from_arm
-                0x8001bb64                __draw_string_from_arm
-                0x8001bbf4                __startIrIRQ_from_arm
-                0x8001bc3c                __testmenu_init_from_arm
-                0x8001bc0c                __startcc1100IRQ_from_arm
+ *fill*         0x8001bb45        0x3 00
+ .glue_7        0x8001bb48        0x0 crt.o
+ .glue_7        0x8001bb48        0x0 main.o
+ .glue_7        0x8001bb48        0x0 global.o
+ .glue_7        0x8001bb48        0x0 audio/soundirq.o
+ .glue_7        0x8001bb48        0x0 infrared/infraredirq.o
+ .glue_7        0x8001bb48        0x0 interrupt/irq.o
+ .glue_7        0x8001bb48        0x0 keyboard/keyirq.o
+ .glue_7        0x8001bb48        0x0 timer/timerirq.o
+ .glue_7        0x8001bb48        0x0 adc/adc.thumb.o
+ .glue_7        0x8001bb48        0x0 adc/adcirq.thumb.o
+ .glue_7        0x8001bb48        0x0 audio/sound.thumb.o
+ .glue_7        0x8001bb48        0x0 audio/sid.thumb.o
+ .glue_7        0x8001bb48        0x0 cc1100/cc1100.thumb.o
+ .glue_7        0x8001bb48        0x0 cc1100/rf.thumb.o
+ .glue_7        0x8001bb48        0x0 display/lcd.thumb.o
+ .glue_7        0x8001bb48        0x0 display/fonty.thumb.o
+ .glue_7        0x8001bb48        0x0 display/backlight.thumb.o
+ .glue_7        0x8001bb48        0x0 flash/flash.thumb.o
+ .glue_7        0x8001bb48        0x0 flash/bfs.thumb.o
+ .glue_7        0x8001bb48        0x0 games/gamesmenu.thumb.o
+ .glue_7        0x8001bb48        0x0 games/tic_tac_toe.thumb.o
+ .glue_7        0x8001bb48        0x0 games/sokoban.thumb.o
+ .glue_7        0x8001bb48        0x0 games/connect4.thumb.o
+ .glue_7        0x8001bb48        0x0 gui/menu.thumb.o
+ .glue_7        0x8001bb48        0x0 gui/mainmenu.thumb.o
+ .glue_7        0x8001bb48        0x0 gui/testmenu.thumb.o
+ .glue_7        0x8001bb48        0x0 gui/settingsmenu.thumb.o
+ .glue_7        0x8001bb48        0x0 gui/controls.thumb.o
+ .glue_7        0x8001bb48        0x0 infrared/infrared.thumb.o
+ .glue_7        0x8001bb48        0x0 infrared/codes.thumb.o
+ .glue_7        0x8001bb48        0x0 infrared/encoders.thumb.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_capture.thumb.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_selector.thumb.o
+ .glue_7        0x8001bb48        0x0 keyboard/keyboard.thumb.o
+ .glue_7        0x8001bb48        0x0 rtc/rtc.thumb.o
+ .glue_7        0x8001bb48        0x0 rtc/i2c.thumb.o
+ .glue_7        0x8001bb48        0x0 serial/serial.thumb.o
+ .glue_7        0x8001bb48        0x0 timer/timerfuncs.thumb.o
+ .glue_7        0x8001bb48        0x0 tools/toolsmenu.thumb.o
+ .glue_7        0x8001bb48        0x0 tools/scart_icp.thumb.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_itt.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_nrc17.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_raw.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_rc5.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_rc6.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_rca.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_rcmm.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_rec80.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_recs80.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_rf.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_sirc.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 infrared/ir_spaceenc.thumbunopt.o
+ .glue_7        0x8001bb48        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .glue_7        0x8001bb48        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .glue_7        0x8001bb48      0x204 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x8001bbfc                __initKeys_from_arm
+                0x8001bcf8                __setBacklight_from_arm
+                0x8001bc50                __enableWOR_from_arm
+                0x8001bc5c                __initRTC_from_arm
+                0x8001bbb4                __printDate_from_arm
+                0x8001bc8c                __initBacklight_from_arm
+                0x8001bb90                __getSetName_from_arm
+                0x8001bba8                __printTime_from_arm
+                0x8001bd1c                __serial_tstc_from_arm
+                0x8001bb48                __RF_sendWOR_from_arm
+                0x8001bc80                __init_menu_from_arm
+                0x8001bc14                __startSoundIRQ_from_arm
+                0x8001bd28                __serial_getc_from_arm
+                0x8001bc38                __RF_init_from_arm
+                0x8001bbc0                __showBat_from_arm
+                0x8001bcc8                __BFS_SaveFile_from_arm
+                0x8001bb84                __draw_logo_from_arm
+                0x8001bca4                __load_RC_setting_from_arm
+                0x8001bd04                __menu_exec_from_arm
+                0x8001bcb0                __load_RF_setting_from_arm
+                0x8001bbd8                __serial_init_from_arm
+                0x8001bb6c                __set_font_from_arm
+                0x8001bc68                __startRtcIRQ_from_arm
+                0x8001bb60                __RF_send_from_arm
+                0x8001bcbc                __load_setting_from_arm
+                0x8001bc98                __BFS_Mount_from_arm
+                0x8001bc08                __initSound_from_arm
+                0x8001bd34                __serial_puts_from_arm
+                0x8001bcec                __setEncoder_from_arm
+                0x8001bd40                __serial_putc_from_arm
+                0x8001bb54                __switch_WOR_RX_from_arm
+                0x8001bbe4                __startTimerIRQ_from_arm
+                0x8001bcd4                __eraseSector_from_arm
+                0x8001bbf0                __startADC_from_arm
+                0x8001bbcc                __lcd_init_from_arm
+                0x8001bce0                __EncIsValid_from_arm
+                0x8001bb78                __lcd_fill_from_arm
+                0x8001bd10                __getCode_from_arm
+                0x8001bc20                __initIR_from_arm
+                0x8001bb9c                __draw_string_from_arm
+                0x8001bc2c                __startIrIRQ_from_arm
+                0x8001bc74                __testmenu_init_from_arm
+                0x8001bc44                __startcc1100IRQ_from_arm
  *(.glue_7t)
- .glue_7t       0x8001bd14        0x0 crt.o
- .glue_7t       0x8001bd14        0x0 main.o
- .glue_7t       0x8001bd14        0x0 global.o
- .glue_7t       0x8001bd14        0x0 audio/soundirq.o
- .glue_7t       0x8001bd14        0x0 infrared/infraredirq.o
- .glue_7t       0x8001bd14        0x0 interrupt/irq.o
- .glue_7t       0x8001bd14        0x0 keyboard/keyirq.o
- .glue_7t       0x8001bd14        0x0 timer/timerirq.o
- .glue_7t       0x8001bd14        0x0 adc/adc.thumb.o
- .glue_7t       0x8001bd14        0x0 adc/adcirq.thumb.o
- .glue_7t       0x8001bd14        0x0 audio/sound.thumb.o
- .glue_7t       0x8001bd14        0x0 audio/sid.thumb.o
- .glue_7t       0x8001bd14        0x0 cc1100/cc1100.thumb.o
- .glue_7t       0x8001bd14        0x0 cc1100/rf.thumb.o
- .glue_7t       0x8001bd14        0x0 display/lcd.thumb.o
- .glue_7t       0x8001bd14        0x0 display/fonty.thumb.o
- .glue_7t       0x8001bd14        0x0 display/backlight.thumb.o
- .glue_7t       0x8001bd14        0x0 flash/flash.thumb.o
- .glue_7t       0x8001bd14        0x0 flash/bfs.thumb.o
- .glue_7t       0x8001bd14        0x0 games/gamesmenu.thumb.o
- .glue_7t       0x8001bd14        0x0 games/tic_tac_toe.thumb.o
- .glue_7t       0x8001bd14        0x0 games/sokoban.thumb.o
- .glue_7t       0x8001bd14        0x0 games/connect4.thumb.o
- .glue_7t       0x8001bd14        0x0 gui/menu.thumb.o
- .glue_7t       0x8001bd14        0x0 gui/mainmenu.thumb.o
- .glue_7t       0x8001bd14        0x0 gui/testmenu.thumb.o
- .glue_7t       0x8001bd14        0x0 gui/settingsmenu.thumb.o
- .glue_7t       0x8001bd14        0x0 gui/controls.thumb.o
- .glue_7t       0x8001bd14        0x0 infrared/infrared.thumb.o
- .glue_7t       0x8001bd14        0x0 infrared/codes.thumb.o
- .glue_7t       0x8001bd14        0x0 infrared/encoders.thumb.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_capture.thumb.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_selector.thumb.o
- .glue_7t       0x8001bd14        0x0 keyboard/keyboard.thumb.o
- .glue_7t       0x8001bd14        0x0 rtc/rtc.thumb.o
- .glue_7t       0x8001bd14        0x0 rtc/i2c.thumb.o
- .glue_7t       0x8001bd14        0x0 serial/serial.thumb.o
- .glue_7t       0x8001bd14        0x0 timer/timerfuncs.thumb.o
- .glue_7t       0x8001bd14        0x0 tools/toolsmenu.thumb.o
- .glue_7t       0x8001bd14        0x0 tools/scart_icp.thumb.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_itt.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_nrc17.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_raw.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_rc5.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_rc6.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_rca.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_rcmm.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_rec80.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_recs80.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_rf.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_sirc.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 infrared/ir_spaceenc.thumbunopt.o
- .glue_7t       0x8001bd14        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
- .glue_7t       0x8001bd14        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
- .glue_7t       0x8001bd14       0x48 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
-                0x8001bd20                ____aeabi_uidiv_change_to_arm
-                0x8001bd38                __setSpeed_change_to_arm
-                0x8001bd4c                ____aeabi_idivmod_from_thumb
-                0x8001bd54                ____aeabi_idiv_from_thumb
-                0x8001bd14                __memcpy_from_thumb
-                0x8001bd1c                ____aeabi_uidiv_from_thumb
-                0x8001bd2c                ____aeabi_uidivmod_from_thumb
-                0x8001bd34                __setSpeed_from_thumb
-                0x8001bd48                __enableIRQ_change_to_arm
-                0x8001bd30                ____aeabi_uidivmod_change_to_arm
-                0x8001bd44                __enableIRQ_from_thumb
-                0x8001bd40                __disableIRQ_change_to_arm
-                0x8001bd24                __memcmp_from_thumb
-                0x8001bd28                __memcmp_change_to_arm
-                0x8001bd50                ____aeabi_idivmod_change_to_arm
-                0x8001bd18                __memcpy_change_to_arm
-                0x8001bd3c                __disableIRQ_from_thumb
-                0x8001bd58                ____aeabi_idiv_change_to_arm
-                0x8001bd5c                _etext = .
+ .glue_7t       0x8001bd4c        0x0 crt.o
+ .glue_7t       0x8001bd4c        0x0 main.o
+ .glue_7t       0x8001bd4c        0x0 global.o
+ .glue_7t       0x8001bd4c        0x0 audio/soundirq.o
+ .glue_7t       0x8001bd4c        0x0 infrared/infraredirq.o
+ .glue_7t       0x8001bd4c        0x0 interrupt/irq.o
+ .glue_7t       0x8001bd4c        0x0 keyboard/keyirq.o
+ .glue_7t       0x8001bd4c        0x0 timer/timerirq.o
+ .glue_7t       0x8001bd4c        0x0 adc/adc.thumb.o
+ .glue_7t       0x8001bd4c        0x0 adc/adcirq.thumb.o
+ .glue_7t       0x8001bd4c        0x0 audio/sound.thumb.o
+ .glue_7t       0x8001bd4c        0x0 audio/sid.thumb.o
+ .glue_7t       0x8001bd4c        0x0 cc1100/cc1100.thumb.o
+ .glue_7t       0x8001bd4c        0x0 cc1100/rf.thumb.o
+ .glue_7t       0x8001bd4c        0x0 display/lcd.thumb.o
+ .glue_7t       0x8001bd4c        0x0 display/fonty.thumb.o
+ .glue_7t       0x8001bd4c        0x0 display/backlight.thumb.o
+ .glue_7t       0x8001bd4c        0x0 flash/flash.thumb.o
+ .glue_7t       0x8001bd4c        0x0 flash/bfs.thumb.o
+ .glue_7t       0x8001bd4c        0x0 games/gamesmenu.thumb.o
+ .glue_7t       0x8001bd4c        0x0 games/tic_tac_toe.thumb.o
+ .glue_7t       0x8001bd4c        0x0 games/sokoban.thumb.o
+ .glue_7t       0x8001bd4c        0x0 games/connect4.thumb.o
+ .glue_7t       0x8001bd4c        0x0 gui/menu.thumb.o
+ .glue_7t       0x8001bd4c        0x0 gui/mainmenu.thumb.o
+ .glue_7t       0x8001bd4c        0x0 gui/testmenu.thumb.o
+ .glue_7t       0x8001bd4c        0x0 gui/settingsmenu.thumb.o
+ .glue_7t       0x8001bd4c        0x0 gui/controls.thumb.o
+ .glue_7t       0x8001bd4c        0x0 infrared/infrared.thumb.o
+ .glue_7t       0x8001bd4c        0x0 infrared/codes.thumb.o
+ .glue_7t       0x8001bd4c        0x0 infrared/encoders.thumb.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_capture.thumb.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_selector.thumb.o
+ .glue_7t       0x8001bd4c        0x0 keyboard/keyboard.thumb.o
+ .glue_7t       0x8001bd4c        0x0 rtc/rtc.thumb.o
+ .glue_7t       0x8001bd4c        0x0 rtc/i2c.thumb.o
+ .glue_7t       0x8001bd4c        0x0 serial/serial.thumb.o
+ .glue_7t       0x8001bd4c        0x0 timer/timerfuncs.thumb.o
+ .glue_7t       0x8001bd4c        0x0 tools/toolsmenu.thumb.o
+ .glue_7t       0x8001bd4c        0x0 tools/scart_icp.thumb.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_itt.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_nrc17.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_raw.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_rc5.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_rc6.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_rca.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_rcmm.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_rec80.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_recs80.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_rf.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_sirc.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 infrared/ir_spaceenc.thumbunopt.o
+ .glue_7t       0x8001bd4c        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_udivsi3.o)
+ .glue_7t       0x8001bd4c        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .glue_7t       0x8001bd4c       0x48 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x8001bd58                ____aeabi_uidiv_change_to_arm
+                0x8001bd70                __setSpeed_change_to_arm
+                0x8001bd84                ____aeabi_idivmod_from_thumb
+                0x8001bd8c                ____aeabi_idiv_from_thumb
+                0x8001bd4c                __memcpy_from_thumb
+                0x8001bd54                ____aeabi_uidiv_from_thumb
+                0x8001bd64                ____aeabi_uidivmod_from_thumb
+                0x8001bd6c                __setSpeed_from_thumb
+                0x8001bd80                __enableIRQ_change_to_arm
+                0x8001bd68                ____aeabi_uidivmod_change_to_arm
+                0x8001bd7c                __enableIRQ_from_thumb
+                0x8001bd78                __disableIRQ_change_to_arm
+                0x8001bd5c                __memcmp_from_thumb
+                0x8001bd60                __memcmp_change_to_arm
+                0x8001bd88                ____aeabi_idivmod_change_to_arm
+                0x8001bd50                __memcpy_change_to_arm
+                0x8001bd74                __disableIRQ_from_thumb
+                0x8001bd90                ____aeabi_idiv_change_to_arm
+                0x8001bd94                _etext = .
 
 .vfp11_veneer   0x00000000        0x0
  .vfp11_veneer  0x00000000        0x0 crt.o
@@ -1116,8 +1118,8 @@ startup
  .v4_bx         0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
                 0x00000000                . = ALIGN (0x4)
 
-.fastcode       0x40000000     0x204c load address 0x8001bd5c
-                0x8001bd5c                __fastcode_load = LOADADDR (.fastcode)
+.fastcode       0x40000000     0x204c load address 0x8001bd94
+                0x8001bd94                __fastcode_load = LOADADDR (.fastcode)
                 0x40000000                __fastcode_start = .
  *(.text.fastcode)
  .text.fastcode
@@ -1223,7 +1225,7 @@ startup
                 0x4000204c                . = ALIGN (0x4)
                 0x4000204c                __fastcode_end = .
 
-.data           0x4000204c       0x28 load address 0x8001dda8
+.data           0x4000204c       0x28 load address 0x8001dde0
                 0x4000204c                _data = .
  *(.data)
  .data          0x4000204c        0x0 crt.o

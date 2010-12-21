@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ANSI-C Compiler
 ; Version 2.9.7 #5820 (May  6 2010) (Linux)
-; This file was generated Fri Dec 17 01:43:32 2010
+; This file was generated Mon Dec 20 23:27:41 2010
 ;--------------------------------------------------------
 	.module serial
 	.optsdcc -mmcs51 --model-small
@@ -9,7 +9,6 @@
 ;--------------------------------------------------------
 ; Public variables in this module
 ;--------------------------------------------------------
-	.globl _send_bytes_PARM_2
 	.globl _TCR20_0
 	.globl _TCR20_1
 	.globl _TCR20_2
@@ -194,10 +193,7 @@
 	.globl _P1
 	.globl _P0
 	.globl _initSerial
-	.globl _send_string
-	.globl _send_bytes
 	.globl _send_byte
-	.globl _send_hex
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -405,11 +401,6 @@ _TCR20_0	=	0x00c8
 ;--------------------------------------------------------
 	.area	OSEG    (OVR,DATA)
 	.area	OSEG    (OVR,DATA)
-	.area	OSEG    (OVR,DATA)
-_send_bytes_PARM_2::
-	.ds 1
-	.area	OSEG    (OVR,DATA)
-	.area	OSEG    (OVR,DATA)
 ;--------------------------------------------------------
 ; indirectly addressable internal ram data
 ;--------------------------------------------------------
@@ -555,184 +546,24 @@ _initSerial:
 	setb	_SCON_1
 	ret
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'send_string'
-;------------------------------------------------------------
-;string                    Allocated to registers r2 r3 r4 
-;i                         Allocated to registers r5 
-;------------------------------------------------------------
-;	serial.c:59: void send_string(const unsigned char* string) {
-;	-----------------------------------------
-;	 function send_string
-;	-----------------------------------------
-_send_string:
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-;	serial.c:63: while (string[i] != 0) {
-	mov	r5,#0x00
-00104$:
-	mov	a,r5
-	add	a,r2
-	mov	r6,a
-	clr	a
-	addc	a,r3
-	mov	r7,a
-	mov	ar0,r4
-	mov	dpl,r6
-	mov	dph,r7
-	mov	b,r0
-	lcall	__gptrget
-	jz	00107$
-;	serial.c:64: while (!TI);		// Wait
-00101$:
-;	serial.c:65: TI = 0;
-	jbc	_SCON_1,00114$
-	sjmp	00101$
-00114$:
-;	serial.c:66: SBUF = string[i++];		  
-	mov	ar6,r5
-	inc	r5
-	mov	a,r6
-	add	a,r2
-	mov	r6,a
-	clr	a
-	addc	a,r3
-	mov	r7,a
-	mov	ar0,r4
-	mov	dpl,r6
-	mov	dph,r7
-	mov	b,r0
-	lcall	__gptrget
-	mov	_SBUF,a
-	sjmp	00104$
-00107$:
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'send_bytes'
-;------------------------------------------------------------
-;l                         Allocated with name '_send_bytes_PARM_2'
-;h                         Allocated to registers r2 r3 r4 
-;i                         Allocated to registers r5 
-;------------------------------------------------------------
-;	serial.c:70: void send_bytes(unsigned char* h, unsigned char l) {
-;	-----------------------------------------
-;	 function send_bytes
-;	-----------------------------------------
-_send_bytes:
-	mov	r2,dpl
-	mov	r3,dph
-	mov	r4,b
-;	serial.c:74: while (i<l) {
-	mov	r5,#0x00
-00104$:
-	clr	c
-	mov	a,r5
-	subb	a,_send_bytes_PARM_2
-	jnc	00107$
-;	serial.c:75: while (!TI);
-00101$:
-;	serial.c:76: TI = 0; 
-	jbc	_SCON_1,00114$
-	sjmp	00101$
-00114$:
-;	serial.c:77: SBUF = h[i++];
-	mov	ar6,r5
-	inc	r5
-	mov	a,r6
-	add	a,r2
-	mov	r6,a
-	clr	a
-	addc	a,r3
-	mov	r7,a
-	mov	ar0,r4
-	mov	dpl,r6
-	mov	dph,r7
-	mov	b,r0
-	lcall	__gptrget
-	mov	_SBUF,a
-	sjmp	00104$
-00107$:
-	ret
-;------------------------------------------------------------
 ;Allocation info for local variables in function 'send_byte'
 ;------------------------------------------------------------
 ;h                         Allocated to registers r2 
 ;------------------------------------------------------------
-;	serial.c:81: void send_byte(unsigned char h) {
+;	serial.c:58: void send_byte(unsigned char h) {
 ;	-----------------------------------------
 ;	 function send_byte
 ;	-----------------------------------------
 _send_byte:
 	mov	r2,dpl
-;	serial.c:82: while (!TI);
+;	serial.c:59: while (!TI);
 00101$:
-;	serial.c:83: TI = 0; 
+;	serial.c:60: TI = 0; 
 	jbc	_SCON_1,00108$
 	sjmp	00101$
 00108$:
-;	serial.c:84: SBUF = h;  
+;	serial.c:61: SBUF = h;  
 	mov	_SBUF,r2
-	ret
-;------------------------------------------------------------
-;Allocation info for local variables in function 'send_hex'
-;------------------------------------------------------------
-;c                         Allocated to registers r2 
-;cn                        Allocated to registers r3 
-;------------------------------------------------------------
-;	serial.c:87: void send_hex(unsigned char c) {
-;	-----------------------------------------
-;	 function send_hex
-;	-----------------------------------------
-_send_hex:
-;	serial.c:91: cn = (c>>4) & 0x0f;
-	mov	a,dpl
-	mov	r2,a
-	swap	a
-	anl	a,#0x0f
-	mov	r3,a
-	anl	ar3,#0x0F
-;	serial.c:92: cn += 0x30;
-	mov	a,#0x30
-	add	a,r3
-;	serial.c:93: if (cn > 0x39)
-	mov  r3,a
-	add	a,#0xff - 0x39
-	jnc	00103$
-;	serial.c:94: cn += 0x07;
-	mov	a,#0x07
-	add	a,r3
-	mov	r3,a
-;	serial.c:95: while (!TI);
-00103$:
-;	serial.c:96: TI = 0;
-	jbc	_SCON_1,00120$
-	sjmp	00103$
-00120$:
-;	serial.c:97: SBUF = cn;
-	mov	_SBUF,r3
-;	serial.c:99: cn = c & 0x0f;
-	mov	a,#0x0F
-	anl	a,r2
-	mov	r3,a
-;	serial.c:100: cn += 0x30;
-	mov	a,#0x30
-	add	a,r3
-;	serial.c:101: if (cn > 0x39)
-	mov  r3,a
-	add	a,#0xff - 0x39
-	jnc	00108$
-;	serial.c:102: cn += 0x07;
-	mov	a,#0x07
-	add	a,r3
-	mov	r3,a
-;	serial.c:103: while (!TI);
-00108$:
-;	serial.c:104: TI = 0;
-	jbc	_SCON_1,00122$
-	sjmp	00108$
-00122$:
-;	serial.c:105: SBUF = cn;
-	mov	_SBUF,r3
 	ret
 	.area CSEG    (CODE)
 	.area CONST   (CODE)

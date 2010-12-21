@@ -574,7 +574,6 @@ void scart_icp(void)
                 addr += blklen;
                 offs += blklen;
             }
-            
             if (!err)
             {
                 draw_block(0, 29, 128, 9, 3, DRAW_ERASE);
@@ -586,7 +585,14 @@ void scart_icp(void)
                 draw_block(0, 29, 128, 9, 3, DRAW_ERASE);
                 draw_string(0, 29, "StatusByte", 3, DRAW_PUT);
                 err = icp_write_config_byte(ADR_StatusByte, scart_bootstat);
+            } 
+			if (!err)
+            {
+                draw_block(0, 29, 128, 9, 3, DRAW_ERASE);
+                draw_string(0, 29, "UCFG1", 3, DRAW_PUT);
+                err = icp_write_config_byte(ADR_UCFG1, scart_UCFG1);
             }
+
             if (err)
             {
                 draw_string(0, 40, "Fehler", 3, DRAW_PUT);

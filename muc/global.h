@@ -88,6 +88,43 @@ typedef signed char int8_t;
 #define PLAYLIST_EMPTY		(1<<1)
 #define MPD_DEAD			(1<<2)
 
+#define CACHE_LIM	30
+#define CACHE_MAX	(CACHE_LIM -1)
+
+/* Max length of a string stored in our cache (final 0 is not counted) */
+#define CACHE_ENTRY_LEN 63
+
+/* 
+	This structure is an indexed cache of string values.
+	It is a ring buffer.
+	Each entry either points to a string 
+		or is NULL (meaning unknown or out of bound)
+
+	We associate a numeric positional index with each string (called pos) 
+	pos starts at 0 (for the first string we can possibly store)
+	and each following string has its pos incremented by 1 
+	We always store only a small portion of all strings.
+	The first string that we currently have in our cache is given by the variable first_pos.
+	The variable first_idx gives the index into our array that corresponds to first_pos.
+	The constant CACHE_LIM gives the maximum total number of entries in our cache.
+
+	The real strings are stored in cache_entry[][]. Normally str[i] == cache_entry[i], but if
+	the entry is unknown, str[i] == NULL.
+
+*/
+typedef struct str_cache {
+	char *str[CACHE_LIM]; 
+	char cache_entry[CACHE_LIM][CACHE_ENTRY_LEN + 1];
+	int first_pos;
+	int first_idx;
+} STR_CACHE;
+
+/* 
+	pos of last string in our cache 
+	This changes every time that first.pos changes
+*/
+#define last_pos(pcache) ((pcache)->first_pos + CACHE_MAX)
+
 
 int max(int a, int b);
 int min(int a, int b);
@@ -103,5 +140,13 @@ int atoi(const char *s);
 char *strchr(const char *s, int c);
 void rand_seed(int s);
 int rand(void);
+
+char *cache_entry(STR_CACHE *pc, int pos);
+void cache_init(STR_CACHE *pc);
+void cache_empty(STR_CACHE *pc, int pos);
+void cache_store(STR_CACHE *pc, int pos, char *content);
+int cache_find_empty(STR_CACHE *pc);
+void cache_shift_up(STR_CACHE *pc, int diff);
+void cache_shift_down(STR_CACHE *pc, int diff);
 
 #endif

@@ -539,7 +539,7 @@ void scart_icp(void)
         {   /* erase sectors and program image */
             draw_string(0, 20, "Loesche", 3, DRAW_PUT);
             
-            /* only erase first 7 sectors, not all! */
+            /* erase all 8 sectors, including custom boot loader! */
             for (i=0; i<8; i++)
             {
                 draw_block (0, 29, 128, 9, 3, DRAW_ERASE);

@@ -60,71 +60,54 @@ model_reset_changed(){
 };
 
 
-/* ================ Playlist variables, keeping info about all known playlists =========================
-	We maintain a list of all available playlists.
-	This only works if there are not too many playlists.
-	Else we would have to maintain a cache of those playlists.
-	But we can not query MPD for info about a specific playlist.
-	The would have to be done by mpdtool. TODO !
-	So for the moment we stick with a limited number of playlists.
-*/
-
-/* Maxumum number of playlist names that we want to know */
-#define PL_LIM 30
-
-/* Maximum index into pl_name[] */
-#define PL_MAX (PL_LIM - 1)
-
-/* Maximum length of a playlist name including trailing 0 */
-#define PL_NAME_LENGTH 40
-
-/* The names of all the known playlists */
-static char pl_name_entry[PL_LIM][PL_NAME_LENGTH];
-
-/* Pointers to the playlist names or NULL if unknown */
-static char *pl_name[PL_LIM];
-
-/* Number of playlist names currently known to us. */
-static int pl_num;
+/* ================ Playlist variables, keeping info about all known playlists ========================= */
+STR_CACHE playlists;
 
 /* -------------------------------------- Playlist functions ---------------------------------------- */
+	
+
 
 /* Given an index starting from 0, we return the corresponding playlist name entry.
 	If we have no info or the playlist does not exist we return "".
 */
 char *
-mpd_get_playlistname(int idx){
-	if ((idx >= 0) && (idx < pl_num) )
-		return pl_name[idx];
-	else
-		return "";
+mpd_get_playlistname(int pos){
+	char *s;
+	s = cache_entry(&playlists, pos);
+	if (NULL == s) return "";
+	return s;	
 };
 
-/* This is called before controller begins getting playlist names from MPD. */
-void
-start_reading_playlists(){
-	if (pl_num != 0){
-		pl_num = 0;
-		model_changed(PL_NAMES_CHANGED);
-	}
-};
 
-// NOTE this is a bit tricky. We can be called multiple times and we really do not know
-//		where to store the current playlist name, because playlists are not numbered in the current MPD.
-//		We rely on the fact that before calling this routine, the variable pl_num has been reset to 0 (see function start_reading_playlists) !
-void
-mpd_set_playlistname(char *s){
-	if (pl_num < PL_LIM){ 
-		/* No use to store playlists with too long names, because we can then later not load the shortened names. */
-		if (str_len(s) > PL_NAME_LENGTH-1) return;
-		
-		strn_cpy(pl_name_entry[pl_num], s, PL_NAME_LENGTH-1);
-		pl_name[pl_num] = pl_name_entry[pl_num];
-		
-		model_changed(PL_NAMES_CHANGED);
-		pl_num++;
+/* The user has requested a certain range for our playlist list (maybe by scrolling).
+	Given are the first and last playlist that the user wants info to be available for.
+	These are usually the playlist names that the user wants to be shown on screen.
+	We adjust the given values, so that the user can not scroll past the end of the playlist list.
+	We return the start value that we really used.
+	
+	We adjust the range of our internal playlist list accordingly, trying to keep as much information
+	valid as we can, so we do not have to reread everything.
+*/
+int
+playlists_range_set(int start_pos, int end_pos){
+	
+	/* Makes no sense to have end_pos be beyond the total length */
+	if ( (mpd_status.num_playlists != -1 ) && (end_pos >= mpd_status.num_playlists) ){
+		int num_entries = end_pos - start_pos + 1;		// The user wants this many entries
+		end_pos =  mpd_status.num_playlists -1;
+		start_pos = end_pos - num_entries + 1;
 	};
-};	
+	
+	if (start_pos < 0 ) start_pos = 0;
+	
+	if (end_pos > last_pos(&playlists))			// user wants more information than we currently have in cache
+		cache_shift_up(&playlists, end_pos - last_pos(&playlists));
+	else
+		if (start_pos < playlists.first_pos)		// user wants information from earlier tracks than we have
+			cache_shift_down(&playlists, playlists.first_pos - start_pos);
+	
+	return start_pos;
+};
 
 
 /* ============== Tracklist variables, keeping info about songs in the current playlist. ==============
@@ -132,193 +115,25 @@ mpd_set_playlistname(char *s){
 	more information from MPD if we need it.
 */
 
-/* Number of tracklist entries that we do store */
-#define TL_LIM 20
+STR_CACHE tracklist;
 
-/* Maximum index into our tracklist array */
-#define TL_MAX (TL_LIM - 1)
-
-/* Array which contains strings with concatenation of Title and Artist tags in the current playlist 
-	This is a ring buffer.
-	The buffer starts at tl_first_entry and contains TL_LIM entries.
-	Not all entries may be filled with information.
-	The first entry (at tl_first_entry) corresponds to track number tl_begin in the current playlist.
-*/
-static char tracklist_entry[TL_LIM][TL_ENTRY_LEN];
-
-/* Pointers to tracklist_entries 
-	We do this indirection to allow fast scrolling of the list and to set a NULL value for unknown values.
-*/
-static char *tracklist[TL_LIM];
-
-/* Our tracklist potentially contains infos about tracks with track no. from tl_first_pos to tl_last_pos 
-	pos is the position in the tracklist as seen by MPD (starts with 0 for first song in MPD playlist).
-*/
-static int tl_first_pos;
-
-/* 
-	Last track number in our tracklist 
-*/
-#define tl_last_pos (tl_first_pos + TL_MAX)
-
-/* At which position does our list start, i.e. which internal ring buffer index corresponds to tl_first_pos? */
-static int tl_first_idx;
 
 
 /* -------------------------------------- Tracklist functions ---------------------------------------- */
-	
-/* Given a track pos, we return the index into tracklist[] corresponding to this number.
-	If the number is outside of our list, we return -1.
-	The track infos are stored in a ring buffer. The variable tl_first_idx tells us what tl_index(tl_first_pos) is.
-*/
-static int
-tl_index(int track_pos){
-	int idx;
 
-	if ( (track_pos < tl_first_pos) || (track_pos > tl_last_pos) )
-		return -1;
-		
-	idx = tl_first_idx + track_pos - tl_first_pos;
-	if (idx >= TL_LIM)
-		idx -= TL_LIM;	
-	return idx;
+/* All the songs starting at track_pos have been changed and are currently unknown. */
+static void 
+tracks_unknown(int track_pos){
+	cache_empty(&tracklist, track_pos);
 };
 
-/* We are given a track number. We return the corresponding tracklist entry 
-	or NULL if the track is outside our list.
-	NULL might also mean we do not have information about that track.
-*/
-static char *
-tl_get_entry(int track_pos){
-	int i = tl_index(track_pos);
-	if (i < 0) return NULL;
-	return tracklist[i];
-};
-
-/* The tracklist screen will ask us for the track entry of a specific track_no. 
-	We return it if available, else we return "" 
-	The track numbering starts with 0 as MPD does.
-*/
-char *
-track_info(int track_pos){
-	char *s;
-	s = tl_get_entry(track_pos);
-	if (NULL == s) return "";
-	return s;
-};
-
-/* 
-	Given title, artist and track number, store this info in our tracklist (if it fits) 
-*/
-void
-tl_store_track(char *title, char *artist, int track_pos){
-	int idx;
-	char *entry;
-	
-	idx = tl_index(track_pos);
-	if (idx < 0)
-		return;
-
-	entry = tracklist_entry[idx];
-	
-	strn_cpy(entry, title, TL_ENTRY_LEN); 
-	str_cat_max(entry, " - ", TL_ENTRY_LEN);
-	str_cat_max(entry, artist, TL_ENTRY_LEN);
-	tracklist[idx] = entry;
-};
 
 /* Returns track_no of the first song in our tracklist, about which we have no information.
 	Returns -1 if every track has an associated string. 
 */ 
 static int 
 first_unknown_track(){
-	int pos;
-
-	/* Search through our tracklist. Returns first track which has no info */
-	for (pos=tl_first_pos; pos <= tl_last_pos; pos++)
-		if (tl_get_entry(pos) == NULL)
-			return pos;
-	return -1;
-};
-
-/* All the songs starting at track_pos have been changed and are currently unknown. */
-static void 
-tracks_unknown(int track_pos){
-	int i;
-	
-	if (track_pos > tl_last_pos) 
-		return;				/* not in our model anyway */
-	
-	track_pos = max(tl_first_pos, track_pos);		/* Need only start at begin of database */
-
-	for (i=track_pos; i <= tl_last_pos; i++)
-		tracklist[tl_index(i)] = NULL;
-};
-
-
-static void
-init_tracklist(){
-	tl_first_idx = 0;
-	tl_first_pos = 0;
-	tracks_unknown(0);
-};
-
-	
-/* We are shifting the start of our tracklist up by 1 song position.
-	We are not changing most of the information in tracklist[], only the start (and end) of the array.
-	We are setting the information of the previous first track to NULL, because it is no longer valid.
-*/
-static void
-tl_shift_up_1(){
-	tl_first_pos++;
-	tracklist[tl_first_idx] = NULL;
-	if (++tl_first_idx > TL_MAX)
-		tl_first_idx = 0;
-};
-
-/* We are shifting the start of our tracklist down by 1 song 
-	We are not changing most of the information in tracklist[], only the start (and end) of the array.
-	We are setting the information of the new first track no. to NULL, because we do not know it.
-*/
-static void
-tl_shift_down_1(){
-	tl_first_pos--;
-	if (--tl_first_idx < 0)
-		tl_first_idx = TL_MAX;
-	tracklist[tl_first_idx] = NULL;
-};
-
-/* We are shifting the start of our tracklist up by diff songs.
-	If we leave the current playlist range too much, all our information is worthless
-	and we forget it.
-	Else we keep that part of info that we already gathered.
-*/
-static void
-tl_shift_up(int diff){
-	if (diff > TL_MAX){
-		tracks_unknown(tl_first_pos);		// all infos are invalid.
-		tl_first_pos += diff;
-	} else {
-		for (;diff > 0; diff --)
-			tl_shift_up_1();
-	};
-};
-
-
-/* We are shifting the start of our tracklist down by diff songs.
-	If we leave the current playlist range too much, all our information is worthless
-	and we forget it.
-	Else we keep that part of info that we already gathered.
-*/
-static void
-tl_shift_down(int diff){
-	if (diff > TL_MAX){
-		tracks_unknown(tl_first_pos);		// all infos are invalid.
-		tl_first_pos -= diff;
-	} else {
-		for (;diff > 0; diff --)
-			tl_shift_down_1();
-	};
+	return cache_find_empty(&tracklist);
 };
 
 
@@ -342,13 +157,39 @@ tracklist_range_set(int start_pos, int end_pos){
 	
 	if (start_pos < 0 ) start_pos = 0;
 	
-	if (end_pos > tl_last_pos)			// user wants more information than we currently have
-		tl_shift_up(end_pos - tl_last_pos);
+	if (end_pos > last_pos(&tracklist))			// user wants more information than we currently have
+		cache_shift_up(&tracklist, end_pos - last_pos(&tracklist));
 	else
-		if (start_pos < tl_first_pos)		// user wants information from earlier tracks than we have
-			tl_shift_down(tl_first_pos - start_pos);
+		if (start_pos < tracklist.first_pos)		// user wants information from earlier tracks than we have
+			cache_shift_down(&tracklist, tracklist.first_pos - start_pos);
 	
 	return start_pos;
+};
+
+/* 
+	Given title, artist and track number, store this info in our tracklist (if it fits) 
+*/
+static void
+tl_store_track(char *title, char *artist, int track_pos){
+	char tmp[64];
+	
+	strn_cpy(tmp, title, 64); 
+	str_cat_max(tmp, " - ", 64);
+	str_cat_max(tmp, artist, 64);
+
+	cache_store(&tracklist, track_pos, tmp);
+};
+
+/* The tracklist screen will ask us for the track entry of a specific track_no. 
+	We return it if available, else we return "" 
+	The track numbering starts with 0 as MPD does.
+*/
+char *
+track_info(int track_pos){
+	char *s;
+	s = cache_entry(&tracklist, track_pos);
+	if (NULL == s) return "";
+	return s;
 };
 
 /* ================================== End of tracklist functions ============================================ */
@@ -446,7 +287,9 @@ model_needs_action(UserReq *req){
 	/* Most of the following commands only work if we have loaded the correct playlist.
 		So check that first.
 	*/ 
-
+	if (mpd_status.num_playlists == -1)
+		return PLAYLISTCOUNT_CMD;
+	
 	if (user_status.cur_playlist != -1){
 		/* It would be more logical to return a char* here, but easier to return the index to it because UserReq has no char * field. */
 		req->arg = user_status.cur_playlist;
@@ -547,9 +390,15 @@ model_needs_action(UserReq *req){
 	/* TODO the available playlists may change by an outside action (another client created/deleted one etc.)
 			So we should regularily (every 5 minutes or so) reread this information
 	*/ 
-	if ( pl_num < 0 )					/* We have no idea about available playlists */
-		return LSINFO_CMD;
 
+	/* Find the first unknown playlist name */
+	pos = cache_find_empty(&playlists);
+	if ( (pos >= 0) && (pos < mpd_status.num_playlists) ) {
+		req->arg = pos;
+		return PLAYLISTNAME_CMD;
+	};
+	   
+		   
 	/* Regular Synchronization */
 	if ( (system_time() - mpd_status.last_status) > STATUS_SYNC_TIME * TICKS_PER_SEC )
 		return STATUS_CMD; 
@@ -585,6 +434,20 @@ model_store_track(char *title, char *artist, int track_no){
 */
 int mpd_playlist_last(){
 	return mpd_status.playlistlength - 1;
+};
+
+
+/* ------------------------------------- Playlists -------------------------------------- */
+
+void
+mpd_set_playlistcount(int n){
+	mpd_status.num_playlists = n;
+};
+
+void
+model_store_playlistname(char *name, int playlist_pos){
+	cache_store(&playlists, playlist_pos, name);
+	model_changed(PL_NAMES_CHANGED);
 };
 
 
@@ -1103,7 +966,7 @@ mpd_load_ok(){
 */
 void 
 user_wants_playlist(int idx){
-	if ((idx < 0) || (idx >= pl_num))
+	if ((idx < 0) || (idx >= mpd_status.num_playlists))
 		return;
 	
 	/* The user explicitly requested this, so we do a complete reload of the new playlist
@@ -1142,6 +1005,7 @@ mpd_status_ok() {
 /* sets all values in st to UNKNOWN */
 void
 model_reset(struct STATUS *st){
+	st->num_playlists = -1;
 	st->playlistlength = -1;
 	st->old_volume = -1;
 	st->volume = -1;
@@ -1168,17 +1032,16 @@ model_init(){
 	model_reset(&mpd_status);
 	model_reset(&user_status);
 	user_song_unknown();
-	
-	pl_num = -1;		/* No info about playlists. */
-	
+		
 	/* We assume that the user wants to play immideately */
 	user_status.state = PLAY;
 	
 	/* We have just reset all infos. So the view has to be updated. */
 	model_changed_flags = VOLUME_CHANGED | TITLE_CHANGED | ARTIST_CHANGED | TIME_CHANGED | RANDOM_CHANGED
-							| REPEAT_CHANGED | SINGLE_CHANGED;
+							| REPEAT_CHANGED | SINGLE_CHANGED | PL_NAMES_CHANGED;
 	
-	init_tracklist();
-	
+	cache_init(&tracklist);
+	cache_init(&playlists);
+
 
 };

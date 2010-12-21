@@ -372,8 +372,8 @@ Symbol Table
   7 __start__stack                                                 0000 GR
   8 _buf                                                           0000 GR
   5 _bufcnt                                                        0002 GR
- 18 _buffer_init                                                   0000 GR
- 18 _buffer_out                                                    005F GR
+ 18 _buffer_init                                                   000B GR
+ 18 _buffer_out                                                    006A GR
   5 _bufnxt                                                        0003 GR
   5 _bufstart                                                      0001 GR
     _cc1100_init                                                   **** GX
@@ -385,32 +385,33 @@ Symbol Table
     _cc1100_strobe                                                 **** GX
     _cc1100_write1                                                 **** GX
     _cc1100_write1_PARM_2                                          **** GX
- 18 _check_etx                                                     018E GR
- 18 _check_radio_input                                             0210 GR
+ 18 _check_etx                                                     0199 GR
+ 18 _check_radio_input                                             021B GR
   5 _check_radio_input_address_1_1                                 000A R
   5 _check_radio_input_length_1_1                                  0009 R
   5 _check_radio_input_x_1_1                                       000B R
- 18 _check_radio_packet                                            01A1 GR
+ 18 _check_radio_packet                                            01AC GR
   5 _check_radio_packet_address_1_1                                0008 R
   5 _check_radio_packet_length_1_1                                 0007 R
   5 _check_radio_packet_x_1_1                                      0006 R
+ 18 _feed_wd                                                       0000 GR
   A _got_eot                                                       0001 GR
   A _got_etx                                                       0000 GR
- 18 _handle_tx                                                     011E GR
+ 18 _handle_tx                                                     0129 GR
   5 _handle_tx_tx_cnt_1_1                                          0005 R
   5 _handle_tx_tx_state_1_1                                        0004 R
- 18 _has_room                                                      007E GR
+ 18 _has_room                                                      0089 GR
     _initSerial                                                    **** GX
- 18 _main                                                          02A8 GR
+ 18 _main                                                          02B3 GR
   5 _radio_mode                                                    0000 GR
- 18 _re_enter_rx                                                   010E GR
- 18 _rx_overflow_reset                                             009C GR
+ 18 _re_enter_rx                                                   0119 GR
+ 18 _rx_overflow_reset                                             00A7 GR
     _send_byte                                                     **** GX
- 18 _serial_isr                                                    000A GR
- 18 _start_rx                                                      00B7 GR
- 18 _start_tx                                                      00D3 GR
+ 18 _serial_isr                                                    0015 GR
+ 18 _start_rx                                                      00C2 GR
+ 18 _start_tx                                                      00DE GR
     _switch_to_idle                                                **** GX
- 18 _tx_finished                                                   00E9 GR
+ 18 _tx_finished                                                   00F4 GR
     a                                                              00E0 
     a.0                                                            00E0 
     a.1                                                            00E1 
@@ -624,7 +625,7 @@ Area Table
   15 GSINIT5                                    size    0   flags 20
   16 GSINIT                                     size    6   flags 20
   17 GSFINAL                                    size    3   flags 20
-  18 CSEG                                       size  308   flags 20
+  18 CSEG                                       size  326   flags 20
   19 CONST                                      size    0   flags 20
   1A XINIT                                      size    0   flags 20
   1B CABS                                       size    0   flags 28
