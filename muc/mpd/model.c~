@@ -27,6 +27,8 @@
 
 
 #include "global.h"
+#include "kernel.h"
+
 #include "fonty.h"
 #include "mpd.h"
 #include "screen.h"
@@ -72,8 +74,6 @@ static STR_CACHE playlists;
 */
 
 static STR_CACHE tracklist;
-
-
 
 /* -------------------------------- Retrieving information from the model ---------------------------------- */
 
@@ -245,18 +245,21 @@ model_needs_action(UserReq *req){
 	if (need_status())
 		return STATUS_CMD;
 
-	if ((mpd_status.cur_artist == NULL) || (mpd_status.cur_title == NULL)) {
-			debug_out("here ",0);
+	if ((mpd_status.artist == NULL) || (mpd_status.title == NULL)) {
 		return CUR_SONG_CMD;
 	};
 	
-	if (user_status.time_elapsed > mpd_status.time_elapsed ){
-		req->arg = user_status.time_elapsed;
-		return FORWARD_CMD;
+	// Seeking only makes sense if we have a current song
+	if ( (user_status.time_elapsed > mpd_status.time_elapsed ) && (mpd_status.pos >= 0) ) {
+			req->arg = mpd_status.pos;
+			req->arg2 = user_status.time_elapsed;
+			return FORWARD_CMD;
 	};
 	
-	if ( (user_status.time_elapsed >= 0) & (user_status.time_elapsed < mpd_status.time_elapsed )){
-		req->arg = user_status.time_elapsed;
+	if ( (user_status.time_elapsed >= 0) && (user_status.time_elapsed < mpd_status.time_elapsed )
+			&& (mpd_status.pos >= 0) ){
+		req->arg = mpd_status.pos;
+		req->arg2 = user_status.time_elapsed;
 		return REWIND_CMD;	
 	};
 	
@@ -438,18 +441,17 @@ mpd_playlists_last(){
 
 
 /* The user wants a new playlist. 
-	We store a reference to the resulting string, so its contents must be kept valid !
 	We assume the user really wants three things.
 	First he wants the current playlist to be emptied.
 	Then he wants to load the new playlist.
 	And then he wants to play the first song in this playlist.
-	This is a bit different than MPD interprets the LOAD command.
+	This is different than the way MPD interprets the LOAD command.
 	So we set three wishes here at once. 
 	The need_action() routine above must make sure to handle the CLEAR and LOAD request first.
 */
 void 
 user_wants_playlist(int idx){
-	if ((idx < 0) || (idx >= mpd_status.num_playlists))
+	if ((mpd_status.num_playlists < 0) || (idx < 0) || (idx >= mpd_status.num_playlists))
 		return;
 	
 	user_status.playlistlength = -1;	// User doesn't care about length of list. */
@@ -490,6 +492,19 @@ mpd_set_time(int elapsed, int total){
 		user_status.time_elapsed = -1;		// wish fulfilled
 };
 
+/* The user wants to skip forward or backward in time a few seconds. */
+void
+user_wants_time_add(int offs){
+	int tmp;
+	if (mpd_status.time_elapsed == -1) return;
+	tmp = mpd_status.time_elapsed + offs;
+	if (tmp < 0) tmp = 0;
+	if (mpd_status.time_total != -1)
+		if (tmp > mpd_status.time_total) 
+			tmp = mpd_status.time_total;
+	user_status.time_elapsed = tmp;
+};
+
 /* Time flies by when you're the driver of a train :-)
 	We increment the elapsed time by 1 second if possible.
 	This is done because we expect mpd to behave nicely.
@@ -515,17 +530,25 @@ mpd_inc_time(){
 	};
 };
 
-/* The user wants to skip forward or backward in time a few seconds. */
-void
-user_wants_time_add(int offs){
-	int tmp;
-	if (mpd_status.time_elapsed == -1) return;
-	tmp = mpd_status.time_elapsed + offs;
-	if (tmp < 0) tmp = 0;
-	if (mpd_status.time_total != -1)
-		if (tmp > mpd_status.time_total) 
-			tmp = mpd_status.time_total;
-	user_status.time_elapsed = tmp;
+/* This thread keeps record of the remaining time of a currently playing song. 
+	We could issue a status command every second and get the playing time exactly as seen by mpd.
+	But this generates quite some traffic over the air, which we want to avoid.
+	So we update the time here once per second.
+*/
+PT_THREAD (update_playtime(struct pt *pt)){
+	static struct timer sec_tmr;
+	
+	PT_BEGIN(pt);
+	
+	/* We want to be noticed once per second. */
+	timer_add(&sec_tmr, 1*TICKS_PER_SEC, 1*TICKS_PER_SEC);
+	
+	while (1){
+		PT_WAIT_UNTIL(pt, timer_expired(&sec_tmr));
+		sec_tmr.expired = 0;
+		mpd_inc_time();
+	};
+	PT_END(pt);
 };
 
 
@@ -720,21 +743,8 @@ user_toggle_single(){
 		caller has to handle those values
 */
 int
-mpd_get_song(){
+mpd_get_pos(){
 	return mpd_status.pos;
-};
-
-
-/* Returns a string with the current title or NULL if unknown. Tracks with no title return "". */
-char *
-mpd_get_curtitle(){
-	return mpd_status.cur_title;
-};
-
-/* Returns a string with the current artist or NULL if unknown. Tracks with no artist return "". */
-char *
-mpd_get_curartist(){
-	return mpd_status.cur_artist;
 };
 
 /* We have got (maybe new) information about the current song pos */ 
@@ -753,72 +763,119 @@ mpd_set_pos(int newpos){
 		mpd_set_time(-1, -1);	
 		mpd_set_state(STOP);
 		if (user_status.state == PLAY){				// user wanted to play something
-			model_changed(ERROR_FLAG);
-			user_status.state = STOP;
+			model_changed(ERROR_FLAG);				// Not possible, so tell the user
+			user_status.state = STOP;				// and change his wish
 		};
 	} else { 
-		mpd_set_artist(NULL);				/* We do not yet know which artist and title we have */
+		mpd_set_artist(NULL);						// We do not yet know which artist and title we have
 		mpd_set_title(NULL);
 		mpd_status.songid = UNKNOWN;				// NOTE songid is currently not used
-		mpd_set_time(0, -1);				/* The 0 is just a guess. But we have to get total time anyway. */
+		mpd_set_time(0, -1);						// The 0 is just a guess. But we have to get total time anyway
 	};
-	model_changed(POS_CHANGED);				// this is (maybe) important to know for track list handling */
+	model_changed(POS_CHANGED);						// this is (maybe) important to know for track list handling
+													// TODO check where POS_CHANGED is used
+};
+
+/* Our play xxx command did succeed */
+void 
+mpd_pos_ok(int newpos){
+	mpd_set_pos(newpos);
+	mpd_set_state(PLAY);				// MPD starts playing
+};
+
+/* Our play xxx command did not succeed 
+	Maybe MPD could not find that song (database too old)
+	TODO we should inform the user about that
+*/
+void 
+mpd_pos_nack(){
+	user_wants_state(-1);
+	user_status.pos = SONG_UNKNOWN;			// ignore user wish
 };
 
 /* Called after a succesful NEXT or PREVIOUS command. */
 void
-mpd_pos_ok(){
+mpd_newpos_ok(){
 	/* We do not really know which song is the current one. There may not even be one or it is random.
 		Mark mpd.pos as UNKNOWN to read the info soon.
 	*/
 	mpd_set_pos(SONG_UNKNOWN);
-	user_song_unknown();	/* wish fulfilled */
+	user_song_unknown();				// wish fulfilled
 };
 
+/* 
+	User wants a specific song pos in the playlist if pos >= 0
+	pos == -1 means user error, do not select any song
+	pos == NEXT_SONG or pos == PREV_SONG trigger the corresponding action
+*/
 void
-user_set_pos(int pos){
-	user_status.pos = pos;
+user_wants_song(int pos){
+	if (pos >= 0) {			// a specific song, we make sure that the wish makes sense.
+		if ((mpd_status.playlistlength >= 0) && (pos > mpd_status.playlistlength - 1)){
+			set_error(END_OF_PLAYLIST);
+			return;
+		} else {
+			clr_error(END_OF_PLAYLIST);
+			user_status.pos = pos;
+			return;
+		}
+	} else {				// pos < 0
+			
+		if (pos == -1) return;	// invalid, do nothing
+		user_status.pos = pos;	// either NEXT_SONG or PREV_SONG
+	}
 };
 
-	
-int	
-user_get_pos(){
-	return user_status.pos;
-};
 
-/* We are given either NULL or a string with the artist tag, NULL meaning artist unknown */
-// TODO how can artist unknown happen ? Should we better store an empty string then ?
-void
-mpd_set_artist(char *s){
-	int length;
-	
-	if ( (s == NULL) ){
-		if (mpd_status.cur_artist != NULL){
-			mpd_status.cur_artist = NULL;		
-			model_changed(ARTIST_CHANGED);
-		};
-	} else {
-		if (strn_cpy_cmp(mpd_status.artist_buf, s, TITLE_LEN, &length) == 0)	
-			model_changed(ARTIST_CHANGED);
-		mpd_status.cur_artist = mpd_status.artist_buf;
-	}; 
+/* Returns a string with the current title or "" if unknown. */
+char *
+mpd_get_title(){
+	if (NULL == mpd_status.title)
+		return "";
+	return mpd_status.title;
 };
 
 /* We are given either NULL or a string with the title tag, NULL meaning title unknown */
-// TODO how can title unknown happen ? Should we better store an empty string then ?
 void
 mpd_set_title(char *s){
 	int length;
 	
 	if (s == NULL){
-		if (mpd_status.cur_title != NULL){
-			mpd_status.cur_title = NULL;
+		if (mpd_status.title != NULL){
+			mpd_status.title = NULL;
 			model_changed(TITLE_CHANGED);
 		};
 	} else {
 		if (strn_cpy_cmp(mpd_status.title_buf, s, TITLE_LEN, &length) == 0)	
 			model_changed(TITLE_CHANGED);
-		mpd_status.cur_title = mpd_status.title_buf;
+		mpd_status.title = mpd_status.title_buf;
+	}; 
+};
+
+/* Returns a string with the current artist or "" if unknown. */
+char *
+mpd_get_artist(){
+	if (NULL == mpd_status.artist)
+		return "";
+	return mpd_status.artist;
+};
+
+/* We are given either NULL or a string with the artist tag, NULL meaning artist unknown 
+	Copies artist information to mpd_status
+*/
+void
+mpd_set_artist(char *s){
+	int length;
+	
+	if ( (s == NULL) ){
+		if (mpd_status.artist != NULL){
+			mpd_status.artist = NULL;		
+			model_changed(ARTIST_CHANGED);
+		};
+	} else {
+		if (strn_cpy_cmp(mpd_status.artist_buf, s, TITLE_LEN, &length) == 0)	
+			model_changed(ARTIST_CHANGED);
+		mpd_status.artist = mpd_status.artist_buf;
 	}; 
 };
 
@@ -839,34 +896,11 @@ void
 user_song_unknown(){
 	user_status.pos = SONG_UNKNOWN;
 	user_status.state = UNKNOWN;
-	user_status.cur_artist=NULL;
-	user_status.cur_title=NULL;
+	user_status.artist=NULL;
+	user_status.title=NULL;
 	user_status.songid = -1;
 	user_status.time_elapsed = -1;
 	user_status.time_total = -1;
-};
-
-/* user wants a specific song pos in the playlist */
-void
-user_wants_song(int p){
-	/* We make sure that the wish makes sense. */
-	if (p < 0) return;
-	if ((mpd_status.playlistlength >= 0) && (p > mpd_status.playlistlength - 1)){
-		set_error(END_OF_PLAYLIST);
-		return;
-	} else
-		clr_error(END_OF_PLAYLIST);
-	user_status.pos = p;
-};
-
-void
-user_wants_next(){
-	user_status.pos = NEXT_SONG;
-};
-
-void
-user_wants_prev(){
-	user_status.pos = PREV_SONG;
 };
 
 
@@ -912,7 +946,7 @@ user_toggle_mute(){
 };
 
 
-/* -------------------------------------- current playlist -------------------------------------------------- */
+/* -------------------------------------- Timing information -------------------------------------------------- */
 
 
 
@@ -944,8 +978,8 @@ model_reset(struct STATUS *st){
 	st->last_status = 0;
 	st->pos = SONG_UNKNOWN;
 	st->songid = -1;
-	st->cur_title = NULL;
-	st->cur_artist = NULL;
+	st->title = NULL;
+	st->artist = NULL;
 	st->artist_buf[0] = '\0';
 	st->title_buf[0] = '\0';
 	st->random = -1;
@@ -955,6 +989,7 @@ model_reset(struct STATUS *st){
 
 /* Initialize our model
 	We assume that we know nothing at the start
+	Must be called only once !
 */
 void 
 model_init(){
@@ -972,5 +1007,10 @@ model_init(){
 	cache_init(&tracklist);
 	cache_init(&playlists);
 
-
+	
+	/* 
+		This task updates the models notion of playtime once per second.
+	*/
+	task_add(&update_playtime);	
+	
 };

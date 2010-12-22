@@ -115,7 +115,7 @@ screen_enter(){
 	/* We try to get the index of the current song, if there is any 
 		because we want to adjust our track list range screen with the current song in the selected window.
 	*/
-	cur_song = max (0, mpd_get_song());
+	cur_song = max (0, mpd_get_pos());
 	
 	/* We like to start our list with the last 2 songs before the current one. */
 	if (cur_song >= 2){
@@ -192,6 +192,7 @@ tracklist_keypress(Screen *track_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
 		case KEY_OK:
+			// NOTE info-idx could return -1 if invalid, user_wants_song can handle that 
 			user_wants_song ( info_idx(&track_list, track_list.sel_win) );
 			switch_screen(TRACKLIST_SCREEN, PLAYING_SCREEN);
 			break;

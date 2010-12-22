@@ -291,7 +291,7 @@ process_sgl(char *s){
 void
 process_song(char *s){
 	if (strstart(s, "OK")) {
-		mpd_pos_ok();
+		mpd_newpos_ok();
 		response_valid = 1;
 	}
 };
@@ -370,16 +370,13 @@ process_playlistinfo_line(char *s){
 static void 
 process_play_line(char *s){
 	if (strstart(s, "OK")) {
-		mpd_set_state(PLAY);
-		mpd_set_pos(song_arg);
+		mpd_pos_ok(song_arg);
 		response_valid = 1;
 	};
-	if (strstart(s, "ACK")) {		// TODO mpd does not want to play that song. Inform the user.
-		user_wants_state(-1);	
-		user_set_pos(-1);	
+	if (strstart(s, "ACK")) {
+		mpd_pos_nack();
 		response_valid = 1;
 	};	
-	
 };
  /* ----------------------------------------- End of response gathering functions ------------------------- */ 
 
@@ -586,18 +583,12 @@ inform_view(int model_changed){
 	if (model_changed & VOLUME_CHANGED)
 		view_volume_changed(mpd_get_volume());
 	
-	if (model_changed & TITLE_CHANGED){
-		if (mpd_get_curtitle() == NULL)
-			view_title_changed("");
-		else	
-			view_title_changed(mpd_get_curtitle());
-	};
-	if (model_changed & ARTIST_CHANGED){
-		if (mpd_get_curartist() == NULL)
-			view_artist_changed("");
-		else
-			view_artist_changed(mpd_get_curartist());
-	};
+	if (model_changed & TITLE_CHANGED)
+		view_title_changed(mpd_get_title());
+
+	if (model_changed & ARTIST_CHANGED)
+		view_artist_changed(mpd_get_artist());
+	
 	if (model_changed & TIME_CHANGED)
 		view_time_changed(mpd_get_time_elapsed(), mpd_get_time_total());
 	
@@ -617,35 +608,12 @@ inform_view(int model_changed){
 		view_tracklist_changed();
 
 	if (model_changed & PL_NAMES_CHANGED){
-		view_playlist_changed();
+		view_playlists_changed();
 	};
 
 	model_reset_changed();
 };
 	
-
-/* This thread keeps record of the remaining time of a currently playing song. 
-	We could issue a status command every second and get the playing time exactly as seen by mpd.
-	But this generates quite some traffic over the air, which we want to avoid.
-	So we update the time seen by the user here until we reach the end of the currently playing song.
-	After the song has ended, we tell the controller that we need a new status from mpd to get the
-	correct time.
-*/
-PT_THREAD (update_playtime(struct pt *pt)){
-	static struct timer sec_tmr;
-	
-	PT_BEGIN(pt);
-	
-	/* We want to be noticed once per second. */
-	timer_add(&sec_tmr, 1*TICKS_PER_SEC, 1*TICKS_PER_SEC);
-	
-	while (1){
-		PT_WAIT_UNTIL(pt, timer_expired(&sec_tmr));
-		sec_tmr.expired = 0;
-		mpd_inc_time();
-	};
-	PT_END(pt);
-};
 
 /* ------------------------------ The Controller ----------------------------------------- */
 
@@ -656,17 +624,24 @@ PT_THREAD (update_playtime(struct pt *pt)){
 	and processes the received answer. 
 */
 static
-PT_THREAD (exec_action(struct pt *pt, enum USER_CMD cmd, int arg) ){
+PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 	static struct pt child_pt;
 	static char cmd_str[CMDSTR_LEN+1];
+	static int arg;
+	static int arg2;
+	static enum USER_CMD cmd;
 	
 	PT_BEGIN(pt);
+	arg = preq->arg;
+	arg2 = preq->arg2;
+	cmd = preq->cmd;
 
 	// NOTE We avoid using a switch statement because of certain restrictions for protothreads
+	
 	/* Volume changing command */
 	if ( cmd == VOLUME_NEW ) {
-		compose_string (cmd_str, "setvol ", arg, CMDSTR_LEN);
 		volume_arg = arg;
+		compose_string (cmd_str, "setvol ", arg, CMDSTR_LEN);
 		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_volume_line, NULL, 1));
 		PT_EXIT(pt);
 	};
@@ -682,8 +657,8 @@ PT_THREAD (exec_action(struct pt *pt, enum USER_CMD cmd, int arg) ){
 	};
 	
 	if (cmd == SEL_SONG){
-		compose_string (cmd_str, "play ", arg, CMDSTR_LEN);
 		song_arg = arg;
+		compose_string (cmd_str, "play ", arg, CMDSTR_LEN);
 		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_play_line, NULL, 1));
 		PT_EXIT(pt);
 	};
@@ -712,14 +687,13 @@ PT_THREAD (exec_action(struct pt *pt, enum USER_CMD cmd, int arg) ){
 		PT_EXIT(pt);
 	};
 		
-	/* The seek command only works if we have a current song to give to mpd (why that?) 
-		TODO check not here
+	/* 
 		We process the seek command with the status response handler, because all relevant 
 		information (time, current song, state) is returned by the status command
 	*/		
-	if ( ( (cmd == FORWARD_CMD) || (cmd == REWIND_CMD) ) && (mpd_get_song() >= 0) ){
+	if ( (cmd == FORWARD_CMD) || (cmd == REWIND_CMD) ) {
 		model_reset(&ans_model);
-		compose_string2 (cmd_str, "command_list_begin\nseek ", mpd_get_song(), arg, CMDSTR_LEN);	
+		compose_string2 (cmd_str, "command_list_begin\nseek ", arg, arg2, CMDSTR_LEN);	
 		str_cat_max(cmd_str, "\nstatus\ncommand_list_end\n", CMDSTR_LEN);
 		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_status_line, NULL, 1));
 		PT_EXIT(pt);
@@ -870,13 +844,7 @@ PT_THREAD (controller(struct pt *pt)){
 	PT_SEM_INIT(&line_ready, 0);
 	task_add(&assemble_line);
 	
-	
-	/* Here we have our notion of time.
-		When a song is playing, its playtime is increasing every second.
-		This task updates the model accordingly.
-	*/
-	task_add(&update_playtime);	
-	
+
 	/* The main loop of the controller.
 		- Simply wait if nothing to do.
 		- If there is some action to do, spawn a new protothread which starts the action (function exec_action() ).
@@ -897,7 +865,7 @@ PT_THREAD (controller(struct pt *pt)){
 
 		if ( request.cmd != NO_CMD ){
 			debug_out("action ", request.cmd);
-			PT_SPAWN( pt, &action_pt, exec_action(&action_pt, request.cmd, request.arg) );
+			PT_SPAWN( pt, &action_pt, exec_action(&action_pt, &request) );
 			PT_YIELD(pt);
 		};
 		

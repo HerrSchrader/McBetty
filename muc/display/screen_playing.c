@@ -317,13 +317,13 @@ playing_keypress(Screen *this_screen, int cur_key, UserReq *req){
 
 		case KEY_Down:
 		case KEY_Pplus:
-			user_wants_next();
+			user_wants_song(NEXT_SONG);
 			break;
 			
 			/* Inform the controller that the user wants the previous song */
 		case KEY_Up:
 		case KEY_Pminus:
-			user_wants_prev();	
+			user_wants_song(PREV_SONG);	
 			break;
 			
 			/* Show/hide version info */

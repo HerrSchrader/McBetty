@@ -27,9 +27,11 @@ typedef struct {
 	int user_req_arg;
 } Screen;
 
+/* A structure to hold a command and its arguments */
 typedef struct {
 	enum USER_CMD cmd;
 	int arg;
+	int arg2;
 } UserReq;
 
 void screen_visible(enum SCREEN screen, int v);

@@ -33,6 +33,7 @@ typedef struct {
 } UserReq;
 
 void screen_visible(enum SCREEN screen, int v);
+void screen_redraw(enum SCREEN screen);
 void mainscreen_init(void);
 void user_pressed_a_key(int cur_key);
 void switch_screen(enum SCREEN oldscreen, enum SCREEN newscreen);

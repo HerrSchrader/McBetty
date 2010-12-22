@@ -115,7 +115,7 @@ screen_enter(){
 	/* We try to get the index of the current song, if there is any 
 		because we want to adjust our track list range screen with the current song in the selected window.
 	*/
-	cur_song = max (0, mpd_get_song());
+	cur_song = max (0, mpd_get_pos());
 	
 	/* We like to start our list with the last 2 songs before the current one. */
 	if (cur_song >= 2){
@@ -129,9 +129,9 @@ screen_enter(){
 	/* If we are near the end of the playlist, don't show mostly empty windows.
 		Adjust start.
 	*/
-	if (mpd_playlist_last() >= 0){
-		if ((mpd_playlist_last() - track_list.first_info_idx + 1) < track_list.num_windows){
-			track_list.first_info_idx =  max( 0, mpd_playlist_last() - track_list.num_windows + 1);
+	if (mpd_tracklist_last() >= 0){
+		if ((mpd_tracklist_last() - track_list.first_info_idx + 1) < track_list.num_windows){
+			track_list.first_info_idx =  max( 0, mpd_tracklist_last() - track_list.num_windows + 1);
 			start_sel = max(0, cur_song - track_list.first_info_idx);
 		};
 	};

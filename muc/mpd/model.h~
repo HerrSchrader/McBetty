@@ -31,6 +31,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
   -2 for MPD has no current song
   -3 for user wants next song
   -4 for user wants previous song
+  NOTE SONG_UNKNOWN has to be -1 
 */
 #define PREV_SONG		-4
 #define NEXT_SONG		-3
@@ -51,8 +52,8 @@ struct STATUS {
 	int songid;					// MPD's internal id of the current song
 	char artist_buf[TITLE_LEN];	// If cur_artist points here, this is the artist tag, else irrelevant 
 	char title_buf[TITLE_LEN];	// If cur_title points here, this is the title tag, else irrelevant 
-	char *cur_artist;			// NULL if not known, else points to info in artist_buf;
-	char *cur_title;			// NULL if not known, else points to info in title_buf;
+	char *artist;				// NULL if not known, else points to info in artist_buf;
+	char *title;				// NULL if not known, else points to info in title_buf;
 	int time_elapsed;			// in seconds
 	int time_total;				// in seconds
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
@@ -66,11 +67,6 @@ void model_reset_changed();
 void start_reading_playlists(void);
 void user_toggle_pause(void);
 void user_set_state(enum PLAYSTATE s);
-
-void user_wants_song(int p);
-void mpd_want_song_add(int offs);
-void user_wants_next();
-void user_wants_prev();
 
 int mpd_get_time_total();
 int mpd_get_time_elapsed();
@@ -90,7 +86,7 @@ void error_dec(int amount);
 int get_comm_error();
 
 
-void user_song_unknown();
+
 void model_store_track(char *title, char *artist, int track_no);
 int tracklist_range_set(int start, int end);
 int mpd_playlist_last();
@@ -103,9 +99,6 @@ void mpd_state_ack();
 
 void mpd_status_ok();
 
-char *mpd_get_curtitle();
-char *mpd_get_curartist();
-
 void mpd_set_newplaylist();
 void mpd_set_title(char *s);
 void mpd_set_artist(char *s);
@@ -113,7 +106,7 @@ void mpd_set_seek();
 
 void mpd_set_playlistname(char *s);
 char *mpd_get_playlistname(int idx);
-int mpd_playlist_last();
+int mpd_playlists_last();
 
 void user_set_playlistlength(int n);
 int mpd_tracklist_last();
@@ -142,11 +135,16 @@ void mpd_set_random(int rnd);
 void mpd_random_ok();
 void user_toggle_random();
 
+int mpd_get_pos();
 void mpd_set_pos(int newpos);
-void user_set_pos(int pos);
-int	user_get_pos();
-void mpd_pos_ok();
+void mpd_pos_ok(int newpos);
+void mpd_pos_nack();
+void mpd_newpos_ok();
 void mpd_set_id(int newid);
+char *mpd_get_curtitle();
+char *mpd_get_curartist();
+void user_song_unknown();
+void user_wants_song(int pos);
 
 #endif
 
