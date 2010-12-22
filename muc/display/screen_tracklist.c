@@ -129,9 +129,9 @@ screen_enter(){
 	/* If we are near the end of the playlist, don't show mostly empty windows.
 		Adjust start.
 	*/
-	if (mpd_playlist_last() >= 0){
-		if ((mpd_playlist_last() - track_list.first_info_idx + 1) < track_list.num_windows){
-			track_list.first_info_idx =  max( 0, mpd_playlist_last() - track_list.num_windows + 1);
+	if (mpd_tracklist_last() >= 0){
+		if ((mpd_tracklist_last() - track_list.first_info_idx + 1) < track_list.num_windows){
+			track_list.first_info_idx =  max( 0, mpd_tracklist_last() - track_list.num_windows + 1);
 			start_sel = max(0, cur_song - track_list.first_info_idx);
 		};
 	};
@@ -142,10 +142,8 @@ screen_enter(){
 	// Tell model which range we want
 	tracklist_range_set( track_list.first_info_idx, last_info_idx(&track_list) );
 	
-	/* A lot of things might have changed since we were called last.
-		So better reread the information from mpd 
-	*/
-	view_tracklist_changed(&track_list);
+	/* Redraw the scroll list */
+	scroll_list_changed(&track_list);
 	
 	screen_visible(TRACKLIST_SCREEN, 1);
 	// NOTE this is potentially time consuming. Could be done piecewise (in a thread).
@@ -212,9 +210,13 @@ tracklist_keypress(Screen *track_screen, int cur_key, UserReq *req){
 			
 		case KEY_Pminus:	
 		case KEY_Down:
-			if ( (track_list.sel_win < (track_list.num_windows - 1)) && (info_idx(&track_list, track_list.sel_win) < mpd_playlist_last()) )
-				sel_win_down(&track_list);
-			else{					// We want to scroll past the lower end of the window list
+			if (track_list.sel_win < (track_list.num_windows - 1)) {
+				// We need only move our selected window one position down
+				// But we check if we have already reached the last info pos
+				if ( (mpd_tracklist_last() == -1) || (info_idx(&track_list, track_list.sel_win) < mpd_tracklist_last()) )
+						sel_win_down(&track_list);
+
+			} else {					// We want to scroll past the lower end of the window list
 				track_list.first_info_idx = tracklist_range_set(track_list.first_info_idx+1, last_info_idx(&track_list)+1 );
 				view_tracklist_changed();
 			};

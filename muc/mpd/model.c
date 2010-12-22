@@ -61,129 +61,17 @@ model_reset_changed(){
 
 
 /* ================ Playlist variables, keeping info about all known playlists ========================= */
-STR_CACHE playlists;
-
-/* -------------------------------------- Playlist functions ---------------------------------------- */
-	
-
-
-/* Given an index starting from 0, we return the corresponding playlist name entry.
-	If we have no info or the playlist does not exist we return "".
-*/
-char *
-mpd_get_playlistname(int pos){
-	char *s;
-	s = cache_entry(&playlists, pos);
-	if (NULL == s) return "";
-	return s;	
-};
-
-
-/* The user has requested a certain range for our playlist list (maybe by scrolling).
-	Given are the first and last playlist that the user wants info to be available for.
-	These are usually the playlist names that the user wants to be shown on screen.
-	We adjust the given values, so that the user can not scroll past the end of the playlist list.
-	We return the start value that we really used.
-	
-	We adjust the range of our internal playlist list accordingly, trying to keep as much information
-	valid as we can, so we do not have to reread everything.
-*/
-int
-playlists_range_set(int start_pos, int end_pos){
-	
-	/* Makes no sense to have end_pos be beyond the total length */
-	if ( (mpd_status.num_playlists != -1 ) && (end_pos >= mpd_status.num_playlists) ){
-		int num_entries = end_pos - start_pos + 1;		// The user wants this many entries
-		end_pos =  mpd_status.num_playlists -1;
-		start_pos = end_pos - num_entries + 1;
-	};
-	
-	if (start_pos < 0 ) start_pos = 0;
-	
-	if (end_pos > last_pos(&playlists))			// user wants more information than we currently have in cache
-		cache_shift_up(&playlists, end_pos - last_pos(&playlists));
-	else
-		if (start_pos < playlists.first_pos)		// user wants information from earlier tracks than we have
-			cache_shift_down(&playlists, playlists.first_pos - start_pos);
-	
-	return start_pos;
-};
+static STR_CACHE playlists;
 
 
 /* ============== Tracklist variables, keeping info about songs in the current playlist. ==============
 * Track lists can be very long (100's of songs). So we only cache a few of them and request
 	more information from MPD if we need it.
+	And of course we only keep information for one track list (the current one),
+	so after loading a new track list we have to empty the cache and refill it.
 */
 
-STR_CACHE tracklist;
-
-
-
-/* -------------------------------------- Tracklist functions ---------------------------------------- */
-
-/* All the songs starting at track_pos have been changed and are currently unknown. */
-static void 
-tracks_unknown(int track_pos){
-	cache_empty(&tracklist, track_pos);
-};
-
-
-/* The user has requested a certain range for our tracklist (maybe by scrolling or loading a new playlist).
-	Given are the first and last track that the user wants info to be available for.
-	These are usually the tracks that the user wants to be shown on screen.
-	We adjust the given values, so that the user can not scroll past the end of the current playlist.
-	We return the start value that we really used.
-	
-	We adjust the range of our internal tracklist accordingly, trying to keep as much information
-	valid as we can, so we do not have to reread everything.
-*/
-int
-tracklist_range_set(int start_pos, int end_pos){
-	
-	if ( (mpd_status.playlistlength != -1 ) && (end_pos >= mpd_status.playlistlength) ){
-		int num_entries = end_pos - start_pos + 1;	// The user wants this many entries
-		end_pos =  mpd_status.playlistlength -1;
-		start_pos = end_pos - num_entries + 1;
-	};
-	
-	start_pos = max(0, start_pos);
-	
-	if (end_pos > last_pos(&tracklist))			// user wants more information than we currently have
-		cache_shift_up(&tracklist, end_pos - last_pos(&tracklist));
-	else
-		if (start_pos < tracklist.first_pos)		// user wants information from earlier tracks than we have
-			cache_shift_down(&tracklist, tracklist.first_pos - start_pos);
-	
-	return start_pos;
-};
-
-/* 
-	Given title, artist and track number, store this info in our tracklist (if it fits) 
-*/
-static void
-tl_store_track(char *title, char *artist, int track_pos){
-	char tmp[64];
-	
-	strn_cpy(tmp, title, 64); 
-	str_cat_max(tmp, " - ", 64);
-	str_cat_max(tmp, artist, 64);
-
-	cache_store(&tracklist, track_pos, tmp);
-};
-
-/* The tracklist screen will ask us for the track entry of a specific track_no. 
-	We return it if available, else we return "" 
-	The track numbering starts with 0 as MPD does.
-*/
-char *
-track_info(int track_pos){
-	char *s;
-	s = cache_entry(&tracklist, track_pos);
-	if (NULL == s) return "";
-	return s;
-};
-
-/* ================================== End of tracklist functions ============================================ */
+static STR_CACHE tracklist;
 
 
 
@@ -412,23 +300,120 @@ action_needed(UserReq *request){
 
 /* ------------------------------------- Tracklist -------------------------------------- */
 
+/* 
+	The cache containing track info has to follow the information that we show on screen.
+	Here we tell the cache which positions we want to show,
+	namely all infos between start_pos and end_pos inclusive.
+
+	We return the start value that we really used.
+*/
+int
+tracklist_range_set(int start_pos, int end_pos){	
+	return cache_range_set(&tracklist, start_pos, end_pos, mpd_status.playlistlength);
+};
+
+/* The tracklist screen will ask us for the track entry of a specific track_no. 
+	We return it if available, else we return "" 
+	The track numbering starts with 0 as MPD does.
+*/
+char *
+track_info(int track_pos){
+	char *s;
+	s = cache_entry(&tracklist, track_pos);
+	if (NULL == s) return "";
+	return s;
+};
+
+/* 
+	Given title, artist and track number, store this info in our tracklist cache (if it fits) 
+*/
 void
-model_store_track(char *title, char *artist, int track_no){
-	tl_store_track(title, artist, track_no);
+model_store_track(char *title, char *artist, int track_pos){
+	char tmp[64];
+	
+	strn_cpy(tmp, title, 64); 
+	str_cat_max(tmp, " - ", 64);
+	str_cat_max(tmp, artist, 64);
+
+	cache_store(&tracklist, track_pos, tmp);
+	
+	model_changed(TRACKLIST_CHANGED);
+};
+
+/* 
+	Returns pos of the last track in the current playlist
+	Is < 0 if the playlistlength is unknown
+	or playlist is empty.
+*/
+int 
+mpd_tracklist_last(){
+	return mpd_status.playlistlength - 1;
+};
+
+/* 
+	The length of our playlist has changed.
+*/
+void
+set_playlistlength(int n){
+	n = max(-1 ,n);	
+	if (mpd_status.playlistlength == n)
+		return;								// no change
+
+	mpd_status.playlistlength = n;	
+	
+	/* If the playlist is empty, there can be no current song.*/
+	if (n == 0)
+		mpd_set_pos(NO_SONG);
+
+	/* NOTE We do NOT set TRACKLIST_CHANGED flag here, because only our information about the
+		total number of tracks has changed, but not the tracks itself.
+		The tracks itself can currently only be changed after a CLEARANDLOAD command.
+	*/
+};
+
+
+/* Called after a successful LOAD command. 
+	Currently we interpret the LOAD as a CLEAR_AND_LOAD, i.e. the old playlist is cleared and the new one loaded.
+	We assume the user wish has been fulfilled 
+	We do not care what playlist was loaded.
+	But we assume the user wants to play the first song of the playlist.
+*/
+void
+mpd_load_ok(){
+	user_status.cur_playlist = -1;			// wish fulfilled
+	user_status.playlistlength = -1;
+	
+	set_playlistlength(-1);				// the new playlistlength is unknown
+	cache_empty(&tracklist, 0);			// all tracks in cache are unknown
+	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR_AND_LOAD command!
 	model_changed(TRACKLIST_CHANGED);
 };
 
 
-/* 
-	Returns pos of the last track in the current playlist
-	Is < 0 if the playlistlength is unknown.
+/* ------------------------------------- Playlists -------------------------------------- */
+
+/* Given an index starting from 0, we return the corresponding playlist name entry.
+	If we have no info or the playlist does not exist we return "".
 */
-int mpd_playlist_last(){
-	return mpd_status.playlistlength - 1;
+char *
+mpd_get_playlistname(int pos){
+	char *s;
+	s = cache_entry(&playlists, pos);
+	if (NULL == s) return "";
+	return s;	
 };
 
+/* 
+	The cache containing playlists info has to follow the information that we show on screen.
+	Here we tell the cache which positions we want to show,
+	namely all infos between start_pos and end_pos inclusive.
 
-/* ------------------------------------- Playlists -------------------------------------- */
+	We return the start value that we really used.
+*/
+int
+playlists_range_set(int start_pos, int end_pos){
+	return cache_range_set(&playlists, start_pos, end_pos, mpd_status.num_playlists);
+};
 
 void
 mpd_set_playlistcount(int n){
@@ -440,6 +425,42 @@ model_store_playlistname(char *name, int playlist_pos){
 	cache_store(&playlists, playlist_pos, name);
 	model_changed(PL_NAMES_CHANGED);
 };
+
+/* 
+	Returns pos of the last playlist known to MPD
+	Is < 0 if the total number of playlists is unknown
+	or if no playlist at all.
+*/
+int 
+mpd_playlists_last(){
+	return mpd_status.num_playlists - 1;
+};
+
+
+/* The user wants a new playlist. 
+	We assume the user really wants three things.
+	First he wants the current playlist to be emptied.
+	Then he wants to load the new playlist.
+	And then he wants to play the first song in this playlist.
+	This is different than the way MPD interprets the LOAD command.
+	So we set three wishes here at once. 
+	The need_action() routine above must make sure to handle the CLEAR and LOAD request first.
+*/
+void 
+user_wants_playlist(int idx){
+	if ((mpd_status.num_playlists < 0) || (idx < 0) || (idx >= mpd_status.num_playlists))
+		return;
+	
+	user_status.playlistlength = -1;	// User doesn't care about length of list. */
+
+	user_status.cur_playlist = idx;		// We want to load this new list 
+	
+	/* User wants first song ... */
+	user_wants_song(0);
+	/* ... to be played */
+	user_status.state = PLAY;
+};
+
 
 
 /* ------------------ Elapsed and total time ------------------------------- */
@@ -589,9 +610,6 @@ user_toggle_pause(){
 };
 
 
-
-
-
 /* ---------------------------- Random mode ------------------------------- */
 int
 mpd_get_random(){
@@ -624,6 +642,7 @@ user_toggle_random(){
 	else if (mpd_status.random == 1)
 		user_status.random = 0;
 };
+
 
 /* ---------------------------- Repeat mode ------------------------------------------ */
 int
@@ -732,6 +751,10 @@ mpd_set_pos(int newpos){
 		mpd_status.songid = UNKNOWN;				// NOTE songid is currently not used
 		mpd_set_time(-1, -1);	
 		mpd_set_state(STOP);
+		if (user_status.state == PLAY){				// user wanted to play something
+			model_changed(ERROR_FLAG);
+			user_status.state = STOP;
+		};
 	} else { 
 		mpd_set_artist(NULL);				/* We do not yet know which artist and title we have */
 		mpd_set_title(NULL);
@@ -889,88 +912,6 @@ user_toggle_mute(){
 
 
 /* -------------------------------------- current playlist -------------------------------------------------- */
-
-
-/* The length of our playlist has changed. We use the given number if it is >= 0.
-	Else it means we do not know the current playlistlength (maybe no playlist at all).
-	We adjust the information in our tracklist accordingly and maybe current_song as well.
-
-	TODO we really need a function that is different from this which is called clr_playlist
-		because we try to do here more than we know.
-*/
-void
-set_playlistlength(int n){
-	if (n < 0) {
-		mpd_status.playlistlength = -1;
-		return;
-	};
-	
-	if (mpd_status.playlistlength == n)
-		return;								// no change
-	
-	mpd_status.playlistlength = n;	
-	
-	/* If the playlist is empty, there can be no current song.*/
-	if (n == 0){
-		mpd_set_pos(NO_SONG);
-		if (user_status.state == PLAY)
-			model_changed(ERROR_FLAG);
-	};
-	
-	// TODO Here we should issue TL_CHANGED flags, if appropriate. */
-	
-	
-	
-};
-
-
-/* Called after a successful LOAD command. 
-	Currently we interpret the LOAD as a CLEAR_AND_LOAD, i.e. the old playlist is cleared and the new one loaded.
-	We assume the user wish has been fulfilled 
-	We do not care what playlist was loaded.
-	But we assume the user wants to play the first song of the playlist.
-*/
-void
-mpd_load_ok(){
-	user_status.cur_playlist = -1;			// wish fulfilled
-	user_status.playlistlength = -1;
-	
-	set_playlistlength(-1);				// the new playlistlength is unknown
-	tracks_unknown(0);					// update all tracks
-	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR_AND_LOAD command!
-};
-
-
-/* The user wants a new playlist. 
-	We store a reference to the resulting string, so its contents must be kept valid !
-	We assume the user really wants three things.
-	First he wants the current playlist to be emptied.
-	Then he wants to load the new playlist.
-	And then he wants to play the first song in this playlist.
-	This is a bit different than MPD interprets the LOAD command.
-	So we set three wishes here at once. 
-	The need_action() routine above must make sure to handle the CLEAR and LOAD request first.
-*/
-void 
-user_wants_playlist(int idx){
-	if ((idx < 0) || (idx >= mpd_status.num_playlists))
-		return;
-	
-	/* The user explicitly requested this, so we do a complete reload of the new playlist
-		without checking if it is already loaded.
-		We have no easy way to know which playlist is loaded, because mpd does no bookkeeping about playlist names.
-		We can only detect that the "LOAD" command worked correctly by waiting for its "OK".
-	*/	
-	
-	user_status.playlistlength = -1;	// User doesn't care about length of list. */
-
-	user_status.cur_playlist = idx;		// We want to load this new list 
-	
-	/* User wants first song ... */
-	user_wants_song(0);
-	/* ... to be played */
-	user_status.state = PLAY;
-};
 
 
 

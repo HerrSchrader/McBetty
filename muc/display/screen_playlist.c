@@ -78,7 +78,7 @@ screen_enter(){
 	/* A lot of things might have changed since we were called last.
 		So better reread the information from mpd 
 	*/
-	view_playlists_changed(&playlist_list);
+	view_playlists_changed();
 	
 	screen_visible(PLAYLIST_SCREEN, 1);
 	screen_redraw(PLAYLIST_SCREEN);	
@@ -134,9 +134,13 @@ playlist_keypress(Screen *pl_screen, int cur_key, UserReq *req){
 			
 		case KEY_Pminus:				
 		case KEY_Down:
-			if ( playlist_list.sel_win < (playlist_list.num_windows - 1) )
-				sel_win_down(&playlist_list);
-			else{					// We want to scroll past the lower end of the window list
+			if ( playlist_list.sel_win < (playlist_list.num_windows - 1) ) {
+				// We need only move our selected window one position down
+				// But we check if we have already reached the last info pos
+				if ( (mpd_playlists_last() == -1) || (info_idx(&playlist_list, playlist_list.sel_win) < mpd_playlists_last()) )
+						sel_win_down(&playlist_list);
+				
+			} else {					// We want to scroll past the lower end of the window list
 				playlist_list.first_info_idx = playlists_range_set(playlist_list.first_info_idx+1, last_info_idx(&playlist_list)+1 );
 				view_playlists_changed();
 			};	

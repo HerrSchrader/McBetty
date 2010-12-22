@@ -303,6 +303,36 @@ cache_find_empty(STR_CACHE *pc){
 	return -1;	
 }
 
+
+/* 
+	The cache containing track info has to follow the information that we show on screen.
+	Here we tell the cache which positions we want to show,
+	namely all infos between start_pos and end_pos inclusive.
+	We adjust the positions given to us so that the start is >= 0
+	and the end is below the total length of the information (if we know it)
+	The last parameter is the absolut limit of the information,
+	i.e. playlistlength if cache is tracklist cache
+	and num_playlists if cache is playlist cache
+	
+	Returns the start_pos that we actually used.
+*/
+int
+cache_range_set(STR_CACHE *pc, int start_pos, int end_pos, int total_infos){
+	
+	if (total_infos >= 0)
+		end_pos = min (end_pos, total_infos - 1);
+	
+	start_pos = max(0, start_pos);
+		
+	if (end_pos > last_pos(pc))				// user wants more information than we currently have
+		cache_shift_up(pc, end_pos - last_pos(pc));
+	else
+		if (start_pos < pc->first_pos)		// user wants information from earlier tracks than we have
+			cache_shift_down(pc, pc->first_pos - start_pos);
+	
+	return start_pos;
+};
+
 /* ==================================== End of string cache functions ========================================= */
 
 

@@ -84,7 +84,6 @@ int	mpd_get_volume();
 void mpd_set_volume(int vol);
 void user_wants_volume_add(int chg);
 
-void user_wants_playlist(int idx);
 
 void error_inc(int amount);
 void error_dec(int amount);
@@ -111,14 +110,16 @@ void mpd_set_newplaylist();
 void mpd_set_title(char *s);
 void mpd_set_artist(char *s);
 void mpd_set_seek();
-void set_playlistlength(int n);
-
 
 void mpd_set_playlistname(char *s);
 char *mpd_get_playlistname(int idx);
+int mpd_playlists_last();
 
 void user_set_playlistlength(int n);
+int mpd_tracklist_last();
 void mpd_load_ok();
+void user_wants_playlist(int idx);
+void set_playlistlength(int n);
 
 void mpd_set_last_response(unsigned int time);
 void mpd_check_mpd_dead();

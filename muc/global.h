@@ -88,7 +88,7 @@ typedef signed char int8_t;
 #define PLAYLIST_EMPTY		(1<<1)
 #define MPD_DEAD			(1<<2)
 
-#define CACHE_LIM	30
+#define CACHE_LIM	25
 #define CACHE_MAX	(CACHE_LIM -1)
 
 /* Max length of a string stored in our cache (final 0 is not counted) */
@@ -148,5 +148,6 @@ void cache_store(STR_CACHE *pc, int pos, char *content);
 int cache_find_empty(STR_CACHE *pc);
 void cache_shift_up(STR_CACHE *pc, int diff);
 void cache_shift_down(STR_CACHE *pc, int diff);
+int cache_range_set(STR_CACHE *pc, int start_pos, int end_pos, int total_infos);
 
 #endif

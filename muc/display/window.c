@@ -388,8 +388,9 @@ info_idx(scroll_list *sl, int win_idx){
 
 
 /* We are called when the current tracklist has potentially changed 
+	Updates the info in all windows of the scroll list (sets new text in window).
 	NOTE	Here we are updating the whole list. Could be inefficient.
-		Better to update one song at a time.
+			Maybe better to update one song at a time.
 */
 void
 scroll_list_changed(scroll_list *sl){

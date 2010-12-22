@@ -78,9 +78,8 @@ screen_enter(){
 	/* A lot of things might have changed since we were called last.
 		So better reread the information from mpd 
 	*/
-	view_playlists_changed(&playlist_list);
+	view_playlists_changed();
 	
-
 	screen_visible(PLAYLIST_SCREEN, 1);
 	screen_redraw(PLAYLIST_SCREEN);	
 };

@@ -19,7 +19,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#define VERSION "0.8.2"
+#define VERSION "0.8.3"
 
 /* This device address is used for radio communication.
 	Betty and SCART-Adapter must have equal addresses  !
@@ -148,5 +148,6 @@ void cache_store(STR_CACHE *pc, int pos, char *content);
 int cache_find_empty(STR_CACHE *pc);
 void cache_shift_up(STR_CACHE *pc, int diff);
 void cache_shift_down(STR_CACHE *pc, int diff);
+int cache_range_set(STR_CACHE *pc, int start_pos, int end_pos, int total_infos);
 
 #endif
