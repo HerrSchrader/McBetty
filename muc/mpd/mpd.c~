@@ -65,20 +65,6 @@ static struct MODEL ans_model;
 
 /* ------------------------------ The Communicator ----------------------------------------- */
 
-/* This semaphore protects access to communication with mpd. 
-	It is initialized to 1, so that only 1 thread at a time can communicate with mpd.
-	Communication means sending a command and receiving the answer.
-	Commands and their answer must be processed together, because an "OK" answer means different
-	things for different commands. 
-	We must protect communication, so that only 1 thread is potentially interested in the answer from mpd.
-	And so that no other thread can send a command before an answer has arrived (or a timeout).
-
-	Whowever holds this mutex, can send and receive via radio link to mpd.
-*/
-
-static struct pt_sem mpd_mutex;
-
-
 /* Variable which is set by the response collecting routines.
 	When we got a response with "OK" we set this to 1.
 	If no response or "ACK" then it will stay at 0.
@@ -251,6 +237,18 @@ process_ok(char *s){
 	};
 };
 
+
+/* We got a line from mpd and expect only OK or ACK answer.
+	Sets response_valid to 1 if we received an "OK" string.
+*/ 
+void 
+process_script(char *s){
+	/* Compare with "OK" */
+	if (strstart(response, "OK")) {
+		mpd_script_ok();
+		response_valid = 1;
+	};
+};
 
 /* We sent a "LOAD" command
 	Inform mpd that the new playlist was loaded and set response_valid to 1 if we received an "OK" string.
@@ -522,10 +520,6 @@ PT_THREAD (handle_cmd(struct pt *pt, char *cmd, void (*process_line) (char *s), 
 		
 	PT_BEGIN(pt);
 	
-	/* We want to acquire exclusive access to MPD communication (radio link) for this command and its answer */
-	
-	PT_SEM_WAIT(pt, &mpd_mutex);
-
 	for (tries = 0; tries < max_tries; tries++){	
 		
 		/* NOTE after acquiring exclusive access to mpd we should initialize line_ready, 
@@ -557,10 +551,7 @@ PT_THREAD (handle_cmd(struct pt *pt, char *cmd, void (*process_line) (char *s), 
 	
 			continue;
 		};
-#ifdef TRACE	
-	trace_flags &= ~(1<<4);
-#endif
-	
+
 		timer_del(&tmr);
 		if (! PT_SEM_CHECK(&line_ready) ){
 			// We got at least one line of response from MPD
@@ -584,9 +575,6 @@ PT_THREAD (handle_cmd(struct pt *pt, char *cmd, void (*process_line) (char *s), 
 		};	
 	};
 	
-	/* Now other threads can again communicate with mpd */
-	PT_SEM_SIGNAL(pt, &mpd_mutex);
-		
 	if (tries >= max_tries) {
 			debug_out("No answer ", 1);
 			model_check_mpd_dead();
@@ -785,7 +773,13 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_plname, 1));
 		PT_EXIT(pt);
 	};
-		
+	
+	if (cmd == SCRIPT_CMD){
+		compose_string (cmd_str, "script ", arg, CMDSTR_LEN);
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_script_ok, 1));
+		PT_EXIT(pt);
+	};
+
 	/* We do not know this command. */
 	debug_out("Unknow Request ",cmd);
 
@@ -854,9 +848,6 @@ PT_THREAD (controller(struct pt *pt)){
 	static UserReq request;
 	
 	PT_BEGIN(pt);
-		
-	/* Make sure 1 and only 1 available thread can communicate with mpd */
-	PT_SEM_INIT(&mpd_mutex, 1);
 
 	/* At start of program we should have no response line from mpd */
 	PT_SEM_INIT(&line_ready, 0);

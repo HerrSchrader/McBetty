@@ -58,6 +58,7 @@ struct MODEL {
 	int time_total;				// in seconds
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
 	unsigned int last_status;	// system time when we last got a valid status answer
+	unsigned int script;		// if the user wants a script to be executed this is >= 0
 };
 
 

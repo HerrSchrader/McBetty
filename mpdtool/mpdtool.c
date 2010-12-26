@@ -184,7 +184,7 @@ init_serial(int serial_fd, int baudrate, int time_out){
 	*/
 	newtio.c_lflag = 0;
  
-	newtio.c_cc[VTIME]    = time_out;	/* time out after 20 seconds */
+	newtio.c_cc[VTIME]    = time_out;	/* time out after time_out tenth seconds */
 	newtio.c_cc[VMIN]     = 0;		/* non-blocking read */
 	
 	/* now clean the modem line and activate the settings for the port */
@@ -537,10 +537,15 @@ read_from_serial (int fd){
 	return;
 };
 	
-void
-check_scart_alive(){
+/* Returns TRUE iff the scart adapter is connected and 
+	responding correctly to our ETX characters
+*/
+int
+scart_alive(){
 	int res;
 	char ETX_char = ETX;
+	
+	fprintf(stderr,"Checking scart adapter\n");
 	
 	tcflush(serial_fd, TCIOFLUSH);
 	reset_ser_in();
@@ -552,15 +557,19 @@ check_scart_alive(){
 	}
 	res = read(serial_fd, ser_in_buf+ser_in_len, 1);
 	if (res == 0){ 
-		fprintf(stderr,"check_scart_alive() -> empty ser_in \n");
-		return;
+		fprintf(stderr,"scart_alive() -> no answer \n");
+		return 0;
 	}
 	
 	if (res < 0){
-		printf("Error on read from serial line, errno = %d\n", errno);
-		return;
+		printf("scart_alive() -> Error on read from serial line, errno = %d\n", errno);
+		return 0;
 	};	
-	fprintf(stderr, "check_scart_alive() got <%02x> from scart\n", ser_in_buf[ser_in_len]);
+	if (ser_in_buf[ser_in_len] != ACK){
+		fprintf(stderr, "scart_alive() got <%02x> from scart, expected 0x06\n", ser_in_buf[ser_in_len]);
+		return 0;
+	};
+	return 1;
 };
 	
 /* 
@@ -758,6 +767,7 @@ init_mpd(char *remote_host, int remote_port){
 #define LISTPLAYLISTS_CMD	(1 << 0)
 #define PLAYLISTNAME_CMD (1 << 1)
 #define PLAYLISTCOUNT_CMD (1 << 2)
+#define SCRIPT_CMD (1<<3)
 
 int mpd_cmds;
 
@@ -879,6 +889,19 @@ translate_to_mpd(char *buf){
 	/* Just to make sure we have a valid C-string */
 	buf[BUFFER_SIZE] = 0;
 	
+// The script commands are not given to mpd, but executed directly	
+// MPD sees the "ping" command and returns  "OK"
+	
+	if (0 == strncmp(buf, "script 1", strlen("script 1")) ){
+		strcpy(buf, "ping\n");
+		system("./script_1.sh");
+	};
+	
+	if (0 == strncmp(buf, "script 2", strlen("script 2")) ){
+		strcpy(buf, "ping\n");
+		system("./script_2.sh");
+	};		
+	
 	/* The command "playlistname x" is our own invention.
 		It returns the name of playlist number x (x starts with 0).
 		We emulate it by sending "listplaylists" and counting the responses. 
@@ -917,8 +940,7 @@ translate_to_serial(){
 	// Convert line to iso8859-15			
 	utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
 	
-	
-	
+
 	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through	
 	if (mpd_emu & PLAYLISTNAME_CMD){
 		if ( (strncmp(mpd_line_buf, "playlist:", 9) == 0) ){
@@ -996,10 +1018,15 @@ int main(int argc, char *argv[])
 	if (serial_fd <0) {perror(serial_device); exit(-1); }
 	
 	tcgetattr(serial_fd,&oldtio); 	/* save current port settings */
-	init_serial(serial_fd, B38400, 250);
+	init_serial(serial_fd, B38400, 50);
 	
-	/* Reset the transmitting device so we have a defined state */
-//	reset_transmitter(serial_fd);
+	/* Check that the scart adapter is connected and responding */
+	if (!scart_alive()){
+		fprintf(stderr,"Error. Scart adapter not responding.\n");
+		fprintf(stderr,"Is scart adapter connected to %s ?\n", serial_device );
+		fprintf(stderr,"Maybe powercycling the scart adapter could help.\n");
+		exit(20);
+	};	
 	
 	init_mpd(argv[2], atoi(argv[3]));
 	client_socket = -1;
@@ -1050,15 +1077,15 @@ int main(int argc, char *argv[])
 				/* No (more) input for some time. Forget all previous bytes */
 				fprintf(stderr,"No command from Betty for some time.\n");
 
-				check_scart_alive();
-				if (++time_out_cnt >= time_out_lim){
-					reboot_scart(serial_fd);
-					time_out_cnt = 0;
-					time_out_lim *= 2;
+				if (!scart_alive()){				
+					if (++time_out_cnt >= time_out_lim){
+						reboot_scart(serial_fd);
+						time_out_cnt = 0;
+						time_out_lim *= 2;
+					};
+					continue;
 				};
-				continue;
 			};
-//			fprintf(stderr," => %d\n", res);
 		};
 		// if we got input from MPD here, something must be wrong.
 		

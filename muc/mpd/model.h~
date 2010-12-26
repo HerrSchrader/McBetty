@@ -117,6 +117,7 @@ void user_wants_playlist(int idx);
 void set_playlistlength(int n);
 int playlists_range_set(int start_pos, int end_pos);
 void mpd_set_playlistcount(int n);
+void model_store_playlistname(char *name, int playlist_pos);
 
 void mpd_set_last_response(unsigned int time);
 void mpd_check_mpd_dead();

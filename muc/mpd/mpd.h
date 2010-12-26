@@ -51,7 +51,8 @@ enum USER_CMD {
 	SINGLE_CMD,
 	PLAYLISTCOUNT_CMD,
 	PLAYLISTNAME_CMD,
-	CLEAR_CMD
+	CLEAR_CMD,
+ 	SCRIPT_CMD
 };
 
 extern int playlist_changed;

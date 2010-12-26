@@ -336,6 +336,14 @@ playing_keypress(Screen *this_screen, int cur_key, UserReq *req){
 			switch_screen(PLAYING_SCREEN, INFO_SCREEN);	
 			break;
 
+		case KEY_A:
+			user_wants_script(1);
+			break;
+			
+		case KEY_B:
+			user_wants_script(2);
+			break;
+				
 		default:
 			break;
 	};

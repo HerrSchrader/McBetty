@@ -285,6 +285,12 @@ model_needs_action(UserReq *req){
 		return PLAYLISTNAME_CMD;
 	};
 
+	/* Maybe the user wants some script to be executed */
+	if (user_model.script != -1){
+		req->arg = user_model.script;
+		return SCRIPT_CMD;
+	};
+
 	/* Regular Synchronization */
 	if ( (system_time() - mpd_model.last_status) > STATUS_SYNC_TIME * TICKS_PER_SEC )
 		return STATUS_CMD; 
@@ -305,7 +311,16 @@ action_needed(UserReq *request){
 	return (request->cmd != NO_CMD);	
 }
 
+/* ------------------------------------ Scripts --------------------------------------- */
+void
+user_wants_script(int script_no){
+	user_model.script = script_no;
+}
 
+void
+mpd_script_ok(){
+	user_model.script = -1;
+};
 
 /* ------------------------------------- Tracklist -------------------------------------- */
 
@@ -950,6 +965,8 @@ void
 mpd_set_volume(int vol){
 	if (vol != mpd_model.volume){
 		mpd_model.volume = vol;
+		if (user_model.volume == mpd_model.volume)
+			user_model.volume = -1;					// wish fulfilled
 		model_changed(VOLUME_CHANGED);
 	}
 };
@@ -1018,6 +1035,7 @@ model_reset(struct MODEL *m){
 	m->random = -1;
 	m->repeat = -1;
 	m->single = -1;
+	m->script = -1;
 };
 
 /* Initialize our model

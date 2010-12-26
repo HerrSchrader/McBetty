@@ -64,8 +64,6 @@ void do_tx();
 	
 PT_THREAD (controller(struct pt *pt));
 
-char *track_info(int no);
-
 /* See rf.c */
 #define CMDSTR_LEN 254
 
