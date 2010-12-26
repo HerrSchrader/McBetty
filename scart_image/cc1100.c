@@ -239,10 +239,28 @@ unsigned char cc1100_read_status_reg_otf(unsigned char reg){
 	 return res2;
  }
 
+/* Read the MARCSTATE register on the fly and mask its value */
+#define cc1100_state() (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f)
  
  /* Bring the CC1100 to idle mode and wait until it is reached */
  void switch_to_idle() {
 	 cc1100_strobe(SIDLE);
-	 while ((cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) != MARCSTATE_IDLE);
+	 while (cc1100_state() != MARCSTATE_IDLE);
+}
+
+/* Returns TRUE iff the cc1100 is not in a TX mode,
+	i.e. either RX or IDLE 
+	CC1100 is not very reliable.
+	There might be some bytes in TX buffer but sending stopped
+	nevertheless for unknown reasons.
+	So we check if state is idle or RX or some error state.
+*/
+unsigned char cc1100_tx_finished(){
+	unsigned char s;
+		
+	s = cc1100_state();
+	return ( (s == MARCSTATE_IDLE ) || (s == MARCSTATE_RX) || (s == MARCSTATE_RXFIFO_OVERFLOW) 
+			|| (s == MARCSTATE_TXFIFO_UNDERFLOW)
+	   );
 }
 

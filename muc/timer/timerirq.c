@@ -49,8 +49,10 @@ timer_init(){
 //		Reason for the current API is that we do not have malloc() yet!
 int 
 timer_add(struct timer *t, int start_time, int period){
-  if (timer_next == NUM_TIMERS)
-	return -1;
+	if (timer_next == NUM_TIMERS){
+		debug_out("All Timers Used", 0);
+		return -1;
+  };
   t->remaining = start_time;
   t->period = period;
   if (t->remaining)

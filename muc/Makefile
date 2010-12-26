@@ -148,6 +148,9 @@ uresident: resident
 resident: $(DEPS) muc_rom.bin
 	$(LPCTOOL) -d /dev/ttyUSB0 -i -v -e -a muc_rom.bin
 
+reset: 
+	$(LPCTOOL) -d /dev/ttyUSB0
+	
 checkin: $(ALLSRCS)
 	ci -u $(ALLSRCS)
 

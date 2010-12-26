@@ -46,15 +46,6 @@
 #include "kernel.h"
 #include "fonty.h"
 
-#define	USRRxData      	(1 << 0)
-#define	USRTxHoldEmpty 	(1 << 6)
-
-#define TX_READY(s)    	((s) & USRTxHoldEmpty)
-#define RX_DATA(s)     	((s) & USRRxData)
-
-#define PUT_CHAR(p,c)  	(p= (unsigned )(c))
-
-
 /* This global variable is set to TRUE (<> 0) if we want debugging output. 
 	Is initialized in serial_init to 0. NOTE currently initialized as 1
 */
@@ -89,7 +80,10 @@ serial_flush_input(void) {
 
 /* flush output queue.
  */
-static int
+#ifndef TRACE
+static 
+#endif
+int
 serial_flush_output(void) {
 	/* wait until the transmitter is no longer busy */
 	while(TX_READY(U0LSR)==0) {
@@ -242,6 +236,33 @@ serial_puts (const char *s){
 	return 1;
 }
 
+#ifdef TRACE
+/* 
+	Output a string directly to serial output line 
+	NOTE only used for debugging
+*/
+void
+serial_outs (const char *s){
+	while (*s != 0) {
+		while (!TX_READY(U0LSR));
+		PUT_CHAR(U0THR, *s++);
+	};
+}
+/* 
+	Output a string directly to serial output line 
+	NOTE only used for debugging
+*/
+
+void
+serial_out_hex(unsigned char v){
+	char num_chars[3];
+	
+	get_hex_digits(v, num_chars);
+	num_chars[2] = 0;
+	serial_outs(num_chars);
+}
+
+#endif
 
 /* ### Serial Ouput Thread ### 
 	NOTE could be done as an interrupt 
@@ -308,12 +329,12 @@ putHexW(unsigned long v){
 	We check the global variable fDebug if we should do any debug output at all
 */
 void 
-debug_out(char *s, unsigned int v){
-	
+debug_out(char *s, unsigned int v){	
 	if (!fDebug) return;
-	
+		
 	if (0 == serial_puts(s))
 		return;
+	
 	if (v < (1<<8)){
 		if (0 == putHexC(v))
 			return;
@@ -328,3 +349,14 @@ debug_out(char *s, unsigned int v){
 	};
 	put_in_buf('\n');
 };
+
+void 
+dbg(char *s){	
+	if (!fDebug) return;
+		
+	if (0 == serial_puts(s))
+		return;
+
+	put_in_buf('\n');
+};
+

@@ -537,6 +537,32 @@ read_from_serial (int fd){
 	return;
 };
 	
+void
+check_scart_alive(){
+	int res;
+	char ETX_char = ETX;
+	
+	tcflush(serial_fd, TCIOFLUSH);
+	reset_ser_in();
+	reset_ser_out();		
+	res = write(serial_fd, &ETX_char, 1);
+	if (res == -1) {
+		perror("check_scart_alive()");
+		printf("We could not write ETX!\n");
+	}
+	res = read(serial_fd, ser_in_buf+ser_in_len, 1);
+	if (res == 0){ 
+		fprintf(stderr,"check_scart_alive() -> empty ser_in \n");
+		return;
+	}
+	
+	if (res < 0){
+		printf("Error on read from serial line, errno = %d\n", errno);
+		return;
+	};	
+	fprintf(stderr, "check_scart_alive() got <%02x> from scart\n", ser_in_buf[ser_in_len]);
+};
+	
 /* 
 	Read a byte from mpd socket into mpd_line_buf 
 	Returns 0 if end-of-file was reached
@@ -891,11 +917,14 @@ translate_to_serial(){
 	// Convert line to iso8859-15			
 	utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
 	
+	
+	
 	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through	
 	if (mpd_emu & PLAYLISTNAME_CMD){
 		if ( (strncmp(mpd_line_buf, "playlist:", 9) == 0) ){
 			if (mpd_emu_cnt == mpd_emu_arg) 
-				serial_output(mpd_line_buf);
+			{usleep(100000);
+serial_output(mpd_line_buf);}
 			mpd_emu_cnt++;
 		} else if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || 
 					(0 == strncmp(mpd_line_buf, "ACK", 3)) )
@@ -1020,9 +1049,10 @@ int main(int argc, char *argv[])
 			if (res == 0) {
 				/* No (more) input for some time. Forget all previous bytes */
 				fprintf(stderr,"No command from Betty for some time.\n");
-				reset_ser_in();
+
+				check_scart_alive();
 				if (++time_out_cnt >= time_out_lim){
-//					reboot_scart(serial_fd);
+					reboot_scart(serial_fd);
 					time_out_cnt = 0;
 					time_out_lim *= 2;
 				};

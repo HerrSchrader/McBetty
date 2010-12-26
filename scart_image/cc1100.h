@@ -55,6 +55,9 @@
 
 // status register contents
 #define MARCSTATE_IDLE		0x01
+#define MARCSTATE_RX		0x0D
+#define MARCSTATE_RXFIFO_OVERFLOW 0x11
+#define MARCSTATE_TXFIFO_UNDERFLOW 0x16
 
 #define CC1100_VERSION		0x31
 

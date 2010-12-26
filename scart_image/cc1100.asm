@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ANSI-C Compiler
 ; Version 2.9.7 #5820 (May  6 2010) (Linux)
-; This file was generated Fri Dec 17 01:43:32 2010
+; This file was generated Sun Dec 26 12:20:46 2010
 ;--------------------------------------------------------
 	.module cc1100
 	.optsdcc -mmcs51 --model-small
@@ -10,6 +10,7 @@
 ; Public variables in this module
 ;--------------------------------------------------------
 	.globl _conf
+	.globl _cc1100_tx_finished
 	.globl _TCR20_0
 	.globl _TCR20_1
 	.globl _TCR20_2
@@ -860,15 +861,15 @@ _cc1100_read_status_reg_otf:
 ;Allocation info for local variables in function 'switch_to_idle'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	cc1100.c:244: void switch_to_idle() {
+;	cc1100.c:246: void switch_to_idle() {
 ;	-----------------------------------------
 ;	 function switch_to_idle
 ;	-----------------------------------------
 _switch_to_idle:
-;	cc1100.c:245: cc1100_strobe(SIDLE);
+;	cc1100.c:247: cc1100_strobe(SIDLE);
 	mov	dpl,#0x36
 	lcall	_cc1100_strobe
-;	cc1100.c:246: while ((cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) != MARCSTATE_IDLE);
+;	cc1100.c:248: while (cc1100_state() != MARCSTATE_IDLE);
 00101$:
 	mov	dpl,#0xF5
 	lcall	_cc1100_read_status_reg_otf
@@ -876,6 +877,57 @@ _switch_to_idle:
 	anl	a,#0x1F
 	mov	r2,a
 	cjne	r2,#0x01,00101$
+	ret
+;------------------------------------------------------------
+;Allocation info for local variables in function 'cc1100_tx_finished'
+;------------------------------------------------------------
+;s                         Allocated to registers r2 
+;------------------------------------------------------------
+;	cc1100.c:258: unsigned char cc1100_tx_finished(){
+;	-----------------------------------------
+;	 function cc1100_tx_finished
+;	-----------------------------------------
+_cc1100_tx_finished:
+;	cc1100.c:261: s = cc1100_state();
+	mov	dpl,#0xF5
+	lcall	_cc1100_read_status_reg_otf
+	mov	a,dpl
+	anl	a,#0x1F
+	mov	r2,a
+;	cc1100.c:262: return ( (s == MARCSTATE_IDLE ) || (s == MARCSTATE_RX) || (s == MARCSTATE_RXFIFO_OVERFLOW) 
+	cjne	r2,#0x01,00118$
+	sjmp	00110$
+00118$:
+	cjne	r2,#0x0D,00119$
+	sjmp	00110$
+00119$:
+	mov	r3,#0x00
+	sjmp	00111$
+00110$:
+	mov	r3,#0x01
+00111$:
+	mov	a,r3
+	jnz	00107$
+	cjne	r2,#0x11,00121$
+	sjmp	00107$
+00121$:
+	mov	r3,#0x00
+	sjmp	00108$
+00107$:
+	mov	r3,#0x01
+00108$:
+	mov	a,r3
+	jnz	00104$
+;	cc1100.c:263: || (s == MARCSTATE_TXFIFO_UNDERFLOW)
+	cjne	r2,#0x16,00123$
+	sjmp	00104$
+00123$:
+	mov	r2,#0x00
+	sjmp	00105$
+00104$:
+	mov	r2,#0x01
+00105$:
+	mov	dpl,r2
 	ret
 	.area CSEG    (CODE)
 	.area CONST   (CODE)

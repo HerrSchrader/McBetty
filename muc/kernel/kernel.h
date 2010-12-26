@@ -21,6 +21,10 @@
 
 #include "pt.h"
 
+#ifdef TRACE
+extern volatile unsigned char trace_flags;
+#endif
+
 /* Some definitions to compute ticks from seconds and 1/10 seconds */
 
 /* Interval in microseconds, after which timer0 shall generate an interrupt
@@ -74,6 +78,7 @@ void signal_set(int sigid);
 void signal_clr(int sigid);
 
 void delay(unsigned int n);
+void delay_ms(unsigned int n);
 
 unsigned int system_time();
 

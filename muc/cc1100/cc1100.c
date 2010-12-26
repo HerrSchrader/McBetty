@@ -246,7 +246,7 @@ spi_read(unsigned int addr, unsigned char *buf, unsigned int len) {
 
 	unsigned short i;
 	unsigned char status;
-		
+			
 	FIOCLR0 = CS1;				// chip select for CC1100
 	
 	while (SPI_BSY);		// Make sure that SPI is not busy and TXFIFO is empty
@@ -260,11 +260,12 @@ spi_read(unsigned int addr, unsigned char *buf, unsigned int len) {
 		if (i++ > 10000) 
 			return -5;	
 	};
-		
+	
 	SSPDR = addr;				// send address
 	while (SPI_BSY);			// Wait while SSP is busy
 	status = SSPDR;
-	
+
+			
 	for (i=0; i < len; i++) {
 		SSPDR = 0x00;			// get next data byte
 		while (SPI_BSY);		// Wait while SSP is busy
@@ -272,6 +273,7 @@ spi_read(unsigned int addr, unsigned char *buf, unsigned int len) {
 	};
 	
 	FIOSET0 = CS1;				// no chip select
+
 	return(status);	
 }
 
@@ -334,10 +336,17 @@ uint8
 cc1100_read_status_reg_otf(uint8 reg){
 	uint8 res1, res2;
 	
-	res1 = cc1100_read1(reg | BURST);
-	while ( (res2=cc1100_read1(reg | BURST)) != res1)
-		res1 = res2;
-	return res2;
+	reg = reg | BURST | READ;
+	
+	spi_read (reg, &res2, 1);
+	do {
+		res1 = res2;				// last value read => res1
+		spi_read (reg, &res2, 1);	// new value => res2
+	} while (res1 != res2);
+
+	if (res1 == -5)
+		dbg("spi failed");
+	return res1;
 };
 
 /* Send a command strobe, the burst bit in cmd must be already cleared! */

@@ -7,17 +7,20 @@
 #define MISO1			(1<<18)
 #define MOSI1			(1<<19)
 
-// SPI Transmit fifo empty
+// SSP Transmit fifo empty
 #define TFE	(1<<0)
 
-// SPI Transmit fifo not full
+// SSP Transmit fifo not full
 #define TNF	(1<<1)
 
-// SPI Receive fifo not empty
+// SSP Receive fifo not empty
 #define RNE 	(1<<2)
 
-// SPI Receive fifo full
+// SSP Receive fifo full
 #define RFF	(1<<3)
+
+// SSP busy
+#define BSY (1<<4)
 
 // is <> 0 if SPI Receive fifo not empty
 #define SPI_RNE (SSPSR & RNE)
@@ -26,7 +29,7 @@
 #define SPI_TNF (SSPSR & TNF)
 
 // is <> 0 if SPI is busy
-#define SPI_BSY (SSPSR & (1<<4))
+#define SPI_BSY (SSPSR & BSY)
 
 #define TXIM	(1<<3)
 

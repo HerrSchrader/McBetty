@@ -32,6 +32,8 @@
 
 #include "pt.h"
 
+#define TRACE
+
 /* included here so that all routines have access to debug_out */
 #include "serial.h"
 

@@ -14,6 +14,6 @@ enum USER_CMD playlist_user_request();
 int playlist_arg(void);
 void playlist_screen_exit();
 void view_playlist_changed();
-
+void view_playlists_changed();
 #endif
 

@@ -38,7 +38,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define NO_SONG			-2
 #define SONG_UNKNOWN	-1
 
-struct STATUS {
+struct MODEL {
 	int	num_playlists;			// total number of playlists known by MPD (-1 if unknown to us)
 	int cur_playlist;			// index to currently loaded playlist (or -1 if unknown)
 	int playlistlength;			// length (number of songs) of the current playlist (-1 if unknown)
@@ -87,11 +87,13 @@ int get_comm_error();
 
 
 
+char *track_info(int no);
 void model_store_track(char *title, char *artist, int track_no);
 int tracklist_range_set(int start, int end);
 int mpd_playlist_last();
+void user_tracklist_clr();
+void mpd_clear_ok();
 
-int user_get_state();
 int mpd_get_state();
 void mpd_set_state(enum PLAYSTATE newstate);
 void mpd_state_ok();
@@ -113,10 +115,13 @@ int mpd_tracklist_last();
 void mpd_load_ok();
 void user_wants_playlist(int idx);
 void set_playlistlength(int n);
+int playlists_range_set(int start_pos, int end_pos);
+void mpd_set_playlistcount(int n);
+void model_store_playlistname(char *name, int playlist_pos);
 
 void mpd_set_last_response(unsigned int time);
 void mpd_check_mpd_dead();
-void model_reset(struct STATUS *st);
+void model_reset(struct MODEL *m);
 int action_needed(UserReq *request);
 void user_wants_state(enum PLAYSTATE s);
 

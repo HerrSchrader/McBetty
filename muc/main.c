@@ -98,34 +98,35 @@ main(void){
 	
 	/* Initialize the serial port */
 	serial_init(38400);
-	task_add(&serial_out);
+	task_add(&serial_out);					// Task 0
 	
 	/* Enable IRQs. Now IRQ service routines start to run */
 	enableIRQ();
 	
 	/* Enable radio communication */
-	RF_init();			
+	RF_init();								// Task 1 == produce_send_token)
 
 	/* Initialize backlight task */
 	inactivity_cnt = 0;		// consider power on to be a user activity
-	task_add(&backl_proc);
+	task_add(&backl_proc);					// Task 2
 	startPWMIRQ();
 
 	/* Initialize keyboard handling */
-	key_init();
+	key_init();								// Task 3 == key_scan()
 
 	/* Build an initial model of the internal and external state of the world */
-	model_init();
+	model_init();							// Task 4 == update_playtime()
 	
 	/* Show something to the user depending on model */
-	mainscreen_init();
+	mainscreen_init();						// Task 5 == win_scroll_all()
 	
 	/* Start the controller task 
 		- keeps model up to date
 		- starts actions according to model
 		- shows relevant information on the screen
 	*/
-	task_add(&controller);
+	task_add(&controller);					// Task 6
+											// Task 7 == assemble_line()
 	
 	/* Start the kernel scheduler */
 	while(1){

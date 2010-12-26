@@ -371,6 +371,7 @@ Symbol Table
   5 _cc1100_read_PARM_3                                            0008 GR
  17 _cc1100_read_status_reg_otf                                    0144 GR
  17 _cc1100_strobe                                                 0135 GR
+ 17 _cc1100_tx_finished                                            0189 GR
  17 _cc1100_write                                                  006E GR
  17 _cc1100_write1                                                 00AF GR
   5 _cc1100_write1_PARM_2                                          0004 GR
@@ -591,7 +592,7 @@ Area Table
   14 GSINIT5                                    size    0   flags 20
   15 GSINIT                                     size    0   flags 20
   16 GSFINAL                                    size    0   flags 20
-  17 CSEG                                       size  189   flags 20
+  17 CSEG                                       size  1C3   flags 20
   18 CONST                                      size   2F   flags 20
   19 XINIT                                      size    0   flags 20
   1A CABS                                       size    0   flags 28

@@ -397,7 +397,7 @@ scroll_list_changed(scroll_list *sl){
 	int i;
 	char *info;
 	struct Window *pwin;
-			
+
 	for (i=0, pwin = sl->wl; i < sl->num_windows; pwin++, i++){
 		info = sl->info_text( info_idx(sl, i) );
 

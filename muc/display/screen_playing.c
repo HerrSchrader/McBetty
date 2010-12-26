@@ -332,10 +332,10 @@ playing_keypress(Screen *this_screen, int cur_key, UserReq *req){
 			break;
 			
 		// TODO debug only
-		case KEY_VTX2:
+		case KEY_VTX3:
 			switch_screen(PLAYING_SCREEN, INFO_SCREEN);	
 			break;
-						
+
 		default:
 			break;
 	};

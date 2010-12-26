@@ -45,6 +45,15 @@
 volatile static unsigned int sys_time;		// monotonically increasing system time (time ticks since boot)
 volatile unsigned int signals;			// signals 
 
+
+// Only for debugging.
+// Implements a kind of poor mans watchdog timer
+#ifdef TRACE
+volatile unsigned int wdt_cnt = 10000;
+volatile int cur_task;
+volatile unsigned char trace_flags = 0;
+#endif
+
 /* Setting or clearing of signals constitutes a critical section, because it is a read-modify-write operation 
 */
 
@@ -88,7 +97,6 @@ delay(unsigned int n){
 		n--;
 	}	
 };
-	
 
 /* Returns the current system time (in 1/100th of a second since boot) */
 unsigned int 
@@ -107,8 +115,32 @@ timerIRQ(void){
 	T0IR = 1;
 	signal_set(SIG_TIMER);
 	sys_time++;			/* increment the system time */
+	
+#ifdef TRACE
+	if (wdt_cnt == 0){
+		// Watchdog triggered, something bad happened.
+		// Now we can spend some time in IRQ, it does not matter.
+
+		serial_flush_output();
+		serial_outs("\nWDT ");
+		serial_out_hex(cur_task);
+		serial_out_hex(trace_flags);
+		serial_outs("\n");
+		wdt_cnt = 200;
+	} else wdt_cnt--;
+#endif
+		
 }
 
+
+#ifdef TRACE  
+void feed_wdt(){
+  	ARM_INT_KEY_TYPE int_lock_key;
+	ARM_INT_LOCK(int_lock_key);
+	wdt_cnt = 200;
+	ARM_INT_UNLOCK(int_lock_key);
+};	
+#endif
 
 /* Frequency, with which timer0 shall count 
    Here: 1 MHz
@@ -302,19 +334,33 @@ handle_events(){
 */
 
 void schedule(){
-  int i, running;
-  struct task *t;
-  
-  for (i=0; i<num_tasks; i++){
-	handle_events();
-	t=&(task_list[i]);
-	/* Run the next thread with its own thread structure as argument */
-	if (t->state == RUN) {
-		running = PT_SCHEDULE( t->thread(&(t->thread_pt)) );
-		if (!running)
-			task_del(t);
-	}
-  };
+	int i, running;
+	struct task *t;
+
+#ifdef TRACE  
+	feed_wdt();
+#endif
+		
+	for (i=0; i<num_tasks; i++){
+
+#ifdef TRACE
+		cur_task = 99;
+#endif  
+	
+		handle_events();
+
+#ifdef TRACE
+		cur_task = i;
+#endif
+		
+		t=&(task_list[i]);
+		/* Run the next thread with its own thread structure as argument */
+		if (t->state == RUN) {
+			running = PT_SCHEDULE( t->thread(&(t->thread_pt)) );
+			if (!running)
+				task_del(t);
+		}
+  	};
 };
 
 

@@ -9,7 +9,7 @@
 
 void playlist_screen_init(Screen *this_screen);
 void playlist_screen_enter();
-void playlist_keypress(Screen *pl_screen, int cur_key);
+void playlist_keypress(Screen *pl_screen, int cur_key, UserReq *req);
 enum USER_CMD playlist_user_request();
 int playlist_arg(void);
 void playlist_screen_exit();

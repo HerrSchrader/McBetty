@@ -44,13 +44,14 @@ enum USER_CMD {
 	REWIND_CMD,
 	STATUS_CMD,
  	PLINFO_CMD,
-	LSINFO_CMD,
+//	LSINFO_CMD,
 	LOAD_CMD,
 	RANDOM_CMD,
 	REPEAT_CMD,
 	SINGLE_CMD,
 	PLAYLISTCOUNT_CMD,
-	PLAYLISTNAME_CMD
+	PLAYLISTNAME_CMD,
+	CLEAR_CMD
 };
 
 extern int playlist_changed;
@@ -62,8 +63,6 @@ void tx_init();
 void do_tx();
 	
 PT_THREAD (controller(struct pt *pt));
-
-char *track_info(int no);
 
 /* See rf.c */
 #define CMDSTR_LEN 254

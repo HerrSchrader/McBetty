@@ -21,12 +21,27 @@
 
 extern int fDebug;
 
+#define	USRRxData      	(1 << 0)
+#define	USRTxHoldEmpty 	(1 << 6)
+
+
+#define TX_READY(s)    	((s) & USRTxHoldEmpty)
+#define RX_DATA(s)     	((s) & USRRxData)
+
+#define PUT_CHAR(p,c)  	(p= (unsigned )(c))
+
 int serial_init (int baudrate);
 
 int serial_getc (void);
 
-void debug_out(char *s, unsigned int v);
+#ifdef TRACE
+int serial_flush_output(void) ;
+void serial_outs (const char *s);
+void serial_out_hex(unsigned char v);
+#endif
 
+void debug_out(char *s, unsigned int v);
+void dbg(char *s);
 PT_THREAD (serial_out(struct pt *pt));
 
 #endif /* BOOP_SERIAL_H */

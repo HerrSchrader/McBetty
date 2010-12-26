@@ -80,9 +80,9 @@ CABS                               0000   0000 =      0. bytes (ABS,CON,CODE)
        0C:  008D  s_CSEG                           
        0C:  0091  l_SSEG                           
        0C:  0100  l_IRAM                           
-       0C:  0550  l_CSEG                           
-       0C:  05DD  s_CONST                          
-       0C:  060C  s_XINIT                          
+       0C:  056A  l_CSEG                           
+       0C:  05F7  s_CONST                          
+       0C:  0626  s_XINIT                          
 
 ASxxxx Linker V02.00 + NoICE + sdld,  page 3.
 Hexadecimal
@@ -604,7 +604,7 @@ Hexadecimal
 
 Area                               Addr   Size   Decimal Bytes (Attributes)
 --------------------------------   ----   ----   ------- ----- ------------
-CSEG                               008D   0550 =   1360. bytes (REL,CON,CODE)
+CSEG                               008D   056A =   1386. bytes (REL,CON,CODE)
 
       Value  Global                              Global Defined In Module
       -----  ---------------------------------   ------------------------
@@ -616,45 +616,45 @@ CSEG                               008D   0550 =   1360. bytes (REL,CON,CODE)
        0C:  0134  _rx_overflow_reset               
        0C:  014F  _start_rx                        
        0C:  016B  _start_tx                        
-       0C:  0181  _tx_finished                     
-       0C:  01A6  _re_enter_rx                     
-       0C:  01B6  _handle_tx                       
-       0C:  0226  _check_etx                       
-       0C:  0239  _check_radio_packet              
-       0C:  02A8  _check_radio_input               
-       0C:  0340  _main                            
-       0C:  03B3  _initSerial                      
-       0C:  0411  _send_byte                       
-       0C:  041B  _spi_rw                          
-       0C:  0446  _cc1100_init                     
-       0C:  0489  _cc1100_write                    
-       0C:  04CA  _cc1100_write1                   
-       0C:  04E7  _cc1100_read                     
-       0C:  0538  _cc1100_read1                    
-       0C:  0550  _cc1100_strobe                   
-       0C:  055F  _cc1100_read_status_reg_otf      
-       0C:  058F  _switch_to_idle                  
-       0C:  05A4  __gptrput                        
-       0C:  05BD  __gptrget                        
-       0C:  05D9  __sdcc_external_startup          
+       0C:  0181  _re_enter_rx                     
+       0C:  0196  _handle_tx                       
+       0C:  0206  _check_etx                       
+       0C:  0219  _check_radio_packet              
+       0C:  0288  _check_radio_input               
+       0C:  0320  _main                            
+       0C:  0393  _initSerial                      
+       0C:  03F1  _send_byte                       
+       0C:  03FB  _spi_rw                          
+       0C:  0426  _cc1100_init                     
+       0C:  0469  _cc1100_write                    
+       0C:  04AA  _cc1100_write1                   
+       0C:  04C7  _cc1100_read                     
+       0C:  0518  _cc1100_read1                    
+       0C:  0530  _cc1100_strobe                   
+       0C:  053F  _cc1100_read_status_reg_otf      
+       0C:  056F  _switch_to_idle                  
+       0C:  0584  _cc1100_tx_finished              
+       0C:  05BE  __gptrput                        
+       0C:  05D7  __gptrget                        
+       0C:  05F3  __sdcc_external_startup          
 
 ASxxxx Linker V02.00 + NoICE + sdld,  page 37.
 Hexadecimal
 
 Area                               Addr   Size   Decimal Bytes (Attributes)
 --------------------------------   ----   ----   ------- ----- ------------
-CONST                              05DD   002F =     47. bytes (REL,CON,CODE)
+CONST                              05F7   002F =     47. bytes (REL,CON,CODE)
 
       Value  Global                              Global Defined In Module
       -----  ---------------------------------   ------------------------
-       0C:  05DD  _conf                            
+       0C:  05F7  _conf                            
 
 ASxxxx Linker V02.00 + NoICE + sdld,  page 38.
 Hexadecimal
 
 Area                               Addr   Size   Decimal Bytes (Attributes)
 --------------------------------   ----   ----   ------- ----- ------------
-XINIT                              060C   0000 =      0. bytes (REL,CON,CODE)
+XINIT                              0626   0000 =      0. bytes (REL,CON,CODE)
 
       Value  Global                              Global Defined In Module
       -----  ---------------------------------   ------------------------

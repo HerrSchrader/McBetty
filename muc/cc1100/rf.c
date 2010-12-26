@@ -63,19 +63,23 @@ rx_reset(){
 
 /* Send the contents of buffer b over radio 
 	b must be less than 255 characters
-	A EOT (0x04) is appended to the packet.
+	A EOT (0x04) is appended to the packet.	
 */
 static void
 RF_send(unsigned char* b, int payload_cnt) {
-	int n;
+	int i, n;
 	
-	// Wait until all previous bytes have been sent out
-	while ( (cc1100_read_status_reg_otf(TXBYTES) & 0x7f) != 0);
-	
+	if (payload_cnt >= 255){
+		debug_out("payload_cnt invalid", payload_cnt);
+		return;
+	}
+	// We do not wait until previous bytes have been sent out
+	// The higher protocol levels must make sure that sending and receiving are timed correctly.
+				
 	switch_to_idle();
 	cc1100_strobe(SFTX);
 	cc1100_strobe(SCAL);	
-		
+			
 	cc1100_write1(TX_fifo, payload_cnt+1+1);	/* Extra bytes ADDR and EOT */
 	cc1100_write1(TX_fifo, DEVICE_ADDRESS);	
 	
@@ -90,12 +94,14 @@ RF_send(unsigned char* b, int payload_cnt) {
 		cc1100_write1(TX_fifo, EOT);
 		payload_cnt--;
 	};
-
-	cc1100_strobe(STX);						// start transmitting
 	
+	cc1100_strobe(STX);						// start transmitting
+
+			
 	while (payload_cnt >= 0){
-		
-		/* Wait until bytes are free in TXFIFO */
+		/* Wait until bytes are free in TXFIFO 
+			TODO possible infinite loop !
+		*/
 		while ((cc1100_read_status_reg_otf(TXBYTES) & 0x7F) > 60);
 		
 		if (payload_cnt > 0)
@@ -104,6 +110,8 @@ RF_send(unsigned char* b, int payload_cnt) {
 			cc1100_write1(TX_fifo, EOT);
 		payload_cnt--;
 	};
+
+
 }
 
 /* Under all circumstances do we want to avoid cluttering the air waves with our comunication, because other devices
@@ -132,6 +140,7 @@ static int send_token = INIT_SEND_TOKEN;
 void
 send_cmd(char *cmd_str){
 	if (send_token > 0){
+
 		RF_send((unsigned char *) cmd_str, str_len(cmd_str));
 		send_token--;
 	} else debug_out("THROTTLED! ",00);
@@ -264,7 +273,12 @@ static int rssi_dbm;
 //	Clears SIG_RX_PACKET.
 //	Sets SIG_NEW_PACKET if a valid packet has been copied.
 //	TODO Flush RX_FIFO or not ?
-
+// TODO this should be called even when the packet is not complete.
+//  It really relies on other tasks to return very fast, so that we are faster than the next packet.
+//  Packets are sent with 38400 bits per second over radio and over scart-serial.
+//  So character time is around 0.2 ms.
+// So the next packet (maybe only 3 or 4 characters long) can arrive after around 0.8 ms !
+// Even with some delays that is under 1 ms. So no other task should take that long!
 void 
 rfRcvPacket() { 
 	uint8_t	tmp_buf[65];
@@ -322,7 +336,12 @@ rfRcvPacket() {
 		};
 		if (!put_in_buf(tmp_buf[i])){
 			debug_out("rx buffer overrun", 0);
-			break;						// buffer is full, forget the rest of the data packet
+// TODO this would be correct, but assemle_line currently relies on the fact that buf can not shrink!
+#if 0	
+			init_rx();					// buffer is full, empty the buffer, the end of the answer is important
+			put_in_buf(tmp_buf[i]);
+#endif
+			break;		
 		};
 	};	
 	return;
@@ -348,8 +367,7 @@ rxInit(void) {
 	switch_to_idle();
 	cc1100_strobe(SFRX);	
 	cc1100_strobe(SCAL);		// TODO done automatically - but seems to be absolutely necessary !
-	// TODO probably not necessary, the SRX strobe waits until CC1100 ready
-	while ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) != 0x01) {}; 
+	// The SRX strobe waits until CC1100 ready
 	cc1100_strobe(SRX);
 }
 

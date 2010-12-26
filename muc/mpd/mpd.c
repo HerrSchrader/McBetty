@@ -45,8 +45,8 @@
 #include "screen_tracklist.h"
 #include "mpd.h"
 
-/* Returns TRUE iff the semaphore count has reached zero, i. e. the semaphore is available */
-#define PT_SEM_CHECK(pt, s) (0 == (s)->count) 
+/* Returns TRUE iff the semaphore count has reached zero, i. e. the semaphore is NOT available */
+#define PT_SEM_CHECK(s) (0 == (s)->count) 
 
 
 // Length of response line
@@ -54,26 +54,28 @@
 
 static char response[RESPLEN];
 
-static int volume_arg;
-static enum PLAYSTATE state_arg;
-static int song_arg;
 
-/* Set by function track_list_needed() and read by handle_user_req() */
-static int req_track_no;
+/* This is the request that the model wanted.
+	The line processing functions can see which parameters were given.
+*/
+static UserReq request;
 
-static int req_pl_no;
-
-/* We gather a some information from the responses in this variable: */
-static struct STATUS ans_model;
+/* We gather some information from the responses in this variable: */
+static struct MODEL ans_model;
 
 /* ------------------------------ The Communicator ----------------------------------------- */
 
 /* This semaphore protects access to communication with mpd. 
 	It is initialized to 1, so that only 1 thread at a time can communicate with mpd.
 	Communication means sending a command and receiving the answer.
-	We must protect it, so that only 1 thread is potentially interested in the answer from mpd.
+	Commands and their answer must be processed together, because an "OK" answer means different
+	things for different commands. 
+	We must protect communication, so that only 1 thread is potentially interested in the answer from mpd.
 	And so that no other thread can send a command before an answer has arrived (or a timeout).
+
+	Whowever holds this mutex, can send and receive via radio link to mpd.
 */
+
 static struct pt_sem mpd_mutex;
 
 
@@ -143,7 +145,7 @@ static void
 process_plname(char *s){
 	/* Compare with "playlist: " */
 	if (strstart(response, "playlist: "))
-		model_store_playlistname(response+10, req_pl_no);
+		model_store_playlistname(response+10, request.arg);
 
 	/* Compare with "OK" */
 	if (strstart(response, "OK")) {
@@ -262,6 +264,14 @@ process_load_line(char *s){
 };
 
 void 
+process_clear_line(char *s){
+	if (strstart(s, "OK")) {
+		mpd_clear_ok();
+		response_valid = 1;
+	}
+};
+
+void 
 process_rnd(char *s){
 	if (strstart(s, "OK")) {
 		mpd_random_ok();
@@ -300,7 +310,7 @@ process_song(char *s){
 static void 
 process_volume_line(char *s){
 	if (strstart(s, "OK")) {
-		mpd_set_volume(volume_arg);	
+		mpd_set_volume(request.arg);	
 		response_valid = 1;
 	};
 };
@@ -351,7 +361,7 @@ process_playlistinfo_line(char *s){
 	if (strstart(response, "ACK")) {
 		strn_cpy(ans_model.artist_buf, "- not", TITLE_LEN);
 		strn_cpy(ans_model.title_buf, "found -", TITLE_LEN);
-		if (ans_model.pos == req_track_no)
+		if (ans_model.pos == request.arg)
 			model_store_track(ans_model.title_buf, ans_model.artist_buf, ans_model.pos);
 		return;
 	};
@@ -359,7 +369,7 @@ process_playlistinfo_line(char *s){
 	/* Compare with "OK" */
 		//TODO We could here detect tracks without title and name tags and substitute the filename instead.
 	if (strstart(response, "OK")) {
-		if (ans_model.pos == req_track_no)
+		if (ans_model.pos == request.arg)
 			model_store_track(ans_model.title_buf, ans_model.artist_buf, ans_model.pos);
 		response_valid = 1;
 		return;
@@ -370,7 +380,7 @@ process_playlistinfo_line(char *s){
 static void 
 process_play_line(char *s){
 	if (strstart(s, "OK")) {
-		mpd_pos_ok(song_arg);
+		mpd_pos_ok(request.arg);
 		response_valid = 1;
 	};
 	if (strstart(s, "ACK")) {
@@ -447,7 +457,7 @@ PT_THREAD (assemble_line(struct pt *pt)) {
 				If no one is interested in the line, we forget it.
 			*/
 			timer_add(&tmr, 5*TICKS_PER_TENTH_SEC, 0);
-			PT_WAIT_UNTIL(pt, PT_SEM_CHECK(pt, &line_ready) || timer_expired(&tmr));
+			PT_WAIT_UNTIL(pt, PT_SEM_CHECK(&line_ready) || timer_expired(&tmr));
 			timer_del(&tmr);
 	
 			/* Either way, reset the semaphore */
@@ -468,7 +478,8 @@ PT_THREAD (assemble_line(struct pt *pt)) {
 */
 PT_THREAD (collect_lines(struct pt *pt, void (*process_line) (char *s))  ){
 	static struct timer tmr;
-	
+
+			
 	PT_BEGIN(pt);
 	/* We should receive all the answers in a relatively short time frame, else something went wrong anyway */
 	timer_add(&tmr, 15*TICKS_PER_TENTH_SEC, 0);
@@ -485,11 +496,12 @@ PT_THREAD (collect_lines(struct pt *pt, void (*process_line) (char *s))  ){
 		};	
 						
 		// Wait for next line
-		PT_WAIT_UNTIL(pt, (!PT_SEM_CHECK(pt, &line_ready) || timer_expired(&tmr)) ); 
+		PT_WAIT_UNTIL(pt, (!PT_SEM_CHECK(&line_ready) || timer_expired(&tmr)) ); 
 	
 	} while (!response_valid && !timer_expired(&tmr));
 	
-	timer_del(&tmr);	
+	timer_del(&tmr);
+		
 	PT_END(pt);
 };
 
@@ -498,20 +510,20 @@ PT_THREAD (collect_lines(struct pt *pt, void (*process_line) (char *s))  ){
 /* Thread to send a command, collect replies from mpd and do error handling 
 	The command string sent to mpd is given as second argument.
 	Third argument is a function which is called to collect responses.
-	Fourth argument is a function which is called after we got a valid response ("OK"). // NOTE not used !
+
 	Fifth argument tells us how often we should try to send the command.
 	TODO we could add more parameters concerning time out and error handling.
 	Thread waits for semaphore mpd_mutex.
 */
-PT_THREAD (handle_cmd(struct pt *pt, char *cmd, void (*process_line) (char *s), void (*process_info) (void), int max_tries)){
+PT_THREAD (handle_cmd(struct pt *pt, char *cmd, void (*process_line) (char *s), int max_tries)){
 	static struct timer tmr;
 	static int tries;
 	static struct pt child_pt;
-	
-	PT_BEGIN(pt);
 		
-
-	/* We want to acquire access to mpd for this command and its answer */
+	PT_BEGIN(pt);
+	
+	/* We want to acquire exclusive access to MPD communication (radio link) for this command and its answer */
+	
 	PT_SEM_WAIT(pt, &mpd_mutex);
 
 	for (tries = 0; tries < max_tries; tries++){	
@@ -523,35 +535,44 @@ PT_THREAD (handle_cmd(struct pt *pt, char *cmd, void (*process_line) (char *s), 
 			This problem rarely happens, because we always wait some time after sending commands to 
 			MPD. So we simply ignore it here.
 		*/
+
 		send_cmd(cmd);
-		debug_out(cmd, 0);
+		dbg(cmd);
 		
 		// TODO overly complicated
 		// move handling of time out etc. to collect_lines
-		
+			
 		/* Time that we want to wait for first response line */
 		timer_add(&tmr, 7*TICKS_PER_TENTH_SEC, 0);
 		
-		PT_WAIT_UNTIL(pt, !PT_SEM_CHECK(pt, &line_ready) || timer_expired(&tmr));
 		
+		PT_WAIT_UNTIL(pt, (!PT_SEM_CHECK(&line_ready) || timer_expired(&tmr)) );
+		
+
+
 		if (timer_expired(&tmr)){
+
 			timer_del(&tmr);
 			debug_out("retry ", tries);
+	
 			continue;
 		};
-	
+
 		timer_del(&tmr);
-		if (! PT_SEM_CHECK(pt, &line_ready) ){
+		if (! PT_SEM_CHECK(&line_ready) ){
 			// We got at least one line of response from MPD
 			model_set_last_response (system_time());
 			 clr_error(MPD_DEAD);
-			 
+
+
+					 
 			/* This thread collects all information from mpd and sets response_valid. */
 			PT_SPAWN(pt, &child_pt, collect_lines(&child_pt, process_line));
+			
 
 			if (response_valid){
-				/* Now our cmd got an OK. Process the info gathered (if necessary) */
-				if (process_info) process_info();
+				/* Now our cmd got an OK. */
+//				if (process_info) process_info();
 				break;
 			}
 				
@@ -632,6 +653,12 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 	static enum USER_CMD cmd;
 	
 	PT_BEGIN(pt);
+	
+	// We copy the request to a static variable, so that the line processing functions can access the arguments
+	// The controller makes sure that only one request can be issued at a time, so no race condition
+	request = *preq;
+	
+	// NOTE Just to make the argument names shorter
 	arg = preq->arg;
 	arg2 = preq->arg2;
 	cmd = preq->cmd;
@@ -640,50 +667,44 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 	
 	/* Volume changing command */
 	if ( cmd == VOLUME_NEW ) {
-		volume_arg = arg;
 		compose_string (cmd_str, "setvol ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_volume_line, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_volume_line, 1));
 		PT_EXIT(pt);
 	};
 
 	if (cmd == NEXT_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "next\n", process_song, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "next\n", process_song, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == PREV_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "previous\n", process_song, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "previous\n", process_song, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == SEL_SONG){
-		song_arg = arg;
 		compose_string (cmd_str, "play ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_play_line, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_play_line, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == PLAY_CMD){
-		state_arg = PLAY;
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "play\n", process_state_line, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "play\n", process_state_line, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == STOP_CMD){
-		state_arg = STOP;
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "stop\n", process_state_line, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "stop\n", process_state_line, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == PAUSE_ON){		
-		state_arg = PAUSE;
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 1\n", process_state_line, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 1\n", process_state_line, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == PAUSE_OFF){		
-		state_arg = PLAY;
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 0\n", process_state_line, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 0\n", process_state_line, 1));
 		PT_EXIT(pt);
 	};
 		
@@ -695,7 +716,7 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 		model_reset(&ans_model);
 		compose_string2 (cmd_str, "command_list_begin\nseek ", arg, arg2, CMDSTR_LEN);	
 		str_cat_max(cmd_str, "\nstatus\ncommand_list_end\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_status_line, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_status_line, 1));
 		PT_EXIT(pt);
 	};
 
@@ -703,68 +724,62 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 		/* We set these values just in case that the current track has no title or artist */
 		mpd_set_artist("???");
 		mpd_set_title("???");
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "currentsong\n", process_currentsong_line, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "currentsong\n", process_currentsong_line, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == STATUS_CMD){
 		model_reset(&ans_model);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "status\n", process_status_line, NULL, 1));	
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "status\n", process_status_line, 1));	
 		PT_EXIT(pt);
 	};	
 	
 	if (cmd == PLINFO_CMD){
 		model_reset(&ans_model);
 		compose_string (cmd_str, "playlistinfo ", arg, CMDSTR_LEN);
-		req_track_no = arg;
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_playlistinfo_line, NULL, 1));	
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_playlistinfo_line, 1));	
 		PT_EXIT(pt);
 	};	
 	
-
-// CLEAR command currently not used
-#if 0
 	if (cmd == CLEAR_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "clear\n", process_clear_line, NULL, 1));	
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "clear\n", process_clear_line, 1));	
 		PT_EXIT(pt);
 	};	
-#endif
 															  
 	if (cmd == LOAD_CMD){
 		strn_cpy (cmd_str, "command_list_begin\nclear\nload \"", CMDSTR_LEN);
 		str_cat_max (cmd_str, mpd_get_playlistname(arg), CMDSTR_LEN);
 		str_cat_max (cmd_str, "\"\ncommand_list_end\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_load_line, NULL, 1));	
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_load_line, 1));	
 		PT_EXIT(pt);
 	};	
 	
 	if (cmd == RANDOM_CMD){
 		compose_string (cmd_str, "random ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_rnd, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_rnd, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == REPEAT_CMD){
 		compose_string (cmd_str, "repeat ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_rpt, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_rpt, 1));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == SINGLE_CMD){
 		compose_string (cmd_str, "single ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_sgl, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_sgl, 1));
 		PT_EXIT(pt);
 	};
 		
 	if (cmd == PLAYLISTCOUNT_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "playlistcount\n", process_plcount, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "playlistcount\n", process_plcount, 1));
 		PT_EXIT(pt);
 	};
 		
 	if (cmd == PLAYLISTNAME_CMD){
 		compose_string (cmd_str, "playlistname ", arg, CMDSTR_LEN);
-		req_pl_no = arg;
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_plname, NULL, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_plname, 1));
 		PT_EXIT(pt);
 	};
 		
@@ -860,22 +875,25 @@ PT_THREAD (controller(struct pt *pt)){
 		 	Therefore action_needed() sets its parameter request to a valid command when it is TRUE or to NO_CMD when it is FALSE.	
 			We have to call action_needed first here so that request is set correctly in any case.
 			TODO maybe it's more logical to have two threads, one for communication and the other to change the view
+				Maybe that could lead to race conditions ?
 		*/
 		PT_WAIT_UNTIL(pt, ( action_needed(&request) || model_get_changed()) );
 
+	
 		if ( request.cmd != NO_CMD ){
-			debug_out("action ", request.cmd);
+//			debug_out("action ", request.cmd);
 			PT_SPAWN( pt, &action_pt, exec_action(&action_pt, &request) );
 			PT_YIELD(pt);
 		};
 		
+
 		if ( model_get_changed() ) {
 			inform_view(model_get_changed());
 			PT_YIELD(pt);
 		};
-		
+
 		detect_errors();
-		
+
 	};
 	PT_END(pt);
 };

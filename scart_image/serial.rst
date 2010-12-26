@@ -465,7 +465,7 @@
                             465 ;	-----------------------------------------
                             466 ;	 function initSerial
                             467 ;	-----------------------------------------
-   03B3                     468 _initSerial:
+   0393                     468 _initSerial:
                     0002    469 	ar2 = 0x02
                     0003    470 	ar3 = 0x03
                     0004    471 	ar4 = 0x04
@@ -474,77 +474,77 @@
                     0007    474 	ar7 = 0x07
                     0000    475 	ar0 = 0x00
                     0001    476 	ar1 = 0x01
-   03B3 AA 82               477 	mov	r2,dpl
-   03B5 AB 83               478 	mov	r3,dph
+   0393 AA 82               477 	mov	r2,dpl
+   0395 AB 83               478 	mov	r3,dph
                             479 ;	serial.c:25: SCON   = 0x52;		// 0101 0010 = Mode 8N1, enable reception, TxIntFlag=1 ? 
-   03B7 75 98 52            480 	mov	_SCON,#0x52
+   0397 75 98 52            480 	mov	_SCON,#0x52
                             481 ;	serial.c:26: SSTAT |= 0x80;		// 1000 0000 = Double buffering mode
-   03BA 43 BA 80            482 	orl	_SSTAT,#0x80
+   039A 43 BA 80            482 	orl	_SSTAT,#0x80
                             483 ;	serial.c:27: switch (baud) {
-   03BD BA 60 05            484 	cjne	r2,#0x60,00114$
-   03C0 BB 00 02            485 	cjne	r3,#0x00,00114$
-   03C3 80 20               486 	sjmp	00101$
-   03C5                     487 00114$:
-   03C5 BA C0 05            488 	cjne	r2,#0xC0,00115$
-   03C8 BB 00 02            489 	cjne	r3,#0x00,00115$
-   03CB 80 20               490 	sjmp	00102$
-   03CD                     491 00115$:
-   03CD BA 80 05            492 	cjne	r2,#0x80,00116$
-   03D0 BB 01 02            493 	cjne	r3,#0x01,00116$
-   03D3 80 20               494 	sjmp	00103$
-   03D5                     495 00116$:
-   03D5 BA 40 05            496 	cjne	r2,#0x40,00117$
-   03D8 BB 02 02            497 	cjne	r3,#0x02,00117$
-   03DB 80 20               498 	sjmp	00104$
-   03DD                     499 00117$:
+   039D BA 60 05            484 	cjne	r2,#0x60,00114$
+   03A0 BB 00 02            485 	cjne	r3,#0x00,00114$
+   03A3 80 20               486 	sjmp	00101$
+   03A5                     487 00114$:
+   03A5 BA C0 05            488 	cjne	r2,#0xC0,00115$
+   03A8 BB 00 02            489 	cjne	r3,#0x00,00115$
+   03AB 80 20               490 	sjmp	00102$
+   03AD                     491 00115$:
+   03AD BA 80 05            492 	cjne	r2,#0x80,00116$
+   03B0 BB 01 02            493 	cjne	r3,#0x01,00116$
+   03B3 80 20               494 	sjmp	00103$
+   03B5                     495 00116$:
+   03B5 BA 40 05            496 	cjne	r2,#0x40,00117$
+   03B8 BB 02 02            497 	cjne	r3,#0x02,00117$
+   03BB 80 20               498 	sjmp	00104$
+   03BD                     499 00117$:
                             500 ;	serial.c:29: case 96:
-   03DD BA 80 2B            501 	cjne	r2,#0x80,00106$
-   03E0 BB 04 28            502 	cjne	r3,#0x04,00106$
-   03E3 80 20               503 	sjmp	00105$
-   03E5                     504 00101$:
+   03BD BA 80 2B            501 	cjne	r2,#0x80,00106$
+   03C0 BB 04 28            502 	cjne	r3,#0x04,00106$
+   03C3 80 20               503 	sjmp	00105$
+   03C5                     504 00101$:
                             505 ;	serial.c:30: BRGR0  = 0x88; 
-   03E5 75 BE 88            506 	mov	_BRGR0,#0x88
+   03C5 75 BE 88            506 	mov	_BRGR0,#0x88
                             507 ;	serial.c:31: BRGR1  = 0x02;
-   03E8 75 BF 02            508 	mov	_BRGR1,#0x02
+   03C8 75 BF 02            508 	mov	_BRGR1,#0x02
                             509 ;	serial.c:32: break;
                             510 ;	serial.c:33: case 192:
-   03EB 80 1E               511 	sjmp	00106$
-   03ED                     512 00102$:
+   03CB 80 1E               511 	sjmp	00106$
+   03CD                     512 00102$:
                             513 ;	serial.c:34: BRGR0  = 0xBC; 
-   03ED 75 BE BC            514 	mov	_BRGR0,#0xBC
+   03CD 75 BE BC            514 	mov	_BRGR0,#0xBC
                             515 ;	serial.c:35: BRGR1  = 0x02;
-   03F0 75 BF 02            516 	mov	_BRGR1,#0x02
+   03D0 75 BF 02            516 	mov	_BRGR1,#0x02
                             517 ;	serial.c:36: break;
                             518 ;	serial.c:37: case 384:
-   03F3 80 16               519 	sjmp	00106$
-   03F5                     520 00103$:
+   03D3 80 16               519 	sjmp	00106$
+   03D5                     520 00103$:
                             521 ;	serial.c:38: BRGR0  = 0x56; 
-   03F5 75 BE 56            522 	mov	_BRGR0,#0x56
+   03D5 75 BE 56            522 	mov	_BRGR0,#0x56
                             523 ;	serial.c:39: BRGR1  = 0x01;
-   03F8 75 BF 01            524 	mov	_BRGR1,#0x01
+   03D8 75 BF 01            524 	mov	_BRGR1,#0x01
                             525 ;	serial.c:40: break;
                             526 ;	serial.c:41: case 576:
-   03FB 80 0E               527 	sjmp	00106$
-   03FD                     528 00104$:
+   03DB 80 0E               527 	sjmp	00106$
+   03DD                     528 00104$:
                             529 ;	serial.c:42: BRGR0  = 0xDE; 
-   03FD 75 BE DE            530 	mov	_BRGR0,#0xDE
+   03DD 75 BE DE            530 	mov	_BRGR0,#0xDE
                             531 ;	serial.c:43: BRGR1  = 0x00;
-   0400 75 BF 00            532 	mov	_BRGR1,#0x00
+   03E0 75 BF 00            532 	mov	_BRGR1,#0x00
                             533 ;	serial.c:44: break;
                             534 ;	serial.c:45: case 1152:
-   0403 80 06               535 	sjmp	00106$
-   0405                     536 00105$:
+   03E3 80 06               535 	sjmp	00106$
+   03E5                     536 00105$:
                             537 ;	serial.c:46: BRGR0  = 0x67; 
-   0405 75 BE 67            538 	mov	_BRGR0,#0x67
+   03E5 75 BE 67            538 	mov	_BRGR0,#0x67
                             539 ;	serial.c:47: BRGR1  = 0x00;
-   0408 75 BF 00            540 	mov	_BRGR1,#0x00
+   03E8 75 BF 00            540 	mov	_BRGR1,#0x00
                             541 ;	serial.c:49: }
-   040B                     542 00106$:
+   03EB                     542 00106$:
                             543 ;	serial.c:50: BRGCON = 0x03;		// Select the baud rate generator as timing source and enable it
-   040B 75 BD 03            544 	mov	_BRGCON,#0x03
+   03EB 75 BD 03            544 	mov	_BRGCON,#0x03
                             545 ;	serial.c:52: TI = 1;
-   040E D2 99               546 	setb	_SCON_1
-   0410 22                  547 	ret
+   03EE D2 99               546 	setb	_SCON_1
+   03F0 22                  547 	ret
                             548 ;------------------------------------------------------------
                             549 ;Allocation info for local variables in function 'send_byte'
                             550 ;------------------------------------------------------------
@@ -554,17 +554,17 @@
                             554 ;	-----------------------------------------
                             555 ;	 function send_byte
                             556 ;	-----------------------------------------
-   0411                     557 _send_byte:
-   0411 AA 82               558 	mov	r2,dpl
+   03F1                     557 _send_byte:
+   03F1 AA 82               558 	mov	r2,dpl
                             559 ;	serial.c:59: while (!TI);
-   0413                     560 00101$:
+   03F3                     560 00101$:
                             561 ;	serial.c:60: TI = 0; 
-   0413 10 99 02            562 	jbc	_SCON_1,00108$
-   0416 80 FB               563 	sjmp	00101$
-   0418                     564 00108$:
+   03F3 10 99 02            562 	jbc	_SCON_1,00108$
+   03F6 80 FB               563 	sjmp	00101$
+   03F8                     564 00108$:
                             565 ;	serial.c:61: SBUF = h;  
-   0418 8A 99               566 	mov	_SBUF,r2
-   041A 22                  567 	ret
+   03F8 8A 99               566 	mov	_SBUF,r2
+   03FA 22                  567 	ret
                             568 	.area CSEG    (CODE)
                             569 	.area CONST   (CODE)
                             570 	.area XINIT   (CODE)

@@ -233,6 +233,11 @@ tracklist_keypress(Screen *track_screen, int cur_key, UserReq *req){
 			view_tracklist_changed();
 			break;
 			
+		// This clears the current tracklist
+		case KEY_VTX2:
+			user_tracklist_clr();	
+			break;
+			
 		default:
 			break;
 	};

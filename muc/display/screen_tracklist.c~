@@ -101,7 +101,9 @@ static scroll_list track_list;
 
 void
 view_tracklist_changed(){
+	debug_out("tlc", 0);
 	scroll_list_changed(&track_list);
+	debug_out("tlc", 1);
 };
 
 
@@ -192,6 +194,7 @@ tracklist_keypress(Screen *track_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
 		case KEY_OK:
+			// NOTE info-idx could return -1 if invalid, user_wants_song can handle that 
 			user_wants_song ( info_idx(&track_list, track_list.sel_win) );
 			switch_screen(TRACKLIST_SCREEN, PLAYING_SCREEN);
 			break;
@@ -230,6 +233,11 @@ tracklist_keypress(Screen *track_screen, int cur_key, UserReq *req){
 		case KEY_Right:
 			track_list.first_info_idx = tracklist_range_set(track_list.first_info_idx+TL_SIZE, last_info_idx(&track_list)+TL_SIZE );
 			view_tracklist_changed();
+			break;
+			
+		// This clears the current tracklist
+		case KEY_VTX2:
+			user_tracklist_clr();	
 			break;
 			
 		default:

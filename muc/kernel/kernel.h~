@@ -74,6 +74,7 @@ void signal_set(int sigid);
 void signal_clr(int sigid);
 
 void delay(unsigned int n);
+void delay_ms(unsigned int n);
 
 unsigned int system_time();
 
@@ -86,7 +87,7 @@ void task_del(struct task *t);
 //void check_events();
 void schedule();
 
-extern int check_rx();
-extern void process_rx();
+//extern int check_rx();
+//extern void process_rx();
 
 #endif

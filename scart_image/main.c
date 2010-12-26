@@ -247,10 +247,6 @@ char buffer_out(){
 	But directly after checking one more character might arrive and even one more might 
 	be in the process of transferring. So better to say yes only when we have 18 bytes
 	free,
-	TODO well, no. Even better to check if we received an ETX. We then know that should be 
-	the last character, because mpdtool waits after an ETX.
-	So when got_etx is 1, has_room() is correct and stays correct until we allow more bytes
-	via ACK!
 */
 unsigned char has_room(){
 	return ( (BUFSIZE - bufcnt) > (MPDTOOL_PKTSIZE + 2) );
@@ -294,11 +290,7 @@ void start_tx() {
 	radio_mode = RADIO_TX;
 }
 
-/* Returns TRUE iff radio transmission is finished */
-unsigned char tx_finished(){
-	return ( (cc1100_read_status_reg_otf(TXBYTES) & 0x7f) == 0  &&
-		( (cc1100_read1(PKTSTATUS | BURST) & (1<<2)) == 0 ) );		// GDO2 == 0
-}
+#define tx_finished() (cc1100_tx_finished())
 
 /* If we are in RADIO_TX mode and transmission is finished, enter RADIO_RX mode */
 void re_enter_rx(){
