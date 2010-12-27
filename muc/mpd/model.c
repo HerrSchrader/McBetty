@@ -842,6 +842,7 @@ mpd_set_pos(int newpos){
 void 
 mpd_pos_ok(int newpos){
 	mpd_set_pos(newpos);
+	user_song_unknown();				// wish fulfilled
 	mpd_set_state(PLAY);				// MPD starts playing
 };
 

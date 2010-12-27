@@ -65,6 +65,9 @@ struct MODEL {
 int model_get_changed(void);
 void model_reset_changed();
 
+void mpd_script_ok();
+void user_wants_script(int script_no);
+	
 void start_reading_playlists(void);
 void user_toggle_pause(void);
 void user_set_state(enum PLAYSTATE s);

@@ -1099,7 +1099,7 @@ int main(int argc, char *argv[])
 		
 		translate_to_mpd (mpd_input_buf);
 		
-		prt_timer(total_tmr); fprintf(stderr, "BETTY: %s", mpd_input_buf);
+		prt_timer(total_tmr); fprintf(stderr, "Betty: %s", mpd_input_buf);
 		
 		// got a complete input via serial line
 		// send it to MPD, if necessary check initial response from mpd

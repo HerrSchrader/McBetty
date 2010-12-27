@@ -45,9 +45,8 @@
 #include "screen_tracklist.h"
 #include "mpd.h"
 
-/* Returns TRUE iff the semaphore count has reached zero, i. e. the semaphore is NOT available */
-#define PT_SEM_CHECK(s) (0 == (s)->count) 
-
+/* Returns TRUE iff the semaphore count is not zero, i. e. the semaphore is available */
+#define PT_SEM_CHECK(s) ((s)->count) 
 
 // Length of response line
 #define RESPLEN 1024
@@ -66,78 +65,55 @@ static struct MODEL ans_model;
 /* ------------------------------ The Communicator ----------------------------------------- */
 
 /* Variable which is set by the response collecting routines.
-	When we got a response with "OK" we set this to 1.
-	If no response or "ACK" then it will stay at 0.
-	This is used by PT_THREAD collect_lines() to end the thread when a valid answer has been received
-	TODO we should also end the thread when an ACK has been received, because then the response is finished.
+	When we got a response with "OK" or "ACK" within time limits we set this to 1.
+	If no response then it will stay at 0.
 	TODO where is this needed? Only for error checking ?
 */
-static int response_valid;
+static int response_finished;
 
 /* ---------------------------- Response collecting handlers ------------------------------------- */
 /* Each request from Betty choses one of the following handlers.
 	The handler then reads the response line(s) from mpd and tells the model about the results.
 */
  
-/* We got a line from mpd after a "current_song" command.
-	Gather the information in the variable mpd_status.
-	Sets response_valid to 1 if we received an "OK" string.
-*/ 
+/* We sent a "setvol" command and got "OK" */
 static void 
-process_currentsong_line(char *s){
-
-	/* Compare with "Artist: " */
-	if (strstart(response, "Artist: ")){
-		mpd_set_artist(response+8);
-		return;
-	};
-	
-	/* Compare with "Title: " */
-	if (strstart(response, "Title: ")){
-		mpd_set_title(response+7);
-		return;
-	};
-	
-	/* Compare with "Pos: " */
-	if (strstart(response, "Pos: ")){
-		mpd_set_pos (atoi (response+5));
-		return;
-	};
-	
-	/* Compare with "Id: " */
-	if (strstart(response, "Id: ")){
-		mpd_set_id (atoi (response+4));
-	};
-	
-	/* Compare with "OK" */
-	if (strstart(response, "OK"))
-		response_valid = 1;
+ans_volume_ok(char *s){
+	mpd_set_volume(request.arg);	
 };
 
-
-static void 
-process_plcount(char *s){
-	/* Compare with "playlistcount: " */
-	if (strstart(response, "playlistcount: "))
-		mpd_set_playlistcount(atoi(response+15));
-
-	/* Compare with "OK" */
-	if (strstart(response, "OK")) {
-		response_valid = 1;
-	};
-};
-
+/*
+	"OK" answer to a song changing command (next, previous)
+*/
 static void
-process_plname(char *s){
-	/* Compare with "playlist: " */
-	if (strstart(response, "playlist: "))
-		model_store_playlistname(response+10, request.arg);
-
-	/* Compare with "OK" */
-	if (strstart(response, "OK")) {
-		response_valid = 1;
-	};
+ans_song_ok(char *s){
+	mpd_newpos_ok();
 };
+
+
+/* We sent a "PLAY xxx" command and got "OK". */
+static void 
+ans_play_ok(char *s){
+	mpd_pos_ok(request.arg);
+};
+
+/* We sent a "PLAY xxx" command and got "ACK". */
+static void
+ans_play_ack(char *s){
+	mpd_pos_nack();	
+};
+
+/* We sent a state changing command (PLAY, PAUSE, STOP) and got "OK" */
+static void 
+ans_state_ok(char *s){
+	mpd_state_ok();
+};
+
+/* We sent a state changing command (PLAY, PAUSE, STOP) and got "ACK" */
+static void 
+ans_state_ack(char *s){
+	mpd_state_ack();	
+};	
 
 /* We got a line from mpd after a status command.
 	Some information can be handled directly by the model.
@@ -148,7 +124,7 @@ process_plname(char *s){
 	TODO get more information, namely if some info is not given
 */ 
 void 
-process_status_line(char *s){
+ans_status_line(char *s){
 	int tmp;
 	char *s2;
 	
@@ -210,128 +186,56 @@ process_status_line(char *s){
 			mpd_set_time( atoi(response+6), atoi(s2+1) );
 		return;
 	};
-	
-	/* Compare with "OK" */
-	if (strstart(response, "OK")) {
-		/* status command finished successfully.
-		 Any variables still unknown were not part of the answer.
-		*/
-		if (ans_model.pos == SONG_UNKNOWN)
-			mpd_set_pos (NO_SONG);
+};
+
+/* status command finished successfully.
+	 Any variables still unknown were not part of the answer.
+*/
+static void
+ans_status_ok(char *s){
+	if (ans_model.pos == SONG_UNKNOWN)
+		mpd_set_pos (NO_SONG);
 		
-		mpd_status_ok();
-		response_valid = 1;
+	mpd_status_ok();
+};
+	
+/* We got a line from mpd after a "current_song" command.
+	Gather the information in the variable mpd_status.
+*/ 
+static void 
+ans_currentsong_line(char *s){
+
+	/* Compare with "Artist: " */
+	if (strstart(response, "Artist: ")){
+		mpd_set_artist(response+8);
 		return;
 	};
-};
-
-
-/* We got a line from mpd and expect only OK or ACK answer.
-	Sets response_valid to 1 if we received an "OK" string.
-*/ 
-void 
-process_ok(char *s){
-	/* Compare with "OK" */
-	if (strstart(response, "OK")) {
-		response_valid = 1;
+	
+	/* Compare with "Title: " */
+	if (strstart(response, "Title: ")){
+		mpd_set_title(response+7);
+		return;
+	};
+	
+	/* Compare with "Pos: " */
+	if (strstart(response, "Pos: ")){
+		mpd_set_pos (atoi (response+5));
+		return;
+	};
+	
+	/* Compare with "Id: " */
+	if (strstart(response, "Id: ")){
+		mpd_set_id (atoi (response+4));
 	};
 };
 
-
-/* We got a line from mpd and expect only OK or ACK answer.
-	Sets response_valid to 1 if we received an "OK" string.
-*/ 
-void 
-process_script(char *s){
-	/* Compare with "OK" */
-	if (strstart(response, "OK")) {
-		mpd_script_ok();
-		response_valid = 1;
-	};
-};
-
-/* We sent a "LOAD" command
-	Inform mpd that the new playlist was loaded and set response_valid to 1 if we received an "OK" string.
-*/ 
-void 
-process_load_line(char *s){
-	if (strstart(s, "OK")) {
-		mpd_load_ok();
-		response_valid = 1;
-	}
-};
-
-void 
-process_clear_line(char *s){
-	if (strstart(s, "OK")) {
-		mpd_clear_ok();
-		response_valid = 1;
-	}
-};
-
-void 
-process_rnd(char *s){
-	if (strstart(s, "OK")) {
-		mpd_random_ok();
-		response_valid = 1;
-	}
-};
-
-void 
-process_rpt(char *s){
-	if (strstart(s, "OK")) {
-		mpd_repeat_ok();
-		response_valid = 1;
-	}
-};
-
-void 
-process_sgl(char *s){
-	if (strstart(s, "OK")) {
-		mpd_single_ok();
-		response_valid = 1;
-	}
-};
-
-/*
-	Checking answers to a song changing command (next, previous)
-*/
-void
-process_song(char *s){
-	if (strstart(s, "OK")) {
-		mpd_newpos_ok();
-		response_valid = 1;
-	}
-};
-
-/* We sent a "setvol" command */
-static void 
-process_volume_line(char *s){
-	if (strstart(s, "OK")) {
-		mpd_set_volume(request.arg);	
-		response_valid = 1;
-	};
-};
-
-/* We sent a state changing command (PLAY, PAUSE, STOP) */
-static void 
-process_state_line(char *s){
-	if (strstart(s, "OK")) {
-		mpd_state_ok();
-		response_valid = 1;
-	};
-	if (strstart(s, "ACK")) {
-		mpd_state_ack();	
-		response_valid = 1;
-	};
-};
 
 /*
 	The information gathered from playlistinfo response is stored in the variable ans_model.
 	It must have been reset to the correct values beforehand.
 */
 void 
-process_playlistinfo_line(char *s){
+ans_playlistinfo_line(char *s){
 
 	/* Compare with "Artist: " */
 	if (strstart(response, "Artist: ")){
@@ -350,42 +254,76 @@ process_playlistinfo_line(char *s){
 		ans_model.pos = atoi(response+5);
 		return;
 	};
+};
 
-	/* Compare with "ACK" */
-	/* NOTE It happens not too infrequently, that mpd cannot find a song in the tracklist (database changed).
+static void
+ans_playlistinfo_ok(char *s){
+	if (ans_model.pos == request.arg)
+		model_store_track(ans_model.title_buf, ans_model.artist_buf, ans_model.pos);
+}
+
+/*
+ NOTE It happens not too infrequently, that mpd cannot find a song in the tracklist (database changed).
 		We could issue a delete command or inform the user if this is the case.
 		For now we just set the info to a value of "- not - found -" so that we do not repeatedly ask mpd about it.
-	*/
-	if (strstart(response, "ACK")) {
+*/
+static void
+ans_playlistinfo_ack(char *s){
 		strn_cpy(ans_model.artist_buf, "- not", TITLE_LEN);
 		strn_cpy(ans_model.title_buf, "found -", TITLE_LEN);
 		if (ans_model.pos == request.arg)
 			model_store_track(ans_model.title_buf, ans_model.artist_buf, ans_model.pos);
-		return;
-	};
-	
-	/* Compare with "OK" */
-		//TODO We could here detect tracks without title and name tags and substitute the filename instead.
-	if (strstart(response, "OK")) {
-		if (ans_model.pos == request.arg)
-			model_store_track(ans_model.title_buf, ans_model.artist_buf, ans_model.pos);
-		response_valid = 1;
-		return;
-	};
+}
+
+
+static void 
+ans_clear_ok(char *s){
+	mpd_clear_ok();
 };
 
-/* We sent a "PLAY xxx" command. */
+/* We sent a "LOAD" command
+	Inform mpd that the new playlist was loaded and set response_valid to 1 if we received an "OK" string.
+*/ 
 static void 
-process_play_line(char *s){
-	if (strstart(s, "OK")) {
-		mpd_pos_ok(request.arg);
-		response_valid = 1;
-	};
-	if (strstart(s, "ACK")) {
-		mpd_pos_nack();
-		response_valid = 1;
-	};	
+ans_load_ok(char *s){
+	mpd_load_ok();
 };
+
+static void 
+ans_rnd_ok(char *s){
+	mpd_random_ok();
+};
+
+static void 
+ans_rpt_ok(char *s){
+	mpd_repeat_ok();
+};
+
+static void 
+ans_sgl_ok(char *s){
+	mpd_single_ok();
+};
+
+static void 
+ans_plcount_line(char *s){
+	/* Compare with "playlistcount: " */
+	if (strstart(response, "playlistcount: "))
+		mpd_set_playlistcount(atoi(response+15));
+};
+
+
+static void
+ans_plname_line(char *s){
+	/* Compare with "playlist: " */
+	if (strstart(response, "playlist: "))
+		model_store_playlistname(response+10, request.arg);
+};
+
+void 
+ans_script_ok(char *s){
+	mpd_script_ok();
+};
+
  /* ----------------------------------------- End of response gathering functions ------------------------- */ 
 
 /* This semaphore is <> 0 iff a response line from mpd is ready. */
@@ -449,18 +387,18 @@ PT_THREAD (assemble_line(struct pt *pt)) {
 			/* Signal a semaphore that there is a line in response[]. */
 			PT_SEM_SIGNAL(pt, &line_ready);
 			
-			debug_out(response, 0);
+			dbg(response);
 			
 			/* Wait until the response buffer has been processed 
-				If no one is interested in the line, we forget it.
+				If no one is interested in the line after a short time, we forget it.
 			*/
 			timer_add(&tmr, 5*TICKS_PER_TENTH_SEC, 0);
-			PT_WAIT_UNTIL(pt, PT_SEM_CHECK(&line_ready) || timer_expired(&tmr));
+			PT_WAIT_UNTIL(pt, !PT_SEM_CHECK(&line_ready) || timer_expired(&tmr));
 			timer_del(&tmr);
 	
 			/* Either way, reset the semaphore */
 			PT_SEM_INIT(&line_ready, 0);
-
+			// and we clear the response line
 			response_ptr = 0;	
 		};
 	};
@@ -473,30 +411,62 @@ PT_THREAD (assemble_line(struct pt *pt)) {
 	Each line collected is processed with the function process_line.
 	Ends with valid_response set to 1 iff we finally received an OK.
 	If ACK or no answer within some time delay exit with response_valid set to 0.
+	
+	First parameter is the pt structure.
+	Second parameter is a function which processes one line of the answer at a time.
+		This function interprets the answer and changes the model if appropriate.
+	Third parameter is a function which is called when MPD sends an "OK" answer.
+		Command succeeded. The function can also update the model.
+	Fourth parameter is a function which is called when MPD sends an "ACK" answer.
+		Some error happened. Interpret the error, inform the user or ignore it.
+	Any of these function parameters can be NULL.
 */
-PT_THREAD (collect_lines(struct pt *pt, void (*process_line) (char *s))  ){
+PT_THREAD (collect_lines(struct pt *pt,
+			void (*process_line) (char *s),
+			void (*process_ok) (char *s),
+			void (*process_ack) (char *s)
+			)) {
 	static struct timer tmr;
-
 			
 	PT_BEGIN(pt);
+	response_finished = 0;
+	
 	/* We should receive all the answers in a relatively short time frame, else something went wrong anyway */
-	timer_add(&tmr, 15*TICKS_PER_TENTH_SEC, 0);
-	response_valid = 0;
-	
-	do { 
-		/* gather information from response line by the given function */
-		process_line(response);
-		PT_SEM_INIT(&line_ready, 0);
 
-		if (response_valid){
-			debug_out("valid answer ", 0);
-			break;		/* and end the thread */
-		};	
-						
-		// Wait for next line
-		PT_WAIT_UNTIL(pt, (!PT_SEM_CHECK(&line_ready) || timer_expired(&tmr)) ); 
+	/* We should receive all the answers in a relatively short time frame, else something went wrong anyway */
+	timer_add(&tmr, 17*TICKS_PER_TENTH_SEC, 0);
 	
-	} while (!response_valid && !timer_expired(&tmr));
+	while (1){
+
+		PT_WAIT_UNTIL(pt, (PT_SEM_CHECK(&line_ready) || timer_expired(&tmr)) );
+		
+		if (PT_SEM_CHECK(&line_ready) ){
+			if (strstart(response, "OK")) {
+				if (process_ok) 
+					process_ok(response);
+				response_finished = 1;
+				break;
+			};
+		
+			if (strstart(response, "ACK")){
+				if (process_ack) 
+					process_ack(response);
+				response_finished = 1;
+				break;
+			};
+		
+			/* gather information from response line by the given function */
+			if (process_line) 
+				process_line(response);
+			PT_SEM_INIT(&line_ready, 0);	// Tell producer that we consumed the line
+		
+		} else {							// Time Out	
+			dbg("collect_lines() timed out");
+			break;
+		};	
+	};
+	
+	PT_SEM_INIT(&line_ready, 0);	// Tell producer that we consumed the line if there is one
 	
 	timer_del(&tmr);
 		
@@ -507,17 +477,18 @@ PT_THREAD (collect_lines(struct pt *pt, void (*process_line) (char *s))  ){
 
 /* Thread to send a command, collect replies from mpd and do error handling 
 	The command string sent to mpd is given as second argument.
-	Third argument is a function which is called to collect responses.
-
-	Fifth argument tells us how often we should try to send the command.
-	TODO we could add more parameters concerning time out and error handling.
-	Thread waits for semaphore mpd_mutex.
+	The other arguments are the same as for collect_lines()
 */
-PT_THREAD (handle_cmd(struct pt *pt, char *cmd, void (*process_line) (char *s), int max_tries)){
-	static struct timer tmr;
+PT_THREAD (handle_cmd(struct pt *pt, char *cmd, 
+			void (*process_line) (char *s),
+			void (*process_ok) (char *s),
+			void (*process_ack) (char *s)
+			) ) {
+
 	static int tries;
 	static struct pt child_pt;
-		
+	static int max_tries = 2;		// NOTE is this value good, should we retry at all?
+	
 	PT_BEGIN(pt);
 	
 	for (tries = 0; tries < max_tries; tries++){	
@@ -532,52 +503,24 @@ PT_THREAD (handle_cmd(struct pt *pt, char *cmd, void (*process_line) (char *s), 
 
 		send_cmd(cmd);
 		dbg(cmd);
-		
-		// TODO overly complicated
-		// move handling of time out etc. to collect_lines
-			
-		/* Time that we want to wait for first response line */
-		timer_add(&tmr, 7*TICKS_PER_TENTH_SEC, 0);
-		
-		
-		PT_WAIT_UNTIL(pt, (!PT_SEM_CHECK(&line_ready) || timer_expired(&tmr)) );
-		
 
-
-		if (timer_expired(&tmr)){
-
-			timer_del(&tmr);
-			debug_out("retry ", tries);
+		/* This thread collects all information from mpd and sets response_valid. */
+		PT_SPAWN(pt, &child_pt, collect_lines(&child_pt, process_line, process_ok, process_ack));
 	
-			continue;
-		};
-
-		timer_del(&tmr);
-		if (! PT_SEM_CHECK(&line_ready) ){
-			// We got at least one line of response from MPD
+		if (response_finished){							// Our cmd got an OK or ACK
 			model_set_last_response (system_time());
-			 clr_error(MPD_DEAD);
-
-
-					 
-			/* This thread collects all information from mpd and sets response_valid. */
-			PT_SPAWN(pt, &child_pt, collect_lines(&child_pt, process_line));
-			
-
-			if (response_valid){
-				/* Now our cmd got an OK. */
-//				if (process_info) process_info();
-				break;
-			}
-				
+			clr_error(MPD_DEAD);
+			break;
+	
 		} else {
-			// MPD did not respond at all
-		};	
+			// MPD did not give a valid response, try sending again
+				debug_out("Retry ",tries);
+		};
 	};
 	
 	if (tries >= max_tries) {
-			debug_out("No answer ", 1);
-			model_check_mpd_dead();
+		debug_out("No answer ", 1);
+		model_check_mpd_dead();
 	};
 	PT_END(pt);
 };
@@ -659,43 +602,43 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 	/* Volume changing command */
 	if ( cmd == VOLUME_NEW ) {
 		compose_string (cmd_str, "setvol ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_volume_line, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_volume_ok, NULL));
 		PT_EXIT(pt);
 	};
 
 	if (cmd == NEXT_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "next\n", process_song, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "next\n", NULL, ans_song_ok, NULL));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == PREV_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "previous\n", process_song, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "previous\n", NULL, ans_song_ok, NULL));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == SEL_SONG){
 		compose_string (cmd_str, "play ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_play_line, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_play_ok, ans_play_ack));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == PLAY_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "play\n", process_state_line, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "play\n", NULL, ans_state_ok, ans_state_ack));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == STOP_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "stop\n", process_state_line, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "stop\n", NULL, ans_state_ok, ans_state_ack));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == PAUSE_ON){		
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 1\n", process_state_line, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 1\n", NULL, ans_state_ok, ans_state_ack));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == PAUSE_OFF){		
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 0\n", process_state_line, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 0\n", NULL, ans_state_ok, ans_state_ack));
 		PT_EXIT(pt);
 	};
 		
@@ -707,76 +650,76 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 		model_reset(&ans_model);
 		compose_string2 (cmd_str, "command_list_begin\nseek ", arg, arg2, CMDSTR_LEN);	
 		str_cat_max(cmd_str, "\nstatus\ncommand_list_end\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_status_line, 1));
-		PT_EXIT(pt);
-	};
-
-	if (cmd == CUR_SONG_CMD){
-		/* We set these values just in case that the current track has no title or artist */
-		mpd_set_artist("???");
-		mpd_set_title("???");
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "currentsong\n", process_currentsong_line, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_status_line, ans_status_ok, NULL));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == STATUS_CMD){
 		model_reset(&ans_model);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "status\n", process_status_line, 1));	
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "status\n", ans_status_line, ans_status_ok, NULL));	
 		PT_EXIT(pt);
 	};	
 	
+	if (cmd == CUR_SONG_CMD){
+		/* We set these values just in case that the current track has no title or artist */
+		mpd_set_artist("???");
+		mpd_set_title("???");
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "currentsong\n", ans_currentsong_line, NULL, NULL));
+		PT_EXIT(pt);
+	};
+
 	if (cmd == PLINFO_CMD){
 		model_reset(&ans_model);
 		compose_string (cmd_str, "playlistinfo ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_playlistinfo_line, 1));	
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_playlistinfo_line, ans_playlistinfo_ok, ans_playlistinfo_ack));	
 		PT_EXIT(pt);
 	};	
 	
 	if (cmd == CLEAR_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "clear\n", process_clear_line, 1));	
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "clear\n", NULL, ans_clear_ok, NULL));	
 		PT_EXIT(pt);
 	};	
-															  
+
 	if (cmd == LOAD_CMD){
 		strn_cpy (cmd_str, "command_list_begin\nclear\nload \"", CMDSTR_LEN);
 		str_cat_max (cmd_str, mpd_get_playlistname(arg), CMDSTR_LEN);
 		str_cat_max (cmd_str, "\"\ncommand_list_end\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_load_line, 1));	
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_load_ok, NULL));	
 		PT_EXIT(pt);
 	};	
 	
 	if (cmd == RANDOM_CMD){
 		compose_string (cmd_str, "random ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_rnd, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_rnd_ok, NULL));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == REPEAT_CMD){
 		compose_string (cmd_str, "repeat ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_rpt, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_rpt_ok, NULL));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == SINGLE_CMD){
 		compose_string (cmd_str, "single ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_sgl, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_sgl_ok, NULL));
 		PT_EXIT(pt);
 	};
 		
 	if (cmd == PLAYLISTCOUNT_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "playlistcount\n", process_plcount, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "playlistcount\n", ans_plcount_line, NULL, NULL));
 		PT_EXIT(pt);
 	};
 		
 	if (cmd == PLAYLISTNAME_CMD){
 		compose_string (cmd_str, "playlistname ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_plname, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_plname_line, NULL, NULL));
 		PT_EXIT(pt);
 	};
 	
 	if (cmd == SCRIPT_CMD){
 		compose_string (cmd_str, "script ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, process_script, 1));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_script_ok, NULL));
 		PT_EXIT(pt);
 	};
 

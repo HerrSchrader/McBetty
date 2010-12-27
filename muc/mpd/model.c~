@@ -965,6 +965,8 @@ void
 mpd_set_volume(int vol){
 	if (vol != mpd_model.volume){
 		mpd_model.volume = vol;
+		if (user_model.volume == mpd_model.volume)
+			user_model.volume = -1;					// wish fulfilled
 		model_changed(VOLUME_CHANGED);
 	}
 };
