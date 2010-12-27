@@ -310,6 +310,7 @@ cache_find_empty(STR_CACHE *pc){
 	namely all infos between start_pos and end_pos inclusive.
 	We adjust the positions given to us so that the start is >= 0
 	and the end is below the total length of the information (if we know it)
+	Also start must not be > total length of the information (if we know it)
 	The last parameter is the absolut limit of the information,
 	i.e. playlistlength if cache is tracklist cache
 	and num_playlists if cache is playlist cache
@@ -319,10 +320,12 @@ cache_find_empty(STR_CACHE *pc){
 int
 cache_range_set(STR_CACHE *pc, int start_pos, int end_pos, int total_infos){
 	
-	if (total_infos >= 0)
-		end_pos = min (end_pos, total_infos - 1);
-	
 	start_pos = max(0, start_pos);
+	
+	if (total_infos >= 0){
+		end_pos = min (end_pos, total_infos - 1);
+		start_pos = min (start_pos, total_infos - 1);
+	};
 		
 	if (end_pos > last_pos(pc))				// user wants more information than we currently have
 		cache_shift_up(pc, end_pos - last_pos(pc));

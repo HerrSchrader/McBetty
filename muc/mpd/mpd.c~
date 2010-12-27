@@ -444,7 +444,6 @@ PT_THREAD (collect_lines(struct pt *pt,
 			if (strstart(response, "OK")) {
 				if (process_ok) 
 					process_ok(response);
-				dbg("Got OK");
 				response_finished = 1;
 				break;
 			};
@@ -452,7 +451,6 @@ PT_THREAD (collect_lines(struct pt *pt,
 			if (strstart(response, "ACK")){
 				if (process_ack) 
 					process_ack(response);
-				dbg("Got ACK");
 				response_finished = 1;
 				break;
 			};

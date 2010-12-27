@@ -731,40 +731,37 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 
 
 /* How does the controller work ? 
-	We have a model of the status of mpd.
+	We have an internal model of the state of mpd. (see file mpd.c)
 	We assume this is ok until we know otherwise.
-	The status of mpd is reflected in the view.
+	The state of mpd is reflected in the view.
 	
 	Now when the user is not satisfied with the current state, he initiates some action.
-	We reflect the changes that the user wants in the user status model.
+	We reflect the changes that the user wants in the user state model. (see mpd.c)
 	
-	Now whenever the user status and the mpd status differ, 
-	the controller issues one ore more commands to mpd to get to the user desired status.
-	It also sets the potentially changing items in mpd_status to unknown, because we
-	do not know for sure if and how mpd reacts to the command.
-	Sometimes we get the new mpd status directly with the answer, so we are done.
+	Now whenever the user state and the mpd state differ, 
+	the controller issues one ore more commands to MPD to get to the user desired state.
+	It also sets the potentially changing items in mpd_state to unknown, because we
+	do not know for sure if and how MPD reacts to the command.
+	Sometimes we get the new mpd state directly with the answer, so we are done.
 	Sometimes mpd does not react or does not tell us enough details in its answer.
 	So:
-	The controller continuously checks for unknown status items in mpd_status.
-	It then sends commands to get the unknown items and updates mpd_status.
-	This way we repeatedly try commands until user_status and mpd_status are compatible.
+	The controller continuously checks for unknown state items in mpd_model.
+	It then sends commands to get the unknown items and updates mpd_model.
+	This way we repeatedly try commands until user_state and mpd_state are compatible.
 	
 	A complication:
-	We have a status item that is frequently changing without user intervention, namely the
+	We have a state item that is frequently changing without user intervention, namely the
 	remaining playing time of the current song. It would be inefficient and consume wireless bandwidth 
 	to check every second for the remaining playing time, because it is predictable.
 	We use a seperate task to update the time information regularily. We also assume 
 	that the user is expecting the passage of time and set the same time in the user model.
 	
 	Further complications:
-	mpd might change its own status expectedly and unexpectedly.
-	mpd changes status expectedly whenever the current song has ended.
-	It might also change status unexpectedly due to an error.
+	MPD might change its own status expectedly and unexpectedly.
+	MPD changes state expectedly whenever the current song has ended.
+	It might also change state unexpectedly due to an error or due to other clients.
+	So the mpd model is regularily updated by issuing "status" commands.
 
-	We must also reflect the user expectation when listening to a playlist, that after a song has ended
-	the next song will be played. We can do that by setting song and songid in user_status to unknown, so 
-	that the user is accepting any change in these items.
-	
 	NOTE  We should build in a failure mode, where we check for error messages from mpd and
 	whether we can reach mpd at all.
 */
@@ -818,7 +815,6 @@ PT_THREAD (controller(struct pt *pt)){
 
 	
 		if ( request.cmd != NO_CMD ){
-//			debug_out("action ", request.cmd);
 			PT_SPAWN( pt, &action_pt, exec_action(&action_pt, &request) );
 			PT_YIELD(pt);
 		};
