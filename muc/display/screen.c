@@ -46,7 +46,7 @@ static enum SCREEN cur_screen;
 	We can index them with enum SCREEN
 	See screen.h for more documentation
 */
-static Screen screen_list[4];
+static Screen screen_list[5];
 
 /* Here we store the action wanted by a user keypress */
 static UserReq user_request;
@@ -111,12 +111,15 @@ mainscreen_init(void) {
 	set_font(MEDIUMFONT);	
 		
 	win_scroll_init();
-
+	
+	win_cursor_init();
+	
 	playing_screen_init( &(screen_list[PLAYING_SCREEN]) );
 	playlist_screen_init( &(screen_list[PLAYLIST_SCREEN]) );
 	tracklist_screen_init( &(screen_list[TRACKLIST_SCREEN]) );
 	info_screen_init( &(screen_list[INFO_SCREEN]) );
-
+	search_screen_init( &(screen_list[SEARCH_SCREEN]) );
+	
 	screen_enter(PLAYING_SCREEN);
 	
 	user_request.cmd = NO_CMD;
@@ -153,6 +156,11 @@ mainscreen_keypress(int cur_key){
 	/* BETTY always shows the playlist screen */
 		case KEY_Betty:
 			switch_screen(cur_screen, PLAYLIST_SCREEN);
+			return;
+
+	/* The BLUE key enters the search screen */		
+		case KEY_Blue:
+			switch_screen(cur_screen, SEARCH_SCREEN);
 			return;
 
 	/* The EXIT key switches through the screens */

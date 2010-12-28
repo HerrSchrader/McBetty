@@ -34,7 +34,7 @@ startup
  *(.startup)
                 0x00000000                . = ALIGN (0x4)
 
-.text           0x80000000     0xa0b8
+.text           0x80000000     0xa380
  *(.text)
  .text          0x80000000      0x198 crt.o
                 0x80000000                _startup
@@ -110,288 +110,299 @@ startup
                 0x8000201c                sec2hms
                 0x80001b48                init_font
                 0x80002234                compose_string2
- .text          0x8000274c      0xcb0 display/window.o
-                0x80003124                sel_win_down
+ .text          0x8000274c      0xe20 display/window.o
+                0x80002b7c                win_cursor_blink
+                0x80003294                sel_win_down
                 0x80002928                last_info_idx
-                0x80002ea4                win_new_text
-                0x80002edc                scroll_list_changed
-                0x800033ac                select
-                0x80002d48                win_draw_text
+                0x80003014                win_new_text
+                0x8000304c                scroll_list_changed
+                0x8000351c                select
+                0x80002eb8                win_draw_text
                 0x8000293c                info_idx
-                0x80002b1c                win_scroll_init
+                0x80002b44                win_scroll_init
                 0x8000274c                win_init
-                0x80002f70                win_draw_border
-                0x80002c04                win_scroll_all
+                0x800030e0                win_draw_border
+                0x80002d74                win_scroll_all
+                0x80002b2c                win_cursor_init
+                0x80002b1c                win_cursor_set
                 0x8000290c                unselect_win
-                0x80002fc8                win_redraw
+                0x80003138                win_redraw
                 0x800028b8                win_unscroll
                 0x8000296c                init_scroll_list
                 0x800028f0                select_win
                 0x80002884                win_scroll
-                0x80003274                sel_win_up
+                0x800033d4                sel_win_up
                 0x800027cc                win_clear
- .text          0x800033fc      0x3bc display/screen.o
-                0x80003478                screen_enter
-                0x800033fc                screen_visible
-                0x80003534                mainscreen_keypress
-                0x800036f4                mainscreen_init
-                0x800034f4                switch_screen
-                0x80003760                screen_redraw
-                0x800034b0                show_new_screen
- .text          0x800037b8      0x8d0 display/screen_playing.o
-                0x800039d8                view_random_changed
-                0x80003a1c                view_state_changed
-                0x80003994                view_repeat_changed
-                0x80003a80                view_artist_changed
-                0x80003ab8                view_volume_changed
-                0x80003c18                view_time_changed
-                0x80003a9c                view_title_changed
-                0x80003950                view_single_changed
-                0x80003ce4                playing_screen_init
-                0x800037b8                playing_keypress
- .text          0x80004088      0x364 display/screen_tracklist.o
-                0x80004158                tracklist_keypress
-                0x80004088                tracklist_screen_init
-                0x80004140                view_tracklist_changed
- .text          0x800043ec      0x2d0 display/screen_playlist.o
-                0x800044b8                playlist_keypress
-                0x800043ec                playlist_screen_init
-                0x800044a0                view_playlists_changed
- .text          0x800046bc      0x2f4 display/screen_info.o
-                0x800046bc                set_error
-                0x8000488c                info_screen_init
-                0x80004758                detect_errors
-                0x800046f0                info_keypress
-                0x800046d4                clr_error
- .text          0x800049b0       0x18 interrupt/irq.o
-                0x800049c4                UNDEF_Routine
-                0x800049c0                SWI_Routine
-                0x800049b0                enableIRQ
- .text          0x800049c8      0x170 pwm/pwmirq.o
-                0x800049c8                startPWMIRQ
-                0x80004a64                backl_proc
- .text          0x80004b38      0x330 keyboard/keyboard.o
-                0x80004b38                set_keypress_handler
-                0x80004df8                key_init
-                0x80004b90                key_scan
-                0x80004b48                key_change
- .text          0x80004e68      0x41c kernel/kernel.o
-                0x80004f0c                feed_wdt
-                0x80004ec0                defaultIRQ
-                0x80004fc0                schedule
-                0x8000510c                kernel_init
-                0x80004efc                system_time
-                0x80004ee4                delay
-                0x800051d0                timerIRQ
-                0x80004e68                signal_set
-                0x80004f2c                task_add
-                0x80004fa0                task_del
-                0x80004e90                signal_clr
- .text          0x80005284      0x170 timer/timerirq.o
-                0x80005298                timer_del
-                0x80005284                timer_init
-                0x8000530c                timer_expired
-                0x80005388                timer_add
-                0x80005314                timer_tick
- .text          0x800053f4     0x10f0 mpd/model.o
-                0x80005a88                mpd_set_title
-                0x800060b8                model_store_track
-                0x8000558c                user_wants_state
-                0x800057a4                mpd_get_pos
-                0x800056d8                user_toggle_repeat
-                0x80005a18                mpd_set_artist
-                0x800059c0                mpd_status_ok
-                0x80005dd0                set_playlistlength
-                0x80005748                mpd_single_ok
-                0x80005d44                mpd_pos_ok
-                0x80005e14                update_playtime
-                0x800058f0                model_reset
-                0x800059dc                user_wants_volume_add
-                0x8000559c                user_toggle_pause
-                0x80005864                mpd_get_volume
-                0x80005568                mpd_get_state
-                0x80005fbc                model_check_mpd_dead
-                0x800054b8                mpd_get_time_total
-                0x800054d8                mpd_set_time
-                0x80005944                model_init
-                0x80005834                user_song_unknown
-                0x8000604c                mpd_load_ok
-                0x80005418                user_wants_script
-                0x80005778                user_toggle_single
-                0x80005e7c                model_store_playlistname
-                0x8000580c                mpd_set_id
-                0x80005638                user_toggle_random
-                0x80005f0c                mpd_get_playlistname
-                0x80005eb0                playlists_range_set
-                0x80005530                user_wants_time_add
-                0x80005428                mpd_script_ok
-                0x800054c8                mpd_get_time_elapsed
-                0x80005488                user_wants_playlist
-                0x800056a8                mpd_repeat_ok
-                0x80005474                mpd_playlists_last
-                0x80005450                user_tracklist_clr
-                0x80005404                model_reset_changed
-                0x80005ee4                tracklist_range_set
-                0x800053f4                model_get_changed
-                0x80005f38                track_info
-                0x800055e0                mpd_set_random
-                0x80005f64                user_wants_song
-                0x8000571c                mpd_set_single
-                0x80005664                mpd_get_repeat
-                0x80005464                mpd_set_playlistcount
-                0x80005874                mpd_set_volume
-                0x800058ac                user_toggle_mute
-                0x80005afc                mpd_set_pos
-                0x80005c3c                mpd_newpos_ok
-                0x8000567c                mpd_set_repeat
-                0x80006130                action_needed
-                0x80005c7c                mpd_set_state
-                0x80005578                mpd_state_ack
-                0x80005608                mpd_random_ok
-                0x80005704                mpd_get_single
-                0x800057cc                mpd_get_title
-                0x80005d34                mpd_state_ok
-                0x800058e0                model_set_last_response
-                0x8000543c                mpd_tracklist_last
-                0x80006000                mpd_clear_ok
-                0x80005d84                mpd_inc_time
-                0x800055cc                mpd_get_random
-                0x800057ec                mpd_get_artist
-                0x800057b4                mpd_pos_nack
- .text          0x800064e4     0x11a8 mpd/mpd.o
-                0x80006518                ans_playlistinfo_line
-                0x80007344                assemble_line
-                0x80007240                controller
-                0x80006908                collect_lines
-                0x8000682c                inform_view
-                0x80006a3c                handle_cmd
-                0x8000747c                ans_script_ok
-                0x8000748c                ans_status_line
- .text          0x8000768c      0x68c serial/serial.o
-                0x80007a40                dbg
-                0x8000768c                serial_flush_output
-                0x80007780                serial_init
-                0x80007cbc                serial_out_hex
-                0x800076a8                serial_outs
-                0x800076dc                serial_out
-                0x80007bb8                debug_out
- .text          0x80007d18      0x148 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
-                0x80007d18                __aeabi_idiv
-                0x80007d18                __divsi3
-                0x80007e40                __aeabi_idivmod
- .text          0x80007e60        0x4 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
-                0x80007e60                __aeabi_ldiv0
-                0x80007e60                __aeabi_idiv0
+ .text          0x8000356c      0x3d8 display/screen.o
+                0x800035e8                screen_enter
+                0x8000356c                screen_visible
+                0x800036a4                mainscreen_keypress
+                0x80003874                mainscreen_init
+                0x80003664                switch_screen
+                0x800038ec                screen_redraw
+                0x80003620                show_new_screen
+ .text          0x80003944      0x8d0 display/screen_playing.o
+                0x80003b64                view_random_changed
+                0x80003ba8                view_state_changed
+                0x80003b20                view_repeat_changed
+                0x80003c0c                view_artist_changed
+                0x80003c44                view_volume_changed
+                0x80003da4                view_time_changed
+                0x80003c28                view_title_changed
+                0x80003adc                view_single_changed
+                0x80003e70                playing_screen_init
+                0x80003944                playing_keypress
+ .text          0x80004214      0x364 display/screen_tracklist.o
+                0x800042e4                tracklist_keypress
+                0x80004214                tracklist_screen_init
+                0x800042cc                view_tracklist_changed
+ .text          0x80004578      0x2d0 display/screen_playlist.o
+                0x80004644                playlist_keypress
+                0x80004578                playlist_screen_init
+                0x8000462c                view_playlists_changed
+ .text          0x80004848      0x2f4 display/screen_info.o
+                0x80004848                set_error
+                0x80004a18                info_screen_init
+                0x800048e4                detect_errors
+                0x8000487c                info_keypress
+                0x80004860                clr_error
+ .text          0x80004b3c      0x124 display/screen_search.o
+                0x80004b3c                search_screen_init
+ .text          0x80004c60       0x18 interrupt/irq.o
+                0x80004c74                UNDEF_Routine
+                0x80004c70                SWI_Routine
+                0x80004c60                enableIRQ
+ .text          0x80004c78      0x170 pwm/pwmirq.o
+                0x80004c78                startPWMIRQ
+                0x80004d14                backl_proc
+ .text          0x80004de8      0x330 keyboard/keyboard.o
+                0x80004de8                set_keypress_handler
+                0x800050a8                key_init
+                0x80004e40                key_scan
+                0x80004df8                key_change
+ .text          0x80005118      0x41c kernel/kernel.o
+                0x800051bc                feed_wdt
+                0x80005170                defaultIRQ
+                0x80005270                schedule
+                0x800053bc                kernel_init
+                0x800051ac                system_time
+                0x80005194                delay
+                0x80005480                timerIRQ
+                0x80005118                signal_set
+                0x800051dc                task_add
+                0x80005250                task_del
+                0x80005140                signal_clr
+ .text          0x80005534      0x170 timer/timerirq.o
+                0x80005548                timer_del
+                0x80005534                timer_init
+                0x800055bc                timer_expired
+                0x80005638                timer_add
+                0x800055c4                timer_tick
+ .text          0x800056a4     0x10f0 mpd/model.o
+                0x80005d38                mpd_set_title
+                0x80006368                model_store_track
+                0x8000583c                user_wants_state
+                0x80005a54                mpd_get_pos
+                0x80005988                user_toggle_repeat
+                0x80005cc8                mpd_set_artist
+                0x80005c70                mpd_status_ok
+                0x80006080                set_playlistlength
+                0x800059f8                mpd_single_ok
+                0x80005ff4                mpd_pos_ok
+                0x800060c4                update_playtime
+                0x80005ba0                model_reset
+                0x80005c8c                user_wants_volume_add
+                0x8000584c                user_toggle_pause
+                0x80005b14                mpd_get_volume
+                0x80005818                mpd_get_state
+                0x8000626c                model_check_mpd_dead
+                0x80005768                mpd_get_time_total
+                0x80005788                mpd_set_time
+                0x80005bf4                model_init
+                0x80005ae4                user_song_unknown
+                0x800062fc                mpd_load_ok
+                0x800056c8                user_wants_script
+                0x80005a28                user_toggle_single
+                0x8000612c                model_store_playlistname
+                0x80005abc                mpd_set_id
+                0x800058e8                user_toggle_random
+                0x800061bc                mpd_get_playlistname
+                0x80006160                playlists_range_set
+                0x800057e0                user_wants_time_add
+                0x800056d8                mpd_script_ok
+                0x80005778                mpd_get_time_elapsed
+                0x80005738                user_wants_playlist
+                0x80005958                mpd_repeat_ok
+                0x80005724                mpd_playlists_last
+                0x80005700                user_tracklist_clr
+                0x800056b4                model_reset_changed
+                0x80006194                tracklist_range_set
+                0x800056a4                model_get_changed
+                0x800061e8                track_info
+                0x80005890                mpd_set_random
+                0x80006214                user_wants_song
+                0x800059cc                mpd_set_single
+                0x80005914                mpd_get_repeat
+                0x80005714                mpd_set_playlistcount
+                0x80005b24                mpd_set_volume
+                0x80005b5c                user_toggle_mute
+                0x80005dac                mpd_set_pos
+                0x80005eec                mpd_newpos_ok
+                0x8000592c                mpd_set_repeat
+                0x800063e0                action_needed
+                0x80005f2c                mpd_set_state
+                0x80005828                mpd_state_ack
+                0x800058b8                mpd_random_ok
+                0x800059b4                mpd_get_single
+                0x80005a7c                mpd_get_title
+                0x80005fe4                mpd_state_ok
+                0x80005b90                model_set_last_response
+                0x800056ec                mpd_tracklist_last
+                0x800062b0                mpd_clear_ok
+                0x80006034                mpd_inc_time
+                0x8000587c                mpd_get_random
+                0x80005a9c                mpd_get_artist
+                0x80005a64                mpd_pos_nack
+ .text          0x80006794     0x11a8 mpd/mpd.o
+                0x800067c8                ans_playlistinfo_line
+                0x800075f4                assemble_line
+                0x800074f0                controller
+                0x80006bb8                collect_lines
+                0x80006adc                inform_view
+                0x80006cec                handle_cmd
+                0x8000772c                ans_script_ok
+                0x8000773c                ans_status_line
+ .text          0x8000793c      0x68c serial/serial.o
+                0x80007cf0                dbg
+                0x8000793c                serial_flush_output
+                0x80007a30                serial_init
+                0x80007f6c                serial_out_hex
+                0x80007958                serial_outs
+                0x8000798c                serial_out
+                0x80007e68                debug_out
+ .text          0x80007fc8      0x148 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+                0x80007fc8                __aeabi_idiv
+                0x80007fc8                __divsi3
+                0x800080f0                __aeabi_idivmod
+ .text          0x80008110        0x4 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x80008110                __aeabi_ldiv0
+                0x80008110                __aeabi_idiv0
  *(.rodata)
- .rodata        0x80007e64       0x2f cc1100/cc1100.o
- *fill*         0x80007e93        0x1 00
- .rodata        0x80007e94       0x18 display/lcd.o
- .rodata        0x80007eac     0x1dac display/fonty.o
-                0x80009c4c                smooth_font_maxchar
-                0x80009c54                misc_font_maxchar
-                0x80009c40                pearl_font_height
-                0x80009c44                pearl_font_maxchar
-                0x80009c50                misc_font_height
-                0x80009ab0                pearl_font_info
-                0x80008b68                misc_font_info
-                0x80009c48                smooth_font_height
-                0x80009652                smooth_font_cpos
-                0x80007eac                misc_font_bits
-                0x80009852                pearl_font_bits
-                0x80008e68                smooth_font_bits
-                0x80009552                smooth_font_info
-                0x80008c68                misc_font_cpos
-                0x80009b30                pearl_font_cpos
+ .rodata        0x80008114       0x2f cc1100/cc1100.o
+ *fill*         0x80008143        0x1 00
+ .rodata        0x80008144       0x18 display/lcd.o
+ .rodata        0x8000815c     0x1dac display/fonty.o
+                0x80009efc                smooth_font_maxchar
+                0x80009f04                misc_font_maxchar
+                0x80009ef0                pearl_font_height
+                0x80009ef4                pearl_font_maxchar
+                0x80009f00                misc_font_height
+                0x80009d60                pearl_font_info
+                0x80008e18                misc_font_info
+                0x80009ef8                smooth_font_height
+                0x80009902                smooth_font_cpos
+                0x8000815c                misc_font_bits
+                0x80009b02                pearl_font_bits
+                0x80009118                smooth_font_bits
+                0x80009802                smooth_font_info
+                0x80008f18                misc_font_cpos
+                0x80009de0                pearl_font_cpos
  *(.rodata*)
  .rodata.str1.4
-                0x80009c58       0x48 cc1100/rf.o
+                0x80009f08       0x48 cc1100/rf.o
  .rodata.str1.4
-                0x80009ca0        0x6 display/fonty.o
+                0x80009f50        0x6 display/fonty.o
                                  0x10 (size before relaxing)
  .rodata.str1.4
                 0x00000000        0x6 display/window.o
                                   0x4 (size before relaxing)
- *fill*         0x80009ca6        0x2 00
+ *fill*         0x80009f56        0x2 00
  .rodata.str1.4
-                0x80009ca8       0x46 display/screen_playing.o
+                0x80009f58       0x46 display/screen_playing.o
                                  0x4c (size before relaxing)
- *fill*         0x80009cee        0x2 00
+ *fill*         0x80009f9e        0x2 00
  .rodata.str1.4
-                0x80009cf0        0xf display/screen_tracklist.o
+                0x80009fa0        0xf display/screen_tracklist.o
                                  0x10 (size before relaxing)
- *fill*         0x80009cff        0x1 00
+ *fill*         0x80009faf        0x1 00
  .rodata.str1.4
-                0x80009d00       0x12 display/screen_playlist.o
+                0x80009fb0       0x12 display/screen_playlist.o
                                  0x14 (size before relaxing)
- *fill*         0x80009d12        0x2 00
+ *fill*         0x80009fc2        0x2 00
  .rodata.str1.4
-                0x80009d14      0x109 display/screen_info.o
+                0x80009fc4      0x109 display/screen_info.o
                                 0x10c (size before relaxing)
- *fill*         0x80009e1d        0x3 00
+ *fill*         0x8000a0cd        0x3 00
  .rodata.str1.4
-                0x80009e20        0x6 kernel/kernel.o
+                0x8000a0d0       0x17 display/screen_search.o
+                                 0x18 (size before relaxing)
+ *fill*         0x8000a0e7        0x1 00
+ .rodata.str1.4
+                0x8000a0e8        0x6 kernel/kernel.o
                                   0xc (size before relaxing)
- *fill*         0x80009e26        0x2 00
+ *fill*         0x8000a0ee        0x2 00
  .rodata.str1.4
-                0x80009e28       0x10 timer/timerirq.o
+                0x8000a0f0       0x10 timer/timerirq.o
  .rodata.str1.4
-                0x80009e38        0x8 mpd/model.o
+                0x8000a100        0x8 mpd/model.o
                                   0xc (size before relaxing)
  .rodata.str1.4
-                0x80009e40      0x278 mpd/mpd.o
+                0x8000a108      0x278 mpd/mpd.o
  *(.glue_7)
- .glue_7        0x8000a0b8        0x0 crt.o
- .glue_7        0x8000a0b8        0x0 isr.o
- .glue_7        0x8000a0b8        0x0 arm_exc.o
- .glue_7        0x8000a0b8        0x0 global.o
- .glue_7        0x8000a0b8        0x0 main.o
- .glue_7        0x8000a0b8        0x0 cc1100/cc1100.o
- .glue_7        0x8000a0b8        0x0 cc1100/rf.o
- .glue_7        0x8000a0b8        0x0 display/lcd.o
- .glue_7        0x8000a0b8        0x0 display/fonty.o
- .glue_7        0x8000a0b8        0x0 display/window.o
- .glue_7        0x8000a0b8        0x0 display/screen.o
- .glue_7        0x8000a0b8        0x0 display/screen_playing.o
- .glue_7        0x8000a0b8        0x0 display/screen_tracklist.o
- .glue_7        0x8000a0b8        0x0 display/screen_playlist.o
- .glue_7        0x8000a0b8        0x0 display/screen_info.o
- .glue_7        0x8000a0b8        0x0 interrupt/irq.o
- .glue_7        0x8000a0b8        0x0 pwm/pwmirq.o
- .glue_7        0x8000a0b8        0x0 keyboard/keyboard.o
- .glue_7        0x8000a0b8        0x0 kernel/kernel.o
- .glue_7        0x8000a0b8        0x0 timer/timerirq.o
- .glue_7        0x8000a0b8        0x0 mpd/model.o
- .glue_7        0x8000a0b8        0x0 mpd/mpd.o
- .glue_7        0x8000a0b8        0x0 serial/serial.o
- .glue_7        0x8000a0b8        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
- .glue_7        0x8000a0b8        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+ .glue_7        0x8000a380        0x0 crt.o
+ .glue_7        0x8000a380        0x0 isr.o
+ .glue_7        0x8000a380        0x0 arm_exc.o
+ .glue_7        0x8000a380        0x0 global.o
+ .glue_7        0x8000a380        0x0 main.o
+ .glue_7        0x8000a380        0x0 cc1100/cc1100.o
+ .glue_7        0x8000a380        0x0 cc1100/rf.o
+ .glue_7        0x8000a380        0x0 display/lcd.o
+ .glue_7        0x8000a380        0x0 display/fonty.o
+ .glue_7        0x8000a380        0x0 display/window.o
+ .glue_7        0x8000a380        0x0 display/screen.o
+ .glue_7        0x8000a380        0x0 display/screen_playing.o
+ .glue_7        0x8000a380        0x0 display/screen_tracklist.o
+ .glue_7        0x8000a380        0x0 display/screen_playlist.o
+ .glue_7        0x8000a380        0x0 display/screen_info.o
+ .glue_7        0x8000a380        0x0 display/screen_search.o
+ .glue_7        0x8000a380        0x0 interrupt/irq.o
+ .glue_7        0x8000a380        0x0 pwm/pwmirq.o
+ .glue_7        0x8000a380        0x0 keyboard/keyboard.o
+ .glue_7        0x8000a380        0x0 kernel/kernel.o
+ .glue_7        0x8000a380        0x0 timer/timerirq.o
+ .glue_7        0x8000a380        0x0 mpd/model.o
+ .glue_7        0x8000a380        0x0 mpd/mpd.o
+ .glue_7        0x8000a380        0x0 serial/serial.o
+ .glue_7        0x8000a380        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .glue_7        0x8000a380        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
  *(.glue_7t)
- .glue_7t       0x8000a0b8        0x0 crt.o
- .glue_7t       0x8000a0b8        0x0 isr.o
- .glue_7t       0x8000a0b8        0x0 arm_exc.o
- .glue_7t       0x8000a0b8        0x0 global.o
- .glue_7t       0x8000a0b8        0x0 main.o
- .glue_7t       0x8000a0b8        0x0 cc1100/cc1100.o
- .glue_7t       0x8000a0b8        0x0 cc1100/rf.o
- .glue_7t       0x8000a0b8        0x0 display/lcd.o
- .glue_7t       0x8000a0b8        0x0 display/fonty.o
- .glue_7t       0x8000a0b8        0x0 display/window.o
- .glue_7t       0x8000a0b8        0x0 display/screen.o
- .glue_7t       0x8000a0b8        0x0 display/screen_playing.o
- .glue_7t       0x8000a0b8        0x0 display/screen_tracklist.o
- .glue_7t       0x8000a0b8        0x0 display/screen_playlist.o
- .glue_7t       0x8000a0b8        0x0 display/screen_info.o
- .glue_7t       0x8000a0b8        0x0 interrupt/irq.o
- .glue_7t       0x8000a0b8        0x0 pwm/pwmirq.o
- .glue_7t       0x8000a0b8        0x0 keyboard/keyboard.o
- .glue_7t       0x8000a0b8        0x0 kernel/kernel.o
- .glue_7t       0x8000a0b8        0x0 timer/timerirq.o
- .glue_7t       0x8000a0b8        0x0 mpd/model.o
- .glue_7t       0x8000a0b8        0x0 mpd/mpd.o
- .glue_7t       0x8000a0b8        0x0 serial/serial.o
- .glue_7t       0x8000a0b8        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
- .glue_7t       0x8000a0b8        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
-                0x8000a0b8                _etext = .
+ .glue_7t       0x8000a380        0x0 crt.o
+ .glue_7t       0x8000a380        0x0 isr.o
+ .glue_7t       0x8000a380        0x0 arm_exc.o
+ .glue_7t       0x8000a380        0x0 global.o
+ .glue_7t       0x8000a380        0x0 main.o
+ .glue_7t       0x8000a380        0x0 cc1100/cc1100.o
+ .glue_7t       0x8000a380        0x0 cc1100/rf.o
+ .glue_7t       0x8000a380        0x0 display/lcd.o
+ .glue_7t       0x8000a380        0x0 display/fonty.o
+ .glue_7t       0x8000a380        0x0 display/window.o
+ .glue_7t       0x8000a380        0x0 display/screen.o
+ .glue_7t       0x8000a380        0x0 display/screen_playing.o
+ .glue_7t       0x8000a380        0x0 display/screen_tracklist.o
+ .glue_7t       0x8000a380        0x0 display/screen_playlist.o
+ .glue_7t       0x8000a380        0x0 display/screen_info.o
+ .glue_7t       0x8000a380        0x0 display/screen_search.o
+ .glue_7t       0x8000a380        0x0 interrupt/irq.o
+ .glue_7t       0x8000a380        0x0 pwm/pwmirq.o
+ .glue_7t       0x8000a380        0x0 keyboard/keyboard.o
+ .glue_7t       0x8000a380        0x0 kernel/kernel.o
+ .glue_7t       0x8000a380        0x0 timer/timerirq.o
+ .glue_7t       0x8000a380        0x0 mpd/model.o
+ .glue_7t       0x8000a380        0x0 mpd/mpd.o
+ .glue_7t       0x8000a380        0x0 serial/serial.o
+ .glue_7t       0x8000a380        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .glue_7t       0x8000a380        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x8000a380                _etext = .
 
 .vfp11_veneer   0x00000000        0x0
  .vfp11_veneer  0x00000000        0x0 crt.o
@@ -409,6 +420,7 @@ startup
  .vfp11_veneer  0x00000000        0x0 display/screen_tracklist.o
  .vfp11_veneer  0x00000000        0x0 display/screen_playlist.o
  .vfp11_veneer  0x00000000        0x0 display/screen_info.o
+ .vfp11_veneer  0x00000000        0x0 display/screen_search.o
  .vfp11_veneer  0x00000000        0x0 interrupt/irq.o
  .vfp11_veneer  0x00000000        0x0 pwm/pwmirq.o
  .vfp11_veneer  0x00000000        0x0 keyboard/keyboard.o
@@ -453,6 +465,8 @@ startup
  .janus_2cc_veneer
                 0x00000000        0x0 display/screen_info.o
  .janus_2cc_veneer
+                0x00000000        0x0 display/screen_search.o
+ .janus_2cc_veneer
                 0x00000000        0x0 interrupt/irq.o
  .janus_2cc_veneer
                 0x00000000        0x0 pwm/pwmirq.o
@@ -489,6 +503,7 @@ startup
  .v4_bx         0x00000000        0x0 display/screen_tracklist.o
  .v4_bx         0x00000000        0x0 display/screen_playlist.o
  .v4_bx         0x00000000        0x0 display/screen_info.o
+ .v4_bx         0x00000000        0x0 display/screen_search.o
  .v4_bx         0x00000000        0x0 interrupt/irq.o
  .v4_bx         0x00000000        0x0 pwm/pwmirq.o
  .v4_bx         0x00000000        0x0 keyboard/keyboard.o
@@ -501,8 +516,8 @@ startup
  .v4_bx         0x00000000        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
                 0x00000000                . = ALIGN (0x4)
 
-.fastcode       0x40000000      0xc5c load address 0x8000a0b8
-                0x8000a0b8                __fastcode_load = LOADADDR (.fastcode)
+.fastcode       0x40000000      0xc5c load address 0x8000a380
+                0x8000a380                __fastcode_load = LOADADDR (.fastcode)
                 0x40000000                __fastcode_start = .
  *(.text.fastcode)
  .text.fastcode
@@ -564,7 +579,7 @@ startup
                 0x40000c5c                . = ALIGN (0x4)
                 0x40000c5c                __fastcode_end = .
 
-.data           0x40000c5c        0x8 load address 0x8000ad14
+.data           0x40000c5c        0x8 load address 0x8000afdc
                 0x40000c5c                _data = .
  *(.data)
  .data          0x40000c5c        0x0 crt.o
@@ -582,6 +597,7 @@ startup
  .data          0x40000c60        0x0 display/screen_tracklist.o
  .data          0x40000c60        0x0 display/screen_playlist.o
  .data          0x40000c60        0x0 display/screen_info.o
+ .data          0x40000c60        0x0 display/screen_search.o
  .data          0x40000c60        0x0 interrupt/irq.o
  .data          0x40000c60        0x0 pwm/pwmirq.o
  .data          0x40000c60        0x0 keyboard/keyboard.o
@@ -596,7 +612,7 @@ startup
                 0x40000c64                _edata = .
                 0x40000c64                . = ALIGN (0x4)
 
-.bss            0x40000c64     0x3450
+.bss            0x40000c64     0x35bc
                 0x40000c64                _bss_start = .
  *(.bss)
  .bss           0x40000c64        0x0 crt.o
@@ -608,42 +624,43 @@ startup
  .bss           0x40000c6c      0x41c cc1100/rf.o
  .bss           0x40001088      0x310 display/lcd.o
  .bss           0x40001398       0x28 display/fonty.o
- .bss           0x400013c0       0x3c display/window.o
- .bss           0x400013fc       0x60 display/screen.o
- .bss           0x4000145c      0x510 display/screen_playing.o
- .bss           0x4000196c      0x468 display/screen_tracklist.o
- .bss           0x40001dd4      0x2e8 display/screen_playlist.o
- .bss           0x400020bc      0x148 display/screen_info.o
- .bss           0x40002204        0x0 interrupt/irq.o
- .bss           0x40002204       0x18 pwm/pwmirq.o
- .bss           0x4000221c       0x34 keyboard/keyboard.o
- .bss           0x40002250      0x264 kernel/kernel.o
-                0x400024b0                trace_flags
- .bss           0x400024b4       0xcc timer/timerirq.o
- .bss           0x40002580     0x1040 mpd/model.o
- .bss           0x400035c0      0x6c8 mpd/mpd.o
- .bss           0x40003c88      0x408 serial/serial.o
- .bss           0x40004090        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
- .bss           0x40004090        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
- COMMON         0x40004090        0x8 display/lcd.o
-                0x40004090                draw_block
-                0x40004094                write_buf
- COMMON         0x40004098        0x1 display/fonty.o
-                0x40004098                font_height
- *fill*         0x40004099        0x3 00
- COMMON         0x4000409c        0x4 pwm/pwmirq.o
-                0x4000409c                inactivity_cnt
- COMMON         0x400040a0        0x8 keyboard/keyboard.o
-                0x400040a0                last_key
-                0x400040a4                cur_key
- COMMON         0x400040a8        0x8 kernel/kernel.o
-                0x400040a8                signals
-                0x400040ac                cur_task
- COMMON         0x400040b0        0x4 serial/serial.o
-                0x400040b0                fDebug
-                0x400040b4                . = ALIGN (0x4)
-                0x400040b4                _bss_end = .
-                0x400040b4                _end = .
+ .bss           0x400013c0       0x50 display/window.o
+ .bss           0x40001410       0x74 display/screen.o
+ .bss           0x40001484      0x510 display/screen_playing.o
+ .bss           0x40001994      0x468 display/screen_tracklist.o
+ .bss           0x40001dfc      0x2e8 display/screen_playlist.o
+ .bss           0x400020e4      0x148 display/screen_info.o
+ .bss           0x4000222c      0x144 display/screen_search.o
+ .bss           0x40002370        0x0 interrupt/irq.o
+ .bss           0x40002370       0x18 pwm/pwmirq.o
+ .bss           0x40002388       0x34 keyboard/keyboard.o
+ .bss           0x400023bc      0x264 kernel/kernel.o
+                0x4000261c                trace_flags
+ .bss           0x40002620       0xcc timer/timerirq.o
+ .bss           0x400026ec     0x1040 mpd/model.o
+ .bss           0x4000372c      0x6c8 mpd/mpd.o
+ .bss           0x40003df4      0x408 serial/serial.o
+ .bss           0x400041fc        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .bss           0x400041fc        0x0 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+ COMMON         0x400041fc        0x8 display/lcd.o
+                0x400041fc                draw_block
+                0x40004200                write_buf
+ COMMON         0x40004204        0x1 display/fonty.o
+                0x40004204                font_height
+ *fill*         0x40004205        0x3 00
+ COMMON         0x40004208        0x4 pwm/pwmirq.o
+                0x40004208                inactivity_cnt
+ COMMON         0x4000420c        0x8 keyboard/keyboard.o
+                0x4000420c                last_key
+                0x40004210                cur_key
+ COMMON         0x40004214        0x8 kernel/kernel.o
+                0x40004214                signals
+                0x40004218                cur_task
+ COMMON         0x4000421c        0x4 serial/serial.o
+                0x4000421c                fDebug
+                0x40004220                . = ALIGN (0x4)
+                0x40004220                _bss_end = .
+                0x40004220                _end = .
                 0xe01fc040                PROVIDE (MEMMAP, 0xe01fc040)
                 0xffe00000                PROVIDE (BCFG0, 0xffe00000)
                 0xffe00004                PROVIDE (BCFG1, 0xffe00004)
@@ -672,6 +689,7 @@ LOAD display/screen_playing.o
 LOAD display/screen_tracklist.o
 LOAD display/screen_playlist.o
 LOAD display/screen_info.o
+LOAD display/screen_search.o
 LOAD interrupt/irq.o
 LOAD pwm/pwmirq.o
 LOAD keyboard/keyboard.o
@@ -721,30 +739,32 @@ OUTPUT(muc_rom.elf elf32-littlearm)
  .ARM.attributes
                 0x00000280       0x30 display/screen_info.o
  .ARM.attributes
-                0x000002b0       0x30 interrupt/irq.o
+                0x000002b0       0x30 display/screen_search.o
  .ARM.attributes
-                0x000002e0       0x30 pwm/pwmirq.o
+                0x000002e0       0x30 interrupt/irq.o
  .ARM.attributes
-                0x00000310       0x30 keyboard/keyboard.o
+                0x00000310       0x30 pwm/pwmirq.o
  .ARM.attributes
-                0x00000340       0x30 kernel/kernel.o
+                0x00000340       0x30 keyboard/keyboard.o
  .ARM.attributes
-                0x00000370       0x30 timer/timerirq.o
+                0x00000370       0x30 kernel/kernel.o
  .ARM.attributes
-                0x000003a0       0x30 mpd/model.o
+                0x000003a0       0x30 timer/timerirq.o
  .ARM.attributes
-                0x000003d0       0x30 mpd/mpd.o
+                0x000003d0       0x30 mpd/model.o
  .ARM.attributes
-                0x00000400       0x30 serial/serial.o
+                0x00000400       0x30 mpd/mpd.o
  .ARM.attributes
-                0x00000430       0x14 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+                0x00000430       0x30 serial/serial.o
  .ARM.attributes
-                0x00000444       0x14 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
+                0x00000460       0x14 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_divsi3.o)
+ .ARM.attributes
+                0x00000474       0x14 /home/raap/CodeSourcery/Sourcery_G++_Lite/lib/gcc/arm-uclinuxeabi/4.3.2/libgcc.a(_dvmd_tls.o)
 
 .stabstr        0x00000000       0xde
  .stabstr       0x00000000       0xde crt.o
 
-.comment        0x00000000      0x372
+.comment        0x00000000      0x39c
  .comment       0x00000000       0x2a isr.o
  .comment       0x0000002a       0x2a global.o
  .comment       0x00000054       0x2a main.o
@@ -758,14 +778,15 @@ OUTPUT(muc_rom.elf elf32-littlearm)
  .comment       0x000001a4       0x2a display/screen_tracklist.o
  .comment       0x000001ce       0x2a display/screen_playlist.o
  .comment       0x000001f8       0x2a display/screen_info.o
- .comment       0x00000222       0x2a interrupt/irq.o
- .comment       0x0000024c       0x2a pwm/pwmirq.o
- .comment       0x00000276       0x2a keyboard/keyboard.o
- .comment       0x000002a0       0x2a kernel/kernel.o
- .comment       0x000002ca       0x2a timer/timerirq.o
- .comment       0x000002f4       0x2a mpd/model.o
- .comment       0x0000031e       0x2a mpd/mpd.o
- .comment       0x00000348       0x2a serial/serial.o
+ .comment       0x00000222       0x2a display/screen_search.o
+ .comment       0x0000024c       0x2a interrupt/irq.o
+ .comment       0x00000276       0x2a pwm/pwmirq.o
+ .comment       0x000002a0       0x2a keyboard/keyboard.o
+ .comment       0x000002ca       0x2a kernel/kernel.o
+ .comment       0x000002f4       0x2a timer/timerirq.o
+ .comment       0x0000031e       0x2a mpd/model.o
+ .comment       0x00000348       0x2a mpd/mpd.o
+ .comment       0x00000372       0x2a serial/serial.o
 
 .note.GNU-stack
                 0x00000000        0x0

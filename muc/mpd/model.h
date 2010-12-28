@@ -157,5 +157,7 @@ char *mpd_get_artist();
 void user_song_unknown();
 void user_wants_song(int pos);
 
+void model_set_last_response(unsigned int t);
+
 #endif
 

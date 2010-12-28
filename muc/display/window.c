@@ -119,6 +119,25 @@ draw_cur_char(struct Window *win){
 	return 1;
 };
 
+/* We assume the cursor is at the current character column.
+	We also use the cur_char.
+	The cursor is not advanced after drawing.
+*/	
+static uint8_t
+draw_cursor(struct Window *win, uint8_t reversed){
+	char ch;
+	
+	/* If we are past the text length, draw space */
+	if (win->cur_char >= win->text_len) ch = ' ';
+	else ch = win->txt[win->cur_char];
+	
+	if (reversed)
+		draw_char(win_txt_row(win), win->cur_col, ch, win->bg_color, win->fg_color, txt_col_lim(win) - win->cur_col ); 
+	else	
+		draw_char(win_txt_row(win), win->cur_col, ch, win->fg_color, win->bg_color,  txt_col_lim(win) - win->cur_col ); 
+	
+	return 1;
+};
 
 /* 	Clear window (except border) and draw the contents completely (except border) new. Use text in win->txt
 	Sets win->fits to 1 if the text fits in window, else sets it to 0.
@@ -203,7 +222,7 @@ win_redraw(struct Window *win){
 	};
 };
 
-
+/* ------------------------------ Windows with scrolling text ------------------------------------------------------- */
 
 /* ### Scroll Task ###  
 	Some windows might need scrolling to show their full content.
@@ -269,6 +288,8 @@ win_unscroll(struct Window *win){
 };
 
 #define SCROLL_PERIOD (8 * (TICKS_PER_TENTH_SEC))
+
+/* ### Scroll Task ###  */
 PT_THREAD (win_scroll_all(struct pt *pt)){
 	static int i;
 	static struct timer scroll_tmr;
@@ -447,3 +468,55 @@ init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt
 	win_scroll( & ((sl->wl)[sl->sel_win]));
 };
 
+/* --------------------------------------------- Text Input Window ------------------------------------- */
+/*
+// got_input(k) user pressed key k 
+    show k in window at current cursor position
+
+We need a blink task. Cursor blinks in selected window at 1|2 HZ
+
+
+*/
+#define BLINK_PERIOD (5 * (TICKS_PER_TENTH_SEC))
+
+/* We only have one window where the cursor blinks */
+static struct Window *pcursor_win = NULL;
+
+/* ### Cursor Blinking Task ###  */
+PT_THREAD (win_cursor_blink(struct pt *pt)){
+	static struct timer tmr;
+	static uint8_t cursor_on=0;
+	 
+	PT_BEGIN(pt);
+		
+	timer_add(&tmr, BLINK_PERIOD, BLINK_PERIOD);
+	
+	while(1){
+		tmr.expired=0;
+		cursor_on ^= 1;
+		PT_WAIT_UNTIL(pt, timer_expired(&tmr));
+		
+		if (pcursor_win == NULL) continue;
+
+		if (! (pcursor_win->flags & WINFLG_VISIBLE)) continue;
+		if (pcursor_win->txt == NULL) continue; 	
+		if (pcursor_win->flags & WINFLG_HIDE) continue;
+	
+		set_font(pcursor_win->font);
+		draw_cursor(pcursor_win, cursor_on);
+	};
+	PT_END(pt);
+};
+
+/* Giving NULL as parameter stops cursor blinking for this window. */
+void
+win_cursor_set(struct Window *pwin){
+	pcursor_win = pwin;
+};	
+
+void
+win_cursor_init(){
+	task_add(&win_cursor_blink);
+};	
+
+	

@@ -1,0 +1,53 @@
+#daemon configuration
+telnet_port 4444
+gdb_port 3333
+
+
+#interface
+interface usbprog
+jtag_speed 0
+
+
+if { [info exists CHIPNAME] } {	
+   set  _CHIPNAME $CHIPNAME    
+} else {	 
+   set  _CHIPNAME lpc2220
+}
+
+if { [info exists ENDIAN] } {	
+   set  _ENDIAN $ENDIAN    
+} else {	 
+   set  _ENDIAN little
+}
+
+if { [info exists CPUTAPID ] } {
+   set _CPUTAPID $CPUTAPID
+} else {
+  # force an error till we get a good number
+   set _CPUTAPID 0x4f1f0f0f
+}
+
+#use combined on interfaces or targets that can't set TRST/SRST separately
+#reset_config trst_and_srst srst_pulls_trst
+#reset_config srst_only
+reset_config trst_only
+
+#jtag scan chain
+#format L IRC IRCM IDCODE (Length, IR Capture, IR Capture Mask, IDCODE)
+# jtag_device 4 0x1 0xf 0xe
+# jtag_nsrst_delay 333
+# jtag_ntrst_delay 333
+
+#jtag scan chain
+jtag newtap $_CHIPNAME cpu -irlen 4 -ircapture 0x1 -irmask 0xf -expected-id $_CPUTAPID
+
+#target configuration
+set _TARGETNAME [format "%s.cpu" $_CHIPNAME]
+target create $_TARGETNAME arm7tdmi -endian $_ENDIAN -chain-position $_TARGETNAME -variant arm7tdmi-s_r4
+$_TARGETNAME configure -work-area-virt 0 -work-area-phys 0x40000000 -work-area-size 0x100000 -work-area-backup 0
+
+#flash configuration
+#flash bank lpc2000 <base> <size> 0 0 <target#> <variant>
+flash bank lpc2000 0x0 0x40000 0 0 0 lpc2000_v1 14765 calc_checksum
+#flash bank cfi 0x80000000   0x800000 2 2 0
+

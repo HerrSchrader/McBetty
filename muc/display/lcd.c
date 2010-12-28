@@ -34,7 +34,13 @@ static void (*draw_vline) (uint8 row, uint8 col, uint8 l, uint8 fg_col);
 static void(*do_scroll) (uint8 row, uint8 col, uint8 width, uint8 bitmask, uint8 offset);
 static void (*write_pattern) (uint8 row, uint8 col, uint8 l, uint8 mask, uint8 pattern0, uint8 pattern1);
 
-/* We can address up to 22 pages of LCD RAM. 
+/* 
+	The display is organized as 160 (internally 176) rows and 128 columns of pixels with 2 bits each of gray scale information.
+	We can address the LCD only bytewise. A single byte holds one bit of color information of 8 consecutive rows at a specific column.
+	We can really address the LCD only in terms of pages. A page is 128 pixels wide and 8 pixels high.
+	Pages start on a row boundary which is divisble by 8.
+	
+	We can address up to 22 pages of LCD RAM. 
 	Each page contains 256 bytes.
 	They are organized as 8 rows and 128 colums per row.
 	The first byte in each page contains the msb of the color of 8 bits of column 0.
@@ -71,14 +77,6 @@ static uint8 rcubuf[2][128];
 static uint16 drawbuf16[2][128];
 
 
-/* 
-	The display is organized as 160 (internally 176) rows and 128 columns of pixels with 2 bits each of gray scale information.
-	We can address the LCD only bytewise. A single byte holds one bit of color information of 8 consecutive rows at a specific column.
-	We can really address the LCD only in terms of pages. A page is 128 pixels wide and 8 pixels high.
-	Pages start on a row boundary which is divisble by 8.
-*/
-
-
 /* Read w columns into rcu_buf */
 static void __attribute__ ((section(".text.fastcode"))) 
 _read_lcd(uint8 row, uint8 col, uint8 w){
@@ -96,7 +94,6 @@ _read_lcd(uint8 row, uint8 col, uint8 w){
 	
 	d = LCD_DATA;		// Another read, why that ? Maybe bug in chip, does not work correctly without
 }
-
 
 
 /* 
@@ -131,7 +128,7 @@ _write_pattern(uint8 row, uint8 col, uint8 l, uint8 mask, uint8 pattern0, uint8 
 	Overlay the contents of LCD with contents of drawbuf16[].
 	The LCD is only changed at those positions, where mask bits are 1.
 	Before the contents are mixed, drawbuf16 is shifted by a certain amount.
-	The shift factor s is means right shift s positions 
+	The shift factor s means right shift s positions 
 */
 static void __attribute__ ((section(".text.fastcode"))) 
 _overlay_shiftr(uint8 row, uint8 col, uint8 l, uint8 mask, uint8 s){
@@ -161,7 +158,7 @@ _overlay_shiftr(uint8 row, uint8 col, uint8 l, uint8 mask, uint8 s){
 	Overlay the contents of LCD with contents of drawbuf16[].
 	The LCD is only changed at those positions, where mask bits are 1.
 	Before the contents are mixed, drawbuf16 is shifted by a certain amount.
-	The shift factor s is means left shift s positions 
+	The shift factor s means left shift s positions 
 */
 static void __attribute__ ((section(".text.fastcode"))) 
 _overlay_shiftl(uint8 row, uint8 col, uint8 l, uint8 mask, uint8 s){

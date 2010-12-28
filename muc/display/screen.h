@@ -9,7 +9,7 @@
 #include "mpd.h"
 
 /* Screens are enumerated so that we do not have to use their addresses */
-enum SCREEN {PLAYLIST_SCREEN, TRACKLIST_SCREEN, PLAYING_SCREEN, INFO_SCREEN };
+enum SCREEN {PLAYLIST_SCREEN, TRACKLIST_SCREEN, PLAYING_SCREEN, INFO_SCREEN, SEARCH_SCREEN };
 
 
 /* We do some object oriented design here.
