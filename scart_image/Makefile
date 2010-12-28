@@ -29,7 +29,7 @@ CC=$(SDCCPATH)/sdcc
 -include Makefile.local
 
 # List C source files here.
-SRC = main.c serial.c  cc1100.c isp.asm
+SRC = main.c serial.c cc1100.c isp.asm
 
                 
 # Define all object files.
@@ -37,7 +37,7 @@ SRC = main.c serial.c  cc1100.c isp.asm
 # Object files needed when boot loader is included.
 OBJ_BOOT = main.rel  serial.rel cc1100.rel isp.rel
 
-# Object files needed whithout the boot loader.
+# Object files needed without the boot loader.
 OBJ = main.rel  serial.rel cc1100.rel 
 
 # necessary binary tools which we create ourself
@@ -58,11 +58,13 @@ all: $(BIN) betty_flasher betty_scart.bin
 scart: $(BIN) betty_scart.bin 
 
 # --------------------------------------------------------------------------
-# creates firmware for betty to flash scart_image to scart adapter
-# after using this target, issue "cd boop.orig && make resident"
+# Creates firmware for betty to flash scart_image to scart adapter
+# After using this target, issue "cd boop.orig && make resident"
+# That will flash Betty with a boop image for flashing the scart adapter
 betty_flasher: scart_image_boot.h
 	cp scart_image_boot.h boop.orig/tools/scart_image.h
 	cd boop.orig && make clean && make
+
 
 # This file is only needed when we want to create a flashing firmware for Betty
 # We then want to have a scart_image.h which includes the boot loader
@@ -106,10 +108,6 @@ cc1100.rel: cc1100.c cc1100.h smartrf_CC1100.h
 isp.rel: isp.asm
 	asx8051 -losg isp.asm
  
-# cmd.rel: cmd.c cmd.h
-#	$(CC) $(FLAGS) -c cmd.c
-
-
 
 # -----------------------------------------------------------------------
 # necessary binary tools

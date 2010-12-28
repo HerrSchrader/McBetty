@@ -10,3 +10,9 @@
 *.lst
 *.rst
 
+# intermediate files generated in scart_image
+scart_image/betty_scart.ihx
+scart_image/betty_scart.bin
+scart_image/betty_scart_boot.ihx
+scart_image/betty_scart_boot.bin
+
