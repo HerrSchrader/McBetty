@@ -1,3 +1,0 @@
-gui/controls.thumb.o: gui/controls.c gui/controls.h display/lcd.h \
-  display/fonty.h global.h lpc2220.h keyboard/keyboard.h \
-  display/backlight.h timer/timerfuncs.h timer/timerirq.h

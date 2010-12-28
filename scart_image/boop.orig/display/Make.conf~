@@ -1,1 +1,0 @@
-SRCS := lcd.c fonty.c backlight.c

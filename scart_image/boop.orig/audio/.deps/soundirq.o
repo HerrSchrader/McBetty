@@ -1,2 +1,0 @@
-audio/soundirq.o: audio/soundirq.c interrupt/irq.h audio/soundirq.h \
-  audio/sound.h audio/sid.h lpc2220.h

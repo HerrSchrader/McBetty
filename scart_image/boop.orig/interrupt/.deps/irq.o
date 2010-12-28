@@ -1,2 +1,0 @@
-interrupt/irq.o: interrupt/irq.c lpc2220.h interrupt/irq.h \
-  audio/soundirq.h infrared/infraredirq.h

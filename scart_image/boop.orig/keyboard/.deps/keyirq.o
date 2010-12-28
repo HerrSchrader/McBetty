@@ -1,2 +1,0 @@
-keyboard/keyirq.o: keyboard/keyirq.c keyboard/keyboard.h \
-  keyboard/keyirq.h lpc2220.h timer/timerfuncs.h timer/timerirq.h

@@ -1,1 +1,0 @@
-serial/serial.thumb.o: serial/serial.c lpc2220.h serial/serial.h

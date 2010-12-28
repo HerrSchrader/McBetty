@@ -1,3 +1,0 @@
-adc/adc.thumb.o: adc/adc.c interrupt/irq.h timer/timerfuncs.h \
-  timer/timerirq.h adc/adc.h adc/adcirq.h display/lcd.h display/fonty.h \
-  lpc2220.h

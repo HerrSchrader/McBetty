@@ -1,4 +1,0 @@
-cc1100/cc1100.o: cc1100/cc1100.c global.h kernel/pt.h kernel/lc.h \
-  kernel/lc-addrlabels.h serial/serial.h lpc2220.h kernel/kernel.h \
-  kernel/pt.h cc1100/cc1100.h interrupt/irq.h cc1100/cc1100_defs.h \
-  cc1100/smartrf_CC1100.h

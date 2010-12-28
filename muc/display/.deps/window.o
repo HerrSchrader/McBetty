@@ -1,4 +1,0 @@
-display/window.o: display/window.c display/window.h global.h kernel/pt.h \
-  kernel/lc.h kernel/lc-addrlabels.h serial/serial.h kernel/kernel.h \
-  kernel/pt.h display/fonty.h display/lcd.h keyboard/keyboard.h \
-  timer/timerirq.h mpd/mpd.h display/screen.h

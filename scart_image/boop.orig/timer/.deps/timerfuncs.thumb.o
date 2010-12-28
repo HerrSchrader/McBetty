@@ -1,2 +1,0 @@
-timer/timerfuncs.thumb.o: timer/timerfuncs.c lpc2220.h timer/timerfuncs.h \
-  timer/timerirq.h interrupt/irq.h keyboard/keyboard.h

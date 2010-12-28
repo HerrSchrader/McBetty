@@ -1,3 +1,0 @@
-infrared/ir_rcmm.thumbunopt.o: infrared/ir_rcmm.c lpc2220.h \
-  infrared/infrared.h infrared/ir_rcmm.h infrared/encoders.h \
-  infrared/codes.h

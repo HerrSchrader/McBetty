@@ -1,4 +1,0 @@
-cc1100/rf.o: cc1100/rf.c lpc2220.h global.h kernel/pt.h kernel/lc.h \
-  kernel/lc-addrlabels.h serial/serial.h kernel/kernel.h kernel/pt.h \
-  timer/timerirq.h interrupt/irq.h cc1100/cc1100.h cc1100/cc1100_defs.h \
-  cc1100/rf.h display/fonty.h

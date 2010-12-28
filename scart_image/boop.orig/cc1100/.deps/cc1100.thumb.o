@@ -1,2 +1,0 @@
-cc1100/cc1100.thumb.o: cc1100/cc1100.c lpc2220.h cc1100/cc1100.h \
-  interrupt/irq.h

@@ -1,3 +1,0 @@
-timer/timerirq.o: timer/timerirq.c lpc2220.h global.h kernel/pt.h \
-  kernel/lc.h kernel/lc-addrlabels.h serial/serial.h timer/timerirq.h \
-  kernel/kernel.h kernel/pt.h

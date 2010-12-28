@@ -1,2 +1,0 @@
-flash/flash.thumb.o: flash/flash.c flash/flash.h serial/serial.h \
-  display/lcd.h

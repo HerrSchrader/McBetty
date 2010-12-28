@@ -1,4 +1,0 @@
-gui/settingsmenu.thumb.o: gui/settingsmenu.c gui/menu.h \
-  gui/settingsmenu.h display/lcd.h display/fonty.h keyboard/keyboard.h \
-  rtc/rtc.h infrared/ir_selector.h display/backlight.h flash/bfs.h \
-  cc1100/rf.h cc1100/cc1100.h infrared/ir_capture.h

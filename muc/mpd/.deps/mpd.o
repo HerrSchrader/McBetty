@@ -1,6 +1,0 @@
-mpd/mpd.o: mpd/mpd.c global.h kernel/pt.h kernel/lc.h \
-  kernel/lc-addrlabels.h serial/serial.h kernel/kernel.h kernel/pt.h \
-  timer/timerirq.h kernel/pt-sem.h cc1100/rf.h display/fonty.h \
-  display/window.h display/fonty.h display/lcd.h display/screen.h \
-  mpd/mpd.h display/screen_playlist.h display/screen_playing.h \
-  mpd/model.h display/screen_tracklist.h mpd/mpd.h

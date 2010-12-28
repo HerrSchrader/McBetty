@@ -1,3 +1,0 @@
-infrared/ir_recs80.thumbunopt.o: infrared/ir_recs80.c lpc2220.h \
-  infrared/infrared.h infrared/ir_recs80.h infrared/encoders.h \
-  infrared/codes.h

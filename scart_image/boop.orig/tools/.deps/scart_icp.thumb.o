@@ -1,3 +1,0 @@
-tools/scart_icp.thumb.o: tools/scart_icp.c lpc2220.h display/lcd.h \
-  display/fonty.h keyboard/keyboard.h tools/scart_icp.h \
-  tools/scart_image.h

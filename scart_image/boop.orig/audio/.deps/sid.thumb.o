@@ -1,2 +1,0 @@
-audio/sid.thumb.o: audio/sid.c interrupt/irq.h audio/sid.h audio/sound.h \
-  audio/soundirq.h lpc2220.h timer/timerfuncs.h timer/timerirq.h

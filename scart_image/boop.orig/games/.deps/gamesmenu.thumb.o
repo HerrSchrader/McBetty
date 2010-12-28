@@ -1,2 +1,0 @@
-games/gamesmenu.thumb.o: games/gamesmenu.c gui/menu.h games/tic_tac_toe.h \
-  games/../global.h games/sokoban.h games/connect4.h

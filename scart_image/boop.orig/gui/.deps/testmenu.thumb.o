@@ -1,6 +1,0 @@
-gui/testmenu.thumb.o: gui/testmenu.c gui/menu.h display/lcd.h \
-  display/fonty.h keyboard/keyboard.h display/backlight.h adc/adc.h \
-  cc1100/rf.h flash/flash.h infrared/ir_raw.h infrared/ir_capture.h \
-  infrared/ir_selector.h infrared/infrared.h audio/sid.h \
-  timer/timerfuncs.h timer/timerirq.h audio/sound.h lpc2220.h \
-  gui/controls.h global.h

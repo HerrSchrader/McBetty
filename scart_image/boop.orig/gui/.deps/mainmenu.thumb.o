@@ -1,2 +1,0 @@
-gui/mainmenu.thumb.o: gui/mainmenu.c gui/menu.h gui/testmenu.h \
-  games/gamesmenu.h gui/settingsmenu.h tools/toolsmenu.h

@@ -1,2 +1,0 @@
-flash/bfs.thumb.o: flash/bfs.c flash/bfs.h flash/flash.h display/lcd.h \
-  display/fonty.h global.h

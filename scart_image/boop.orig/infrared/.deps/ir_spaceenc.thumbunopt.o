@@ -1,3 +1,0 @@
-infrared/ir_spaceenc.thumbunopt.o: infrared/ir_spaceenc.c lpc2220.h \
-  infrared/infrared.h infrared/ir_spaceenc.h infrared/encoders.h \
-  infrared/codes.h infrared/ir_codes/spaceenc/schneider_dtv3_xtra

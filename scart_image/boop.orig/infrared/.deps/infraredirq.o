@@ -1,2 +1,0 @@
-infrared/infraredirq.o: infrared/infraredirq.c infrared/infrared.h \
-  infrared/infraredirq.h interrupt/irq.h lpc2220.h keyboard/keyboard.h

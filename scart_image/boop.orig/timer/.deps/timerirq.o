@@ -1,2 +1,0 @@
-timer/timerirq.o: timer/timerirq.c lpc2220.h timer/timerirq.h \
-  timer/timerfuncs.h

@@ -1,1 +1,0 @@
-tools/toolsmenu.thumb.o: tools/toolsmenu.c gui/menu.h tools/scart_icp.h

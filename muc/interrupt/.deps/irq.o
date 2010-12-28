@@ -1,1 +1,0 @@
-interrupt/irq.o: interrupt/irq.c lpc2220.h interrupt/irq.h

@@ -1,8 +1,0 @@
-main.o: main.c lpc2220.h display/lcd.h interrupt/irq.h \
-  keyboard/keyboard.h display/fonty.h audio/sid.h audio/sound.h \
-  infrared/infrared.h infrared/codes.h infrared/encoders.h \
-  infrared/ir_selector.h serial/serial.h flash/flash.h cc1100/rf.h \
-  gui/menu.h gui/testmenu.h gui/mainmenu.h timer/timerfuncs.h \
-  timer/timerirq.h global.h adc/adc.h display/backlight.h rtc/rtc.h \
-  rtc/i2c.h flash/bfs.h gui/settingsmenu.h infrared/ir_raw.h \
-  infrared/ir_capture.h gui/controls.h

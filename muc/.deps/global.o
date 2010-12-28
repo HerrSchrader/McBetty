@@ -1,2 +1,0 @@
-global.o: global.c global.h kernel/pt.h kernel/lc.h \
-  kernel/lc-addrlabels.h serial/serial.h

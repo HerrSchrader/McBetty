@@ -1,4 +1,0 @@
-keyboard/keyboard.o: keyboard/keyboard.c lpc2220.h global.h kernel/pt.h \
-  kernel/lc.h kernel/lc-addrlabels.h serial/serial.h kernel/kernel.h \
-  kernel/pt.h timer/timerirq.h interrupt/irq.h display/screen.h mpd/mpd.h \
-  keyboard/keyboard.h

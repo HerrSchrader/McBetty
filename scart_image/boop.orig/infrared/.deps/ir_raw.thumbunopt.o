@@ -1,4 +1,0 @@
-infrared/ir_raw.thumbunopt.o: infrared/ir_raw.c lpc2220.h \
-  infrared/infrared.h infrared/ir_raw.h infrared/encoders.h \
-  infrared/codes.h infrared/ir_capture.h display/fonty.h display/lcd.h \
-  global.h flash/bfs.h
