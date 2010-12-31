@@ -84,6 +84,11 @@ screen_enter(){
 };
 
 
+static void 
+screen_exit(){
+	screen_visible(PLAYING_SCREEN, 0);
+};
+
 /* Initialize the playing screen 
 	We clear the whole screen.
 */
@@ -92,6 +97,7 @@ playing_screen_init(Screen *this_screen) {
 	this_screen->wl_size = WL_SIZE;
 	this_screen->win_list = win;
 	this_screen->screen_enter = screen_enter;
+	this_screen->screen_exit = screen_exit;
 	
 	win_init(&title_win, 0, 0, 50, 128, 1, win_txt[0]);
 	title_win.font = MEDIUMFONT;	

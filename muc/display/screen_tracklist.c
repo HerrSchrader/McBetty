@@ -104,7 +104,6 @@ view_tracklist_changed(){
 	scroll_list_changed(&track_list);
 };
 
-
 static void
 screen_enter(){
 	int cur_song;
@@ -152,6 +151,11 @@ screen_enter(){
 };
 
 
+static void 
+screen_exit(){
+	screen_visible(TRACKLIST_SCREEN, 0);
+};
+
 void
 tracklist_screen_init(Screen *this_screen){
 	int cur_start_row;
@@ -159,6 +163,7 @@ tracklist_screen_init(Screen *this_screen){
 	this_screen->wl_size = WL_SIZE;
 	this_screen->win_list = win;
 	this_screen->screen_enter = screen_enter;
+	this_screen->screen_exit = screen_exit;
 	
 	cur_start_row = WL_START_ROW;	
 	
@@ -177,6 +182,7 @@ tracklist_screen_init(Screen *this_screen){
 	
 
 };	
+
 
 
 /* Handle user input (key presses) 

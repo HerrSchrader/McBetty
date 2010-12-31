@@ -98,7 +98,7 @@ delay(unsigned int n){
 	}	
 };
 
-/* Returns the current system time (in 1/100th of a second since boot) */
+/* Returns the current system time in ticks (currently 1/100th of a second) since boot) */
 unsigned int 
 system_time(){
 	return (sys_time);

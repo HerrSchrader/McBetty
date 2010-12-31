@@ -44,7 +44,7 @@ int strstart( char *s1, char *s2){
 };
 
 /* Standard C string length */
-int str_len( char *s){
+int strlen( char *s){
 	int cnt;
 	for (cnt = 0; *s++; cnt++);
 	return cnt;
@@ -66,7 +66,8 @@ strchr(const char *s, int c){
 /* Standard C string copy EXCEPT that the destination string is always 0 terminated ! 
 	The resulting string uses at most n bytes (incl. trailing 0) 
 */
-char *strn_cpy(char *dest, const char *src, int n){
+char *
+strn_cpy(char *dest, const char *src, int n){
 	int i;
 	char *dst = dest;
 	for (i=0; i<n; i++){
@@ -77,6 +78,20 @@ char *strn_cpy(char *dest, const char *src, int n){
 	};
 	*dst = 0;
 	return dest;
+};
+
+/* Delete the character at position pos in the string 
+	Deletes in place, original string is changed
+	Returns new strlen(s). 
+*/
+int
+str_del(char *s, int pos){
+	int i;
+	for (i=0; s[i]; i++)
+		if (i == pos) break;
+	for (; s[i]; i++)
+		s[i] = s[i+1];
+	return i;
 };
 
 // Not needed

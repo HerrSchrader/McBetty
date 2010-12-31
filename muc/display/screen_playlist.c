@@ -63,7 +63,6 @@ view_playlists_changed(){
 };
 
 
-
 static void
 screen_enter(){
 
@@ -84,6 +83,10 @@ screen_enter(){
 	screen_redraw(PLAYLIST_SCREEN);	
 };
 
+static void 
+screen_exit(){
+	screen_visible(PLAYLIST_SCREEN, 0);
+};
 
 void
 playlist_screen_init(Screen *this_screen){
@@ -92,7 +95,8 @@ playlist_screen_init(Screen *this_screen){
 	this_screen->wl_size = WL_SIZE;
 	this_screen->win_list = win;
 	this_screen->screen_enter = screen_enter;
-	
+	this_screen->screen_exit = screen_exit;
+
 	cur_start_row = WL_START_ROW;	
 	
 	/* The first window is a help window */
@@ -107,6 +111,7 @@ playlist_screen_init(Screen *this_screen){
 	
 	win_new_text(&win[0], "Choose a playlist");
 };	
+
 
 
 

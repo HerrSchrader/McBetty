@@ -54,6 +54,7 @@
 */
 
 /* Here we overwrite some settings done by SmartRF Studio */
+#define SMARTRF_SETTING_PKTCTRL0	0x45
 #define SPECIAL_SETTING_PKTCTRL1	0x0E
 #define SPECIAL_SETTING_ADDR		DEVICE_ADDRESS
 

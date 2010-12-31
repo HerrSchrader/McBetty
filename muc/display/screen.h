@@ -23,8 +23,8 @@ typedef struct {
 	int	wl_size;					// number of windows in this screen
 	struct Window *win_list;		// pointer to array with the windows
 	void (*screen_enter)(void);		// function called when screen is entered
+	void (*screen_exit)(void);		// function called when screen is exited
 	enum USER_CMD user_req_cmd;
-	int user_req_arg;
 } Screen;
 
 /* A structure to hold a command and its arguments */

@@ -285,6 +285,10 @@ model_needs_action(UserReq *req){
 		return PLAYLISTNAME_CMD;
 	};
 
+	/* Something to search ? */
+	if (user_model.search_string != NULL)
+		return FIND_CMD;
+	
 	/* Maybe the user wants some script to be executed */
 	if (user_model.script != -1){
 		req->arg = user_model.script;
@@ -996,6 +1000,21 @@ user_toggle_mute(){
 			user_model.volume = 15;			// we use a default here in case we have no idea of old volume
 };
 
+/* -------------------------------------- Searching ----------------------------------------------------------- */
+char *
+mpd_get_search_string(){
+	return user_model.search_string;
+};
+
+void
+mpd_find_ok(){
+	user_model.search_string = NULL;
+};
+
+void
+user_set_search_string(char * str){
+	user_model.search_string = str;
+};
 
 /* -------------------------------------- Timing information -------------------------------------------------- */
 
@@ -1036,6 +1055,7 @@ model_reset(struct MODEL *m){
 	m->random = -1;
 	m->repeat = -1;
 	m->single = -1;
+	m->search_string = NULL;
 	m->script = -1;
 };
 

@@ -131,13 +131,14 @@ typedef struct str_cache {
 int max(int a, int b);
 int min(int a, int b);
 int abs(int a);
-int str_len( char *s);
+int strlen( char *s);
 int strstart( char *s1, char *s2);
 char *strn_cpy(char *dest, const char *src, int n);
 char *strncat(char *dest, const char *src, int n);
 char *str_cat_max(char *dest, const char *src, int n);
 int strn_cpy_cmp(char *str1, char *str2, int n, int *length);
 int atoi(const char *s);
+int str_del(char *s, int pos);
 
 char *strchr(const char *s, int c);
 void rand_seed(int s);

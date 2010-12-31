@@ -107,6 +107,11 @@ void waitTX(void);
 void sendWOR(unsigned char addr);
 void switch_to_idle();
 unsigned char cc1100_read_status_reg_otf(unsigned char reg);
-
+ 
+ 
+/* Read the MARCSTATE register on the fly and mask its value */
+#define cc1100_marcstate() (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f)
+ 
+ 
 #endif
 

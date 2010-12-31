@@ -35,6 +35,28 @@ timer_init(){
 
 
 /* 
+	Set new values for a given timer.
+	If start_time != 0, t->expired is cleared else it is set.
+	It is safe to reset a running timer.
+	
+	A timer with a start_time of 0 is stopped.
+	A period of 0 means the timer will not reload automatically.
+*/
+void
+timer_set(struct timer *t, int start_time, int period){
+	t->remaining = start_time;
+	t->period = period;
+	t->expired = (t->remaining == 0);
+}
+
+/* The timer is stopped and is set to not expired */
+void
+timer_stop (struct timer *t){
+	timer_set(t, 0, 0);
+	t->expired = 0;
+};
+
+/* 
 	Given a pointer to a timer structure, add this timer to the timer list.
 	The timer is automatically started
 	Returns 0 iff the timer could be successfully added to the system timer list 
@@ -44,7 +66,7 @@ timer_init(){
 // TODO this interface seems to be a bit strange.
 // The application has to allocate and free a timer structure itself
 // We did this for efficiency reasons, so that one timer can be used frequently without allocation overhead.
-// TODO better to insert fucntions here to allocate and free a timer structure
+// TODO better to insert functions here to allocate and free a timer structure
 // TODO the following routine should then be used to start the timer with given parameters
 //		Reason for the current API is that we do not have malloc() yet!
 int 
@@ -52,15 +74,10 @@ timer_add(struct timer *t, int start_time, int period){
 	if (timer_next == NUM_TIMERS){
 		debug_out("All Timers Used", 0);
 		return -1;
-  };
-  t->remaining = start_time;
-  t->period = period;
-  if (t->remaining)
-	t->expired = 0;
-  else
-	t->expired=1;
-  timer_list[timer_next++] = t;
-  return 0;
+	};
+	timer_set(t, start_time, period);
+	timer_list[timer_next++] = t;
+	return 0;
 }
 
 
@@ -79,7 +96,6 @@ timer_del(struct timer *t){
   };
 };
 
-
 /* Returns TRUE iff the given timer has expired. */
 int 
 timer_expired(struct timer *t){
@@ -90,6 +106,7 @@ timer_expired(struct timer *t){
 /* This will be called whenever a new time tick signal has been received. 
 	Bottom half of timer irq.
 	Event handler for SIG_TIMER
+	A timer with t->remaining == 0 is essentially stopped!
 */
 void 
 timer_tick(){

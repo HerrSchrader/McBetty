@@ -27,9 +27,30 @@
 
 
 // Some ASCII codes below 0x20 needed for out of band communication
-#define EOT	0x04
+
+// End of Text: mpdtool waits for an ACK before sending more bytes over serial line
 #define ETX	0x03
+
+// End Of Transmission: Answer from MPD is complete or command from Betty is complete
+#define EOT	0x04
+
+// Only for debugging
+// Enquiry: mpdtools asks what state we are in
+#define ENQ 0x05
+
+// Acknowledge: We are ready to receive more bytes over serial line
 #define ACK	0x06
+
+// Shift Out: sent after ENQ if radio_mode == RADIO_TX
+#define SO 0x0E
+
+// Shift In: sent after ENQ if radio_mode == RADIO_RX
+#define ASCII_SI 0x0F
+
+// Data Link Escape: sent after ENQ if radio_mode == RADIO_IDLE
+#define DLE 0x10
+
+#define NAK 0x15
 
 // Software Reset bit of AUXR1
 #define SRST	3
@@ -145,11 +166,16 @@ __sfr __at (0xAD) CMP2_;
 
 #define BUFSIZE (MAX_TX_PAYLOAD + MPDTOOL_PKTSIZE + 2)
 __idata char buf[BUFSIZE];
+
+/* Highest index into buf */
+#define BUFMAX (BUFSIZE - 1)
+
 unsigned char bufstart;
 volatile unsigned char bufcnt;
 volatile unsigned char bufnxt;
 volatile __bit got_etx;
 volatile __bit got_eot;
+volatile __bit got_enq;
 
 
 void
@@ -166,16 +192,30 @@ void buffer_init(){
 	bufstart = 0;		// Index of first data byte in buffer
 }
 
-/* "First in" part of buffer routines is handled by ISR: */
-/* The serial interrupt reads a character from serial interface if there is one.
+/* "First in" part of buffer routines is handled by ISR:
+	 The serial interrupt reads a character from serial interface if there is one.
 	The character is stored in the ring buffer.
 	If the ring buffer is full, the last character will be overwritten.
 	This ensures that EOT character should be stored.
-	The flag got_etx is set to 1 if an ETX character is received.
-	ETX will never be stored in buffer.
-	For debugging purposes the number of overwritten(=dropped) bytes is counted.
-	The flag got_etx can be used as a semaphore, sdcc will later generate atomical TestAndClear instructions for it.
-	The flag got_eot is set as soon as we see an EOT character. All following bytes will be dropped until got_eot is cleared.
+*/
+	
+/*	
+	Here we also handle part of the out-of-band communication with mpdtool.
+	mpdtool sends characters below 0x20 to trigger events or give information.
+	
+	ETX is sent if mpdtool waits for an ACK. This is so that we have time to send bytes over radio
+		if necessary.
+		It is also used to indicate that the scart adapter is still alive.
+		
+		Here we set the flag got_etx to 1 if an ETX character is received.
+		ETX will never be stored in buffer.
+		
+		The flag got_etx can be used as a semaphore, sdcc will later generate atomical TestAndClear instructions for it.
+	
+	EOT is sent if the answer from MPD is complete. This is stored in buffer, because Betty expects this too.
+		The flag got_eot is set as soon as we see an EOT character.
+		All following bytes will be dropped until got_eot is cleared.
+		
 	bufcnt and buflim (and got_etx and got_eot and dropped) are changed in this routine.
 */
 
@@ -193,6 +233,11 @@ void serial_isr (void) __interrupt (4) {
 		return;
 	};
 	
+	if (x == ENQ){
+		got_enq = 1;
+		return;
+	};
+	
 	//TODO this need not be enforced here. mpdtool should take care of this,
 	if (got_eot){
 		return;
@@ -200,20 +245,20 @@ void serial_isr (void) __interrupt (4) {
 	
 	/* If the buffer is full, delete previous byte to make room */
 	if (bufcnt >= BUFSIZE){
-		bufcnt--;
 		/* decrement bufnxt by 1, with wrap around */
 		if (bufnxt == 0)
-			bufnxt = BUFSIZE-1;
+			bufnxt = BUFMAX;
 		else
 			bufnxt--;
+		bufcnt--;
 	};
 	
 	/* Store byte and increment bufnxt by 1, with wrap around */
 	buf[bufnxt++] = x;
-	if (bufnxt >= BUFSIZE)
+	if (bufnxt > BUFMAX)
 		bufnxt = 0;
 	bufcnt++;
-	
+
 	if (x == EOT)
 		got_eot = 1;
 
@@ -256,7 +301,9 @@ unsigned char has_room(){
 /* This routine checks if reception is stuck in RX_OVERFLOW state.
 	If so, it flushes the buffer and resets radio to RX */
 
-#define RX_OVERFLOW 17
+#define RX_OVERFLOW		0x11
+#define MARCSTATE_RX	0x0D
+#define MARCSTATE_IDLE	0x01
 
 void
 rx_overflow_reset(){
@@ -378,10 +425,10 @@ void handle_tx(){
 	}
 }
 
-/* Checks if the sender is waiting for ACK. Sends ACK if there is room in buffer */
+/* Checks if mpdtool is waiting for ACK. Sends ACK if there is room in buffer */
 void check_etx(){
-	if (got_etx) {	/* Is the sender waiting for an ACK ? */		
-		if (has_room()){	/* Still enough space in buffer ? */
+	if (got_etx) {				/* Is mpdtool waiting for an ACK ? */		
+		if (has_room()){		/* Still enough space in buffer ? */
 			got_etx = 0;		// Atomic Operation ! (see sdcc manual)
 			send_byte(ACK);
 		};
@@ -390,6 +437,27 @@ void check_etx(){
 	
 	
 
+/* Checks if mpdtool has sent an ENQ character. Sends SO or SI or DLE*/
+void check_enq(){
+	if (got_enq) {
+		got_enq = 0;		// Atomic Operation ! (see sdcc manual)
+		
+		if (radio_mode == RADIO_RX){
+			/* This is the mode where we are stuck in */
+			/* Do some sanity checks */
+			if ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) != MARCSTATE_RX) {
+				send_byte(NAK);
+				return;
+			};
+			send_byte(ASCII_SI);
+		} else if (radio_mode == RADIO_TX)
+			send_byte(SO);
+		else
+			send_byte(DLE);
+	};
+}
+	
+#if 0
 /* checks if a complete packet has been received via radio 
 	Transfers this packet to serial line
 	Stops if EOT is received, EOT is sent over serial, radio_mode is set to IDLE
@@ -415,8 +483,8 @@ void check_radio_packet (){
 		start_rx();	
 	};
 }
+#endif
 
-#define MARCSTATE_IDLE 0x01
 /* We check if there are some bytes to read from the RX_FIFO
 	and output one of them to the serial line.
 	We make sure to empty the RX_FIFO only when a complete packet has been received. (see CC1100 errata)
@@ -433,12 +501,17 @@ void check_radio_packet (){
 				we read the complete packet and send it to serial line, but
 				we also send some status bytes via serial and maybe the RX_FIFO underflows.
 	None of these errors should lead to an infinite loop.
+	
+	TODO check CRC bytes and send a byte to mpdtool to cancel the command if CRC wrong
 */
 void check_radio_input (){
 	static unsigned char length = 0;
 	unsigned char address;
 	unsigned char n;
 	char x;
+	
+	// Just to make sure that radio is not stuck in RX_FIFO_OVERFLOW.
+	rx_overflow_reset();
 	
 	/* nothing received so far */
 	if (length == 0){
@@ -452,7 +525,7 @@ void check_radio_input (){
 		} 
 	} else {	// Already received length (and address), read payload 
 		/* Finished packet ? */
-		if ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) == MARCSTATE_IDLE) {
+		if ( cc1100_marcstate() == MARCSTATE_IDLE) {
 			while (length > 1) {
 				cc1100_read(RX_fifo|BURST, &x, 1);
 				send_byte(x);	
@@ -621,7 +694,8 @@ void main(void) {
 	
 	got_etx = 0;
 	got_eot = 0;
-
+	got_enq = 0;
+	
 	buffer_init();
 		
 	start_rx();								// Start receiving via radio
@@ -640,6 +714,8 @@ void main(void) {
 		
 		/* Check if mpdtool has sent ETX. Sends ACK if there is room in buffer */
 		check_etx();
+		
+		check_enq();
 		
 		/* Our radio link is only half duplex. We decide here if we receive or transmit 
 			We are normally in state RADIO_RX to not miss a packet from Betty.

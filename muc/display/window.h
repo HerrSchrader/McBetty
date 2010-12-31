@@ -78,6 +78,12 @@ struct Window {
 /* Last absolute column + 1 available for text TODO think about including border here */
 #define txt_col_lim(win) ((win)->start_col + (win)->width - (win)->txt_offs_col)
 
+/* Codes sent to win_cursor_input */
+#define CURSOR_LEFT			-1
+#define CURSOR_RIGHT		-2
+#define CURSOR_BACKSPACE	-3
+
+
 /* A scroll list */
 typedef struct {
 	struct Window *wl;					/* Address of first window showing the scroll list */

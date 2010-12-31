@@ -319,7 +319,13 @@ ans_plname_line(char *s){
 		model_store_playlistname(response+10, request.arg);
 };
 
-void 
+/* We sent a "PLAY xxx" command and got "ACK". */
+static void
+ans_find_ok(char *s){
+	mpd_find_ok();	
+};
+
+static void 
 ans_script_ok(char *s){
 	mpd_script_ok();
 };
@@ -714,6 +720,14 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 	if (cmd == PLAYLISTNAME_CMD){
 		compose_string (cmd_str, "playlistname ", arg, CMDSTR_LEN);
 		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_plname_line, NULL, NULL));
+		PT_EXIT(pt);
+	};
+	
+	if (cmd == FIND_CMD){
+		strn_cpy (cmd_str, "search any ", CMDSTR_LEN);
+		str_cat_max (cmd_str, mpd_get_search_string(), CMDSTR_LEN);
+		str_cat_max (cmd_str, "\n", CMDSTR_LEN);
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_find_ok, NULL));
 		PT_EXIT(pt);
 	};
 	

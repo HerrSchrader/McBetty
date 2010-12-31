@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ANSI-C Compiler
 ; Version 2.9.7 #5820 (May  6 2010) (Linux)
-; This file was generated Sun Dec 26 12:18:23 2010
+; This file was generated Fri Dec 31 16:30:34 2010
 ;--------------------------------------------------------
 	.module main
 	.optsdcc -mmcs51 --model-small
@@ -11,7 +11,7 @@
 ;--------------------------------------------------------
 	.globl _main
 	.globl _check_radio_input
-	.globl _check_radio_packet
+	.globl _check_enq
 	.globl _check_etx
 	.globl _handle_tx
 	.globl _re_enter_rx
@@ -207,6 +207,7 @@
 	.globl _P2
 	.globl _P1
 	.globl _P0
+	.globl _got_enq
 	.globl _got_eot
 	.globl _got_etx
 	.globl _buf
@@ -429,12 +430,6 @@ _handle_tx_tx_state_1_1:
 	.ds 1
 _handle_tx_tx_cnt_1_1:
 	.ds 1
-_check_radio_packet_x_1_1:
-	.ds 1
-_check_radio_packet_length_1_1:
-	.ds 1
-_check_radio_packet_address_1_1:
-	.ds 1
 _check_radio_input_length_1_1:
 	.ds 1
 _check_radio_input_address_1_1:
@@ -470,6 +465,8 @@ _buf::
 _got_etx::
 	.ds 1
 _got_eot::
+	.ds 1
+_got_enq::
 	.ds 1
 ;--------------------------------------------------------
 ; paged external ram data
@@ -532,7 +529,7 @@ __interrupt_vect:
 ;tx_cnt                    Allocated with name '_handle_tx_tx_cnt_1_1'
 ;x                         Allocated to registers 
 ;------------------------------------------------------------
-;	main.c:325: static unsigned char tx_state = TX_IDLE;
+;	main.c:372: static unsigned char tx_state = TX_IDLE;
 	mov	_handle_tx_tx_state_1_1,#0x00
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'check_radio_input'
@@ -542,7 +539,7 @@ __interrupt_vect:
 ;n                         Allocated to registers r2 
 ;x                         Allocated with name '_check_radio_input_x_1_1'
 ;------------------------------------------------------------
-;	main.c:438: static unsigned char length = 0;
+;	main.c:508: static unsigned char length = 0;
 	mov	_check_radio_input_length_1_1,#0x00
 	.area GSFINAL (CODE)
 	ljmp	__sdcc_program_startup
@@ -563,7 +560,7 @@ __sdcc_program_startup:
 ;Allocation info for local variables in function 'feed_wd'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:156: feed_wd(){
+;	main.c:182: feed_wd(){
 ;	-----------------------------------------
 ;	 function feed_wd
 ;	-----------------------------------------
@@ -576,29 +573,29 @@ _feed_wd:
 	ar7 = 0x07
 	ar0 = 0x00
 	ar1 = 0x01
-;	main.c:157: EA = 0;
+;	main.c:183: EA = 0;
 	clr	_IEN0_7
-;	main.c:158: WFEED1 = 0xA5;
+;	main.c:184: WFEED1 = 0xA5;
 	mov	_WFEED1,#0xA5
-;	main.c:159: WFEED2 = 0x5A;
+;	main.c:185: WFEED2 = 0x5A;
 	mov	_WFEED2,#0x5A
-;	main.c:160: EA = 1;
+;	main.c:186: EA = 1;
 	setb	_IEN0_7
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'buffer_init'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:163: void buffer_init(){
+;	main.c:189: void buffer_init(){
 ;	-----------------------------------------
 ;	 function buffer_init
 ;	-----------------------------------------
 _buffer_init:
-;	main.c:164: bufcnt = 0;			// Number of bytes in the buffer
+;	main.c:190: bufcnt = 0;			// Number of bytes in the buffer
 	mov	_bufcnt,#0x00
-;	main.c:165: bufnxt = 0;			// Index of next free place in buffer
+;	main.c:191: bufnxt = 0;			// Index of next free place in buffer
 	mov	_bufnxt,#0x00
-;	main.c:166: bufstart = 0;		// Index of first data byte in buffer
+;	main.c:192: bufstart = 0;		// Index of first data byte in buffer
 	mov	_bufstart,#0x00
 	ret
 ;------------------------------------------------------------
@@ -606,7 +603,7 @@ _buffer_init:
 ;------------------------------------------------------------
 ;x                         Allocated to registers r2 
 ;------------------------------------------------------------
-;	main.c:182: void serial_isr (void) __interrupt (4) {
+;	main.c:222: void serial_isr (void) __interrupt (4) {
 ;	-----------------------------------------
 ;	 function serial_isr
 ;	-----------------------------------------
@@ -617,61 +614,69 @@ _serial_isr:
 	push	ar0
 	push	psw
 	mov	psw,#0x00
-;	main.c:185: x=SBUF;
+;	main.c:225: x=SBUF;
 	mov	r2,_SBUF
-;	main.c:186: RI = 0;
+;	main.c:226: RI = 0;
 	clr	_SCON_0
-;	main.c:191: if (x == ETX){
+;	main.c:231: if (x == ETX){
 	cjne	r2,#0x03,00102$
-;	main.c:192: got_etx = 1;
+;	main.c:232: got_etx = 1;
 	setb	_got_etx
-;	main.c:193: return;
-	sjmp	00114$
+;	main.c:233: return;
+	sjmp	00116$
 00102$:
-;	main.c:197: if (got_eot){
-	jnb	_got_eot,00104$
-;	main.c:198: return;
-	sjmp	00114$
+;	main.c:236: if (x == ENQ){
+	cjne	r2,#0x05,00104$
+;	main.c:237: got_enq = 1;
+	setb	_got_enq
+;	main.c:238: return;
+	sjmp	00116$
 00104$:
-;	main.c:202: if (bufcnt >= BUFSIZE){
+;	main.c:242: if (got_eot){
+	jnb	_got_eot,00106$
+;	main.c:243: return;
+	sjmp	00116$
+00106$:
+;	main.c:247: if (bufcnt >= BUFSIZE){
 	mov	a,#0x100 - 0x4E
 	add	a,_bufcnt
-	jnc	00109$
-;	main.c:203: bufcnt--;
-	dec	_bufcnt
-;	main.c:205: if (bufnxt == 0)
+	jnc	00111$
+;	main.c:249: if (bufnxt == 0)
 	mov	a,_bufnxt
-	jnz	00106$
-;	main.c:206: bufnxt = BUFSIZE-1;
+	jnz	00108$
+;	main.c:250: bufnxt = BUFMAX;
 	mov	_bufnxt,#0x4D
 	sjmp	00109$
-00106$:
-;	main.c:208: bufnxt--;
+00108$:
+;	main.c:252: bufnxt--;
 	dec	_bufnxt
 00109$:
-;	main.c:212: buf[bufnxt++] = x;
+;	main.c:253: bufcnt--;
+	dec	_bufcnt
+00111$:
+;	main.c:257: buf[bufnxt++] = x;
 	mov	r3,_bufnxt
 	inc	_bufnxt
 	mov	a,r3
 	add	a,#_buf
 	mov	r0,a
 	mov	@r0,ar2
-;	main.c:213: if (bufnxt >= BUFSIZE)
-	mov	a,#0x100 - 0x4E
-	add	a,_bufnxt
-	jnc	00111$
-;	main.c:214: bufnxt = 0;
+;	main.c:258: if (bufnxt > BUFMAX)
+	mov	a,_bufnxt
+	add	a,#0xff - 0x4D
+	jnc	00113$
+;	main.c:259: bufnxt = 0;
 	mov	_bufnxt,#0x00
-00111$:
-;	main.c:215: bufcnt++;
-	inc	_bufcnt
-;	main.c:217: if (x == EOT)
-	cjne	r2,#0x04,00113$
-;	main.c:218: got_eot = 1;
-	setb	_got_eot
 00113$:
-;	main.c:220: return;
-00114$:
+;	main.c:260: bufcnt++;
+	inc	_bufcnt
+;	main.c:262: if (x == EOT)
+	cjne	r2,#0x04,00115$
+;	main.c:263: got_eot = 1;
+	setb	_got_eot
+00115$:
+;	main.c:265: return;
+00116$:
 	pop	psw
 	pop	ar0
 	pop	ar3
@@ -687,46 +692,46 @@ _serial_isr:
 ;------------------------------------------------------------
 ;x                         Allocated to registers r2 
 ;------------------------------------------------------------
-;	main.c:227: char buffer_out(){
+;	main.c:272: char buffer_out(){
 ;	-----------------------------------------
 ;	 function buffer_out
 ;	-----------------------------------------
 _buffer_out:
-;	main.c:230: if (bufcnt == 0) return (0);
+;	main.c:275: if (bufcnt == 0) return (0);
 	mov	a,_bufcnt
 	jnz	00102$
 	mov	dpl,a
 	ret
 00102$:
-;	main.c:231: x = buf[bufstart++];
+;	main.c:276: x = buf[bufstart++];
 	mov	r2,_bufstart
 	inc	_bufstart
 	mov	a,r2
 	add	a,#_buf
 	mov	r0,a
 	mov	ar2,@r0
-;	main.c:232: if (bufstart >= BUFSIZE)
+;	main.c:277: if (bufstart >= BUFSIZE)
 	mov	a,#0x100 - 0x4E
 	add	a,_bufstart
 	jnc	00104$
-;	main.c:233: bufstart = 0;
+;	main.c:278: bufstart = 0;
 	mov	_bufstart,#0x00
 00104$:
-;	main.c:236: bufcnt--;
+;	main.c:281: bufcnt--;
 	dec	_bufcnt
-;	main.c:238: return x;
+;	main.c:283: return x;
 	mov	dpl,r2
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'has_room'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:251: unsigned char has_room(){
+;	main.c:296: unsigned char has_room(){
 ;	-----------------------------------------
 ;	 function has_room
 ;	-----------------------------------------
 _has_room:
-;	main.c:252: return ( (BUFSIZE - bufcnt) > (MPDTOOL_PKTSIZE + 2) );
+;	main.c:297: return ( (BUFSIZE - bufcnt) > (MPDTOOL_PKTSIZE + 2) );
 	mov	r2,_bufcnt
 	mov	r3,#0x00
 	mov	a,#0x4E
@@ -751,22 +756,22 @@ _has_room:
 ;Allocation info for local variables in function 'rx_overflow_reset'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:262: rx_overflow_reset(){
+;	main.c:309: rx_overflow_reset(){
 ;	-----------------------------------------
 ;	 function rx_overflow_reset
 ;	-----------------------------------------
 _rx_overflow_reset:
-;	main.c:263: if ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) == RX_OVERFLOW){
+;	main.c:310: if ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) == RX_OVERFLOW){
 	mov	dpl,#0xF5
 	lcall	_cc1100_read_status_reg_otf
 	mov	a,dpl
 	anl	a,#0x1F
 	mov	r2,a
 	cjne	r2,#0x11,00103$
-;	main.c:264: cc1100_strobe(SFRX);
+;	main.c:311: cc1100_strobe(SFRX);
 	mov	dpl,#0x3A
 	lcall	_cc1100_strobe
-;	main.c:265: cc1100_strobe(SRX);
+;	main.c:312: cc1100_strobe(SRX);
 	mov	dpl,#0x34
 	ljmp	_cc1100_strobe
 00103$:
@@ -775,59 +780,59 @@ _rx_overflow_reset:
 ;Allocation info for local variables in function 'start_rx'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:271: void start_rx() {
+;	main.c:318: void start_rx() {
 ;	-----------------------------------------
 ;	 function start_rx
 ;	-----------------------------------------
 _start_rx:
-;	main.c:273: rx_overflow_reset();
+;	main.c:320: rx_overflow_reset();
 	lcall	_rx_overflow_reset
-;	main.c:274: switch_to_idle();
+;	main.c:321: switch_to_idle();
 	lcall	_switch_to_idle
-;	main.c:276: cc1100_strobe(SFRX);
+;	main.c:323: cc1100_strobe(SFRX);
 	mov	dpl,#0x3A
 	lcall	_cc1100_strobe
-;	main.c:277: cc1100_strobe(SCAL);
+;	main.c:324: cc1100_strobe(SCAL);
 	mov	dpl,#0x33
 	lcall	_cc1100_strobe
-;	main.c:278: cc1100_strobe(SRX);
+;	main.c:325: cc1100_strobe(SRX);
 	mov	dpl,#0x34
 	lcall	_cc1100_strobe
-;	main.c:279: radio_mode = RADIO_RX;
+;	main.c:326: radio_mode = RADIO_RX;
 	mov	_radio_mode,#0x01
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'start_tx'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:284: void start_tx() {	
+;	main.c:331: void start_tx() {	
 ;	-----------------------------------------
 ;	 function start_tx
 ;	-----------------------------------------
 _start_tx:
-;	main.c:285: rx_overflow_reset();
+;	main.c:332: rx_overflow_reset();
 	lcall	_rx_overflow_reset
-;	main.c:286: switch_to_idle();
+;	main.c:333: switch_to_idle();
 	lcall	_switch_to_idle
-;	main.c:288: cc1100_strobe(SCAL);
+;	main.c:335: cc1100_strobe(SCAL);
 	mov	dpl,#0x33
 	lcall	_cc1100_strobe
-;	main.c:289: cc1100_strobe(STX);
+;	main.c:336: cc1100_strobe(STX);
 	mov	dpl,#0x35
 	lcall	_cc1100_strobe
-;	main.c:290: radio_mode = RADIO_TX;
+;	main.c:337: radio_mode = RADIO_TX;
 	mov	_radio_mode,#0x02
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 're_enter_rx'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:296: void re_enter_rx(){
+;	main.c:343: void re_enter_rx(){
 ;	-----------------------------------------
 ;	 function re_enter_rx
 ;	-----------------------------------------
 _re_enter_rx:
-;	main.c:297: if ((radio_mode == RADIO_TX) && tx_finished())
+;	main.c:344: if ((radio_mode == RADIO_TX) && tx_finished())
 	mov	a,#0x02
 	cjne	a,_radio_mode,00104$
 	lcall	_cc1100_tx_finished
@@ -835,7 +840,7 @@ _re_enter_rx:
 	mov	b,dph
 	orl	a,b
 	jz	00104$
-;	main.c:298: start_rx();
+;	main.c:345: start_rx();
 	ljmp	_start_rx
 00104$:
 	ret
@@ -846,12 +851,12 @@ _re_enter_rx:
 ;tx_cnt                    Allocated with name '_handle_tx_tx_cnt_1_1'
 ;x                         Allocated to registers 
 ;------------------------------------------------------------
-;	main.c:322: void handle_tx(){
+;	main.c:369: void handle_tx(){
 ;	-----------------------------------------
 ;	 function handle_tx
 ;	-----------------------------------------
 _handle_tx:
-;	main.c:329: switch (tx_state){
+;	main.c:376: switch (tx_state){
 	clr	a
 	cjne	a,_handle_tx_tx_state_1_1,00121$
 	sjmp	00101$
@@ -861,173 +866,144 @@ _handle_tx:
 	sjmp	00107$
 00122$:
 	mov	a,#0x02
-;	main.c:331: case TX_IDLE:
+;	main.c:378: case TX_IDLE:
 	cjne	a,_handle_tx_tx_state_1_1,00113$
 	sjmp	00111$
 00101$:
-;	main.c:333: if (got_eot) {
+;	main.c:380: if (got_eot) {
 	jnb	_got_eot,00105$
-;	main.c:334: tx_cnt = bufcnt;	/* = number of payload bytes to be transferred to TXFIFO (not counting address and length byte) */
-;	main.c:337: cc1100_write1(TX_fifo, tx_cnt + 1);
+;	main.c:381: tx_cnt = bufcnt;	/* = number of payload bytes to be transferred to TXFIFO (not counting address and length byte) */
+;	main.c:384: cc1100_write1(TX_fifo, tx_cnt + 1);
 	mov	a,_bufcnt
 	mov	_handle_tx_tx_cnt_1_1,a
 	inc	a
 	mov	_cc1100_write1_PARM_2,a
 	mov	dpl,#0x3F
 	lcall	_cc1100_write1
-;	main.c:340: cc1100_write1(TX_fifo, DEV_ADDR);	
+;	main.c:387: cc1100_write1(TX_fifo, DEV_ADDR);	
 	mov	_cc1100_write1_PARM_2,#0x01
 	mov	dpl,#0x3F
 	lcall	_cc1100_write1
-;	main.c:342: tx_state = TX_COPY;
+;	main.c:389: tx_state = TX_COPY;
 	mov	_handle_tx_tx_state_1_1,#0x01
-;	main.c:343: got_eot=0;
+;	main.c:390: got_eot=0;
 	clr	_got_eot
-;	main.c:345: break;
+;	main.c:392: break;
 	ret
 00105$:
-;	main.c:347: } else if ( bufcnt >= MAX_TX_PAYLOAD ) {
+;	main.c:394: } else if ( bufcnt >= MAX_TX_PAYLOAD ) {
 	mov	a,#0x100 - 0x3C
 	add	a,_bufcnt
 	jnc	00113$
-;	main.c:350: tx_cnt = MAX_TX_PAYLOAD;	
+;	main.c:397: tx_cnt = MAX_TX_PAYLOAD;	
 	mov	_handle_tx_tx_cnt_1_1,#0x3C
-;	main.c:353: cc1100_write1(TX_fifo, MAX_TX_PAYLOAD + 1);
+;	main.c:400: cc1100_write1(TX_fifo, MAX_TX_PAYLOAD + 1);
 	mov	_cc1100_write1_PARM_2,#0x3D
 	mov	dpl,#0x3F
 	lcall	_cc1100_write1
-;	main.c:356: cc1100_write1(TX_fifo, DEV_ADDR);	
+;	main.c:403: cc1100_write1(TX_fifo, DEV_ADDR);	
 	mov	_cc1100_write1_PARM_2,#0x01
 	mov	dpl,#0x3F
 	lcall	_cc1100_write1
-;	main.c:358: tx_state = TX_COPY;
+;	main.c:405: tx_state = TX_COPY;
 	mov	_handle_tx_tx_state_1_1,#0x01
-;	main.c:360: break;
-;	main.c:362: case TX_COPY:
+;	main.c:407: break;
+;	main.c:409: case TX_COPY:
 	ret
 00107$:
-;	main.c:364: if (tx_cnt > 0){
+;	main.c:411: if (tx_cnt > 0){
 	mov	a,_handle_tx_tx_cnt_1_1
 	jz	00109$
-;	main.c:365: x = buffer_out();
+;	main.c:412: x = buffer_out();
 	lcall	_buffer_out
 	mov	_cc1100_write1_PARM_2,dpl
-;	main.c:366: cc1100_write1(TX_fifo, x);	
+;	main.c:413: cc1100_write1(TX_fifo, x);	
 	mov	dpl,#0x3F
 	lcall	_cc1100_write1
-;	main.c:367: tx_cnt--;
+;	main.c:414: tx_cnt--;
 	dec	_handle_tx_tx_cnt_1_1
 	ret
 00109$:
-;	main.c:370: tx_state = TX_SEND;
+;	main.c:417: tx_state = TX_SEND;
 	mov	_handle_tx_tx_state_1_1,#0x02
-;	main.c:372: break;
-;	main.c:374: case TX_SEND:
+;	main.c:419: break;
+;	main.c:421: case TX_SEND:
 	ret
 00111$:
-;	main.c:375: start_tx();
+;	main.c:422: start_tx();
 	lcall	_start_tx
-;	main.c:376: tx_state = TX_IDLE;
+;	main.c:423: tx_state = TX_IDLE;
 	mov	_handle_tx_tx_state_1_1,#0x00
-;	main.c:378: }
+;	main.c:425: }
 00113$:
 	ret
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'check_etx'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:382: void check_etx(){
+;	main.c:429: void check_etx(){
 ;	-----------------------------------------
 ;	 function check_etx
 ;	-----------------------------------------
 _check_etx:
-;	main.c:383: if (got_etx) {	/* Is the sender waiting for an ACK ? */		
+;	main.c:430: if (got_etx) {				/* Is mpdtool waiting for an ACK ? */		
 	jnb	_got_etx,00105$
-;	main.c:384: if (has_room()){	/* Still enough space in buffer ? */
+;	main.c:431: if (has_room()){		/* Still enough space in buffer ? */
 	lcall	_has_room
 	mov	a,dpl
 	jz	00105$
-;	main.c:385: got_etx = 0;		// Atomic Operation ! (see sdcc manual)
+;	main.c:432: got_etx = 0;		// Atomic Operation ! (see sdcc manual)
 	clr	_got_etx
-;	main.c:386: send_byte(ACK);
+;	main.c:433: send_byte(ACK);
 	mov	dpl,#0x06
 	ljmp	_send_byte
 00105$:
 	ret
 ;------------------------------------------------------------
-;Allocation info for local variables in function 'check_radio_packet'
+;Allocation info for local variables in function 'check_enq'
 ;------------------------------------------------------------
-;x                         Allocated with name '_check_radio_packet_x_1_1'
-;i                         Allocated to registers r2 
-;length                    Allocated with name '_check_radio_packet_length_1_1'
-;address                   Allocated with name '_check_radio_packet_address_1_1'
 ;------------------------------------------------------------
-;	main.c:397: void check_radio_packet (){
+;	main.c:441: void check_enq(){
 ;	-----------------------------------------
-;	 function check_radio_packet
+;	 function check_enq
 ;	-----------------------------------------
-_check_radio_packet:
-;	main.c:401: if ( GDO0 ){
-	jnb	_P0_6,00109$
-;	main.c:404: cc1100_read(RX_fifo|BURST, &length, 1);		// Length byte = payload length + 1
-	mov	_cc1100_read_PARM_2,#_check_radio_packet_length_1_1
-	mov	(_cc1100_read_PARM_2 + 1),#0x00
-	mov	(_cc1100_read_PARM_2 + 2),#0x40
-	mov	_cc1100_read_PARM_3,#0x01
-	mov	dpl,#0x7F
-	lcall	_cc1100_read
-;	main.c:406: cc1100_read(RX_fifo|BURST, &address, 1); 	// Address byte (unused!)
-	mov	_cc1100_read_PARM_2,#_check_radio_packet_address_1_1
-	mov	(_cc1100_read_PARM_2 + 1),#0x00
-	mov	(_cc1100_read_PARM_2 + 2),#0x40
-	mov	_cc1100_read_PARM_3,#0x01
-	mov	dpl,#0x7F
-	lcall	_cc1100_read
-;	main.c:409: for (i=0; i < (length - 1); i++){
-	mov	r2,#0x00
-00103$:
-	mov	r3,_check_radio_packet_length_1_1
-	mov	r4,#0x00
-	dec	r3
-	cjne	r3,#0xff,00117$
-	dec	r4
-00117$:
-	mov	ar5,r2
-	mov	r6,#0x00
-	clr	c
-	mov	a,r5
-	subb	a,r3
-	mov	a,r6
-	xrl	a,#0x80
-	mov	b,r4
-	xrl	b,#0x80
-	subb	a,b
-	jnc	00106$
-;	main.c:410: cc1100_read(RX_fifo|BURST, &x, 1);
-	mov	_cc1100_read_PARM_2,#_check_radio_packet_x_1_1
-	mov	(_cc1100_read_PARM_2 + 1),#0x00
-	mov	(_cc1100_read_PARM_2 + 2),#0x40
-	mov	_cc1100_read_PARM_3,#0x01
-	mov	dpl,#0x7F
-	push	ar2
-	lcall	_cc1100_read
-;	main.c:411: send_byte(x);
-	mov	dpl,_check_radio_packet_x_1_1
-	lcall	_send_byte
-	pop	ar2
-;	main.c:412: if (x == EOT)
-	mov	a,#0x04
-	cjne	a,_check_radio_packet_x_1_1,00119$
-	sjmp	00106$
-00119$:
-;	main.c:409: for (i=0; i < (length - 1); i++){
-	inc	r2
-	sjmp	00103$
-00106$:
-;	main.c:415: start_rx();	
-	ljmp	_start_rx
-00109$:
+_check_enq:
+;	main.c:442: if (got_enq) {
+;	main.c:443: got_enq = 0;		// Atomic Operation ! (see sdcc manual)
+	jbc	_got_enq,00117$
 	ret
+00117$:
+;	main.c:445: if (radio_mode == RADIO_RX){
+	mov	a,#0x01
+	cjne	a,_radio_mode,00107$
+;	main.c:448: if ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) != MARCSTATE_RX) {
+	mov	dpl,#0xF5
+	lcall	_cc1100_read_status_reg_otf
+	mov	a,dpl
+	anl	a,#0x1F
+	mov	r2,a
+	cjne	r2,#0x0D,00120$
+	sjmp	00102$
+00120$:
+;	main.c:449: send_byte(NAK);
+	mov	dpl,#0x15
+;	main.c:450: return;
+	ljmp	_send_byte
+00102$:
+;	main.c:452: send_byte(ASCII_SI);
+	mov	dpl,#0x0F
+	ljmp	_send_byte
+00107$:
+;	main.c:453: } else if (radio_mode == RADIO_TX)
+	mov	a,#0x02
+	cjne	a,_radio_mode,00104$
+;	main.c:454: send_byte(SO);
+	mov	dpl,#0x0E
+	ljmp	_send_byte
+00104$:
+;	main.c:456: send_byte(DLE);
+	mov	dpl,#0x10
+	ljmp	_send_byte
 ;------------------------------------------------------------
 ;Allocation info for local variables in function 'check_radio_input'
 ;------------------------------------------------------------
@@ -1036,33 +1012,35 @@ _check_radio_packet:
 ;n                         Allocated to registers r2 
 ;x                         Allocated with name '_check_radio_input_x_1_1'
 ;------------------------------------------------------------
-;	main.c:437: void check_radio_input (){
+;	main.c:507: void check_radio_input (){
 ;	-----------------------------------------
 ;	 function check_radio_input
 ;	-----------------------------------------
 _check_radio_input:
-;	main.c:444: if (length == 0){
+;	main.c:514: rx_overflow_reset();
+	lcall	_rx_overflow_reset
+;	main.c:517: if (length == 0){
 	mov	a,_check_radio_input_length_1_1
 	jnz	00112$
-;	main.c:445: n = cc1100_read_status_reg_otf(RXBYTES) & 0x7f;
+;	main.c:518: n = cc1100_read_status_reg_otf(RXBYTES) & 0x7f;
 	mov	dpl,#0xFB
 	lcall	_cc1100_read_status_reg_otf
 	mov	a,dpl
 	anl	a,#0x7F
-;	main.c:446: if (n > 2) {
+;	main.c:519: if (n > 2) {
 	mov  r2,a
 	add	a,#0xff - 0x02
 	jc	00122$
 	ret
 00122$:
-;	main.c:447: cc1100_read(RX_fifo|BURST, &length, 1);		// Length byte = payload length + 1 address byte
+;	main.c:520: cc1100_read(RX_fifo|BURST, &length, 1);		// Length byte = payload length + 1 address byte
 	mov	_cc1100_read_PARM_2,#_check_radio_input_length_1_1
 	mov	(_cc1100_read_PARM_2 + 1),#0x00
 	mov	(_cc1100_read_PARM_2 + 2),#0x40
 	mov	_cc1100_read_PARM_3,#0x01
 	mov	dpl,#0x7F
 	lcall	_cc1100_read
-;	main.c:448: cc1100_read(RX_fifo|BURST, &address, 1); 	// Address byte (unused!)
+;	main.c:521: cc1100_read(RX_fifo|BURST, &address, 1); 	// Address byte (unused!)
 	mov	_cc1100_read_PARM_2,#_check_radio_input_address_1_1
 	mov	(_cc1100_read_PARM_2 + 1),#0x00
 	mov	(_cc1100_read_PARM_2 + 2),#0x40
@@ -1070,57 +1048,57 @@ _check_radio_input:
 	mov	dpl,#0x7F
 	ljmp	_cc1100_read
 00112$:
-;	main.c:455: if ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) == MARCSTATE_IDLE) {
+;	main.c:528: if ( cc1100_marcstate() == MARCSTATE_IDLE) {
 	mov	dpl,#0xF5
 	lcall	_cc1100_read_status_reg_otf
 	mov	a,dpl
 	anl	a,#0x1F
 	mov	r3,a
 	cjne	r3,#0x01,00109$
-;	main.c:456: while (length > 1) {
+;	main.c:529: while (length > 1) {
 00103$:
 	mov	a,_check_radio_input_length_1_1
 	add	a,#0xff - 0x01
 	jnc	00105$
-;	main.c:457: cc1100_read(RX_fifo|BURST, &x, 1);
+;	main.c:530: cc1100_read(RX_fifo|BURST, &x, 1);
 	mov	_cc1100_read_PARM_2,#_check_radio_input_x_1_1
 	mov	(_cc1100_read_PARM_2 + 1),#0x00
 	mov	(_cc1100_read_PARM_2 + 2),#0x40
 	mov	_cc1100_read_PARM_3,#0x01
 	mov	dpl,#0x7F
 	lcall	_cc1100_read
-;	main.c:458: send_byte(x);	
+;	main.c:531: send_byte(x);	
 	mov	dpl,_check_radio_input_x_1_1
 	lcall	_send_byte
-;	main.c:459: length--;
+;	main.c:532: length--;
 	dec	_check_radio_input_length_1_1
 	sjmp	00103$
 00105$:
-;	main.c:461: length = 0;
+;	main.c:534: length = 0;
 	mov	_check_radio_input_length_1_1,#0x00
-;	main.c:462: start_rx();	
+;	main.c:535: start_rx();	
 	ljmp	_start_rx
 00109$:
-;	main.c:465: n = cc1100_read_status_reg_otf(RXBYTES) & 0x7f;	
+;	main.c:538: n = cc1100_read_status_reg_otf(RXBYTES) & 0x7f;	
 	mov	dpl,#0xFB
 	lcall	_cc1100_read_status_reg_otf
 	mov	a,dpl
 	anl	a,#0x7F
-;	main.c:468: if (n > 1){
+;	main.c:541: if (n > 1){
 	mov  r2,a
 	add	a,#0xff - 0x01
 	jnc	00114$
-;	main.c:469: cc1100_read(RX_fifo|BURST, &x, 1);
+;	main.c:542: cc1100_read(RX_fifo|BURST, &x, 1);
 	mov	_cc1100_read_PARM_2,#_check_radio_input_x_1_1
 	mov	(_cc1100_read_PARM_2 + 1),#0x00
 	mov	(_cc1100_read_PARM_2 + 2),#0x40
 	mov	_cc1100_read_PARM_3,#0x01
 	mov	dpl,#0x7F
 	lcall	_cc1100_read
-;	main.c:470: send_byte(x);	
+;	main.c:543: send_byte(x);	
 	mov	dpl,_check_radio_input_x_1_1
 	lcall	_send_byte
-;	main.c:471: length--;	
+;	main.c:544: length--;	
 	dec	_check_radio_input_length_1_1
 00114$:
 	ret
@@ -1128,92 +1106,96 @@ _check_radio_input:
 ;Allocation info for local variables in function 'main'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	main.c:498: void main(void) {
+;	main.c:571: void main(void) {
 ;	-----------------------------------------
 ;	 function main
 ;	-----------------------------------------
 _main:
-;	main.c:508: P0M1 &= 0x6c;		// 0110 1100 -> P0M1
+;	main.c:581: P0M1 &= 0x6c;		// 0110 1100 -> P0M1
 	anl	_P0M1,#0x6C
-;	main.c:509: P0M2 |= 0x92;		// 1001 0010 -> P0M2
+;	main.c:582: P0M2 |= 0x92;		// 1001 0010 -> P0M2
 	orl	_P0M2,#0x92
-;	main.c:511: P0 = 0x83;			// 1000 0011 -> Port0
+;	main.c:584: P0 = 0x83;			// 1000 0011 -> Port0
 	mov	_P0,#0x83
-;	main.c:518: P1M1 &= 0x3e;		// 0011 1110
+;	main.c:591: P1M1 &= 0x3e;		// 0011 1110
 	anl	_P1M1,#0x3E
-;	main.c:519: P1M2 |= 0xcd;		// 1100 1101
+;	main.c:592: P1M2 |= 0xcd;		// 1100 1101
 	orl	_P1M2,#0xCD
-;	main.c:521: P1 = 0xcd;			// 1100 1101 -> Port1
+;	main.c:594: P1 = 0xcd;			// 1100 1101 -> Port1
 	mov	_P1,#0xCD
-;	main.c:525: P3M1 &= 0xfe;
+;	main.c:598: P3M1 &= 0xfe;
 	anl	_P3M1,#0xFE
-;	main.c:526: P3M2 |= 0x01;
+;	main.c:599: P3M2 |= 0x01;
 	orl	_P3M2,#0x01
-;	main.c:528: P3 = 0;
+;	main.c:601: P3 = 0;
 	mov	_P3,#0x00
-;	main.c:549: AUXR1 |= (1<<6);
+;	main.c:622: AUXR1 |= (1<<6);
 	orl	_AUXR1,#0x40
-;	main.c:551: RTCCON |= 1<<RTCS1;
+;	main.c:624: RTCCON |= 1<<RTCS1;
 	orl	_RTCCON,#0x40
-;	main.c:552: RTCCON |= 1<<RTCS0;
+;	main.c:625: RTCCON |= 1<<RTCS0;
 	orl	_RTCCON,#0x20
-;	main.c:553: RTCH = 0xff;
+;	main.c:626: RTCH = 0xff;
 	mov	_RTCH,#0xFF
-;	main.c:554: RTCL = 0xff;
+;	main.c:627: RTCL = 0xff;
 	mov	_RTCL,#0xFF
-;	main.c:556: initSerial(384);		// Serial baudrate 38400
+;	main.c:629: initSerial(384);		// Serial baudrate 38400
 	mov	dptr,#0x0180
 	lcall	_initSerial
-;	main.c:557: SSTAT |= (1<<CIDIS);	// Combined interrupt disabled, RX and TX generate different interrupts
+;	main.c:630: SSTAT |= (1<<CIDIS);	// Combined interrupt disabled, RX and TX generate different interrupts
 	orl	_SSTAT,#0x20
-;	main.c:559: cc1100_init();
+;	main.c:632: cc1100_init();
 	lcall	_cc1100_init
-;	main.c:561: ESR = 1;
+;	main.c:634: ESR = 1;
 	setb	_IEN0_4
-;	main.c:562: EA = 1;
-	setb	_IEN0_7
-;	main.c:622: got_etx = 0;
-	clr	_got_etx
-;	main.c:623: got_eot = 0;
-	clr	_got_eot
-;	main.c:625: buffer_init();
-	lcall	_buffer_init
-;	main.c:627: start_rx();								// Start receiving via radio
-	lcall	_start_rx
-;	main.c:630: WDL = 0xFF;			// WDT counter
-	mov	_WDL,#0xFF
-;	main.c:631: EA = 0;
-	clr	_IEN0_7
-;	main.c:632: WDCON = 0xE5;		// Start WDT
-	mov	_WDCON,#0xE5
-;	main.c:633: WFEED1 = 0xA5;
-	mov	_WFEED1,#0xA5
-;	main.c:634: WFEED2 = 0x5A;
-	mov	_WFEED2,#0x5A
 ;	main.c:635: EA = 1;
 	setb	_IEN0_7
-;	main.c:637: while (1) {						/* Forever: */
+;	main.c:695: got_etx = 0;
+	clr	_got_etx
+;	main.c:696: got_eot = 0;
+	clr	_got_eot
+;	main.c:697: got_enq = 0;
+	clr	_got_enq
+;	main.c:699: buffer_init();
+	lcall	_buffer_init
+;	main.c:701: start_rx();								// Start receiving via radio
+	lcall	_start_rx
+;	main.c:704: WDL = 0xFF;			// WDT counter
+	mov	_WDL,#0xFF
+;	main.c:705: EA = 0;
+	clr	_IEN0_7
+;	main.c:706: WDCON = 0xE5;		// Start WDT
+	mov	_WDCON,#0xE5
+;	main.c:707: WFEED1 = 0xA5;
+	mov	_WFEED1,#0xA5
+;	main.c:708: WFEED2 = 0x5A;
+	mov	_WFEED2,#0x5A
+;	main.c:709: EA = 1;
+	setb	_IEN0_7
+;	main.c:711: while (1) {						/* Forever: */
 00107$:
-;	main.c:639: feed_wd();
+;	main.c:713: feed_wd();
 	lcall	_feed_wd
-;	main.c:642: check_etx();
+;	main.c:716: check_etx();
 	lcall	_check_etx
-;	main.c:650: if (radio_mode == RADIO_RX)
+;	main.c:718: check_enq();
+	lcall	_check_enq
+;	main.c:726: if (radio_mode == RADIO_RX)
 	mov	a,#0x01
 	cjne	a,_radio_mode,00102$
-;	main.c:652: check_radio_input();
+;	main.c:728: check_radio_input();
 	lcall	_check_radio_input
 	sjmp	00103$
 00102$:
-;	main.c:656: re_enter_rx();
+;	main.c:732: re_enter_rx();
 	lcall	_re_enter_rx
 00103$:
-;	main.c:661: if (radio_mode != RADIO_TX)
+;	main.c:737: if (radio_mode != RADIO_TX)
 	mov	a,#0x02
 	cjne	a,_radio_mode,00116$
 	sjmp	00107$
 00116$:
-;	main.c:662: handle_tx();
+;	main.c:738: handle_tx();
 	lcall	_handle_tx
 	sjmp	00107$
 	.area CSEG    (CODE)

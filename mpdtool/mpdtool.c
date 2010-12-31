@@ -63,7 +63,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-
+// All our buffers can hold 1024 characters (+ trailing 0)
 #define BUFFER_SIZE 1024
 
 #define _POSIX_SOURCE 1 /* POSIX compliant source */
@@ -74,6 +74,14 @@
 #define ACK	0x06
 #define EOT	0x04
 #define	CR	0x0d
+
+#define ENQ	0x05
+#define SO	0x0e
+#define SI	0x0f
+#define DLE	0x10
+
+#define NAK	0x15
+
 #define LF	0x0a
 #define ESC	0x1b
 
@@ -89,8 +97,8 @@ int ser_in_len;
 int cmd_complete;
 
 char ser_out_buf[BUFFER_SIZE + 1];
-int ser_out_len;
-static char *ser_out_start;
+int ser_out_wrt_idx;
+int ser_out_rd_idx;
 int wait_ack;
 
 char mpd_line_buf[BUFFER_SIZE + 1];
@@ -109,9 +117,29 @@ reset_ser_in(){
 /* resets the serial output buffer */
 void
 reset_ser_out(){
-	ser_out_start = ser_out_buf;
-	ser_out_len = 0;
+	ser_out_rd_idx = 0;
+	ser_out_wrt_idx = 0;
 };
+
+/* A bit tricky. 
+	We will check that there is room for the character.
+	If the buffer is full, all characters will be ignored,
+	exceot the EOF character, which is important for the protocol.
+*/
+void
+ser_out_char(char c){
+	if (ser_out_wrt_idx < (BUFFER_SIZE - 1) )
+		ser_out_buf[ser_out_wrt_idx++] = c;
+	else if (c == EOT)
+		ser_out_buf[ser_out_wrt_idx + 1] = c;
+}
+
+void
+serial_output (char *buf){	
+	while (*buf) 
+		ser_out_char( *(buf++) );
+}
+
 
 // Reset the line buffer for input from mpd
 void
@@ -417,14 +445,6 @@ utf8_to_iso8859_15(unsigned char *s){
 };
 
 
-
-void
-serial_output (char *buf){
-		
-	while (*buf)
-		*(ser_out_start + ser_out_len++) = *(buf++);
-}
-
 /*
 	Send at most MAX_TX bytes to serial
 	Given is ser_out_buf with ser_out_len bytes in it.
@@ -450,14 +470,14 @@ send_to_serial(int serial_fd){
 	/* Are we still waiting for an ACK? */
 	if (wait_ack) return;
 	
-	bytes_to_send = min (ser_out_len, MAX_TX - tx_cnt);
+	bytes_to_send = min (ser_out_wrt_idx - ser_out_rd_idx, MAX_TX - tx_cnt);
 	
 	for (bytes_written = 0; bytes_written < bytes_to_send; bytes_written += num){
 
 		/* Write a certain number of bytes to serial_fd. We either send the remaining bytes in buffer
 			or the remaining bytes to fill a packet, whichever is shorter.
 		*/
-		num = write(serial_fd, (void *)(ser_out_start), bytes_to_send);
+		num = write(serial_fd, (void *)(ser_out_buf + ser_out_rd_idx), bytes_to_send);
 		
 		/* Did our write fail completely ? */
 		if (num == -1) {
@@ -470,8 +490,7 @@ send_to_serial(int serial_fd){
 			return;
 		
 		/* Now num is the number of bytes really written. Can be shorter than expected */
-		ser_out_len -= num;
-		ser_out_start += num;
+		ser_out_rd_idx += num;
 		tx_cnt += num;
 	};
 
@@ -544,6 +563,7 @@ int
 scart_alive(){
 	int res;
 	char ETX_char = ETX;
+	char ENQ_char = ENQ;
 	
 	fprintf(stderr,"Checking scart adapter\n");
 	
@@ -569,7 +589,43 @@ scart_alive(){
 		fprintf(stderr, "scart_alive() got <%02x> from scart, expected 0x06\n", ser_in_buf[ser_in_len]);
 		return 0;
 	};
-	return 1;
+	
+	
+	res = write(serial_fd, &ENQ_char, 1);
+	if (res == -1) {
+		perror("check_scart_alive()");
+		printf("We could not write ENQ!\n");
+	}
+	res = read(serial_fd, ser_in_buf+ser_in_len, 1);
+	if (res == 0){ 
+		fprintf(stderr,"scart_alive() -> no answer \n");
+		return 0;
+	}
+	
+	if (res < 0){
+		printf("scart_alive() -> Error on read from serial line, errno = %d\n", errno);
+		return 0;
+	};
+	
+	if (ser_in_buf[ser_in_len] == SO){
+		fprintf(stderr, "scart radio_mode == RADIO_TX\n");
+		return 1;
+	};
+	if (ser_in_buf[ser_in_len] == SI){
+		fprintf(stderr, "scart radio_mode == RADIO_RX\n");
+		return 1;
+	};
+	if (ser_in_buf[ser_in_len] == DLE){
+		fprintf(stderr, "scart radio_mode == RADIO_IDLE\n");
+		return 1;
+	};
+	if (ser_in_buf[ser_in_len] == NAK){
+		fprintf(stderr, "scart radio_mode == RADIO_RX, but NACK!\n");
+		return 1;
+	};	
+	fprintf(stderr, "scart radio_mode unknown\n");
+
+	return 0;
 };
 	
 /* 
@@ -581,7 +637,7 @@ scart_alive(){
 int 
 read_from_mpd (int mpd_fd){
 	int res;		 
-	
+		
 	res = read(mpd_fd, mpd_line_buf+mpd_line_len, 1);
 	if (res == 0)
 		return res;
@@ -593,7 +649,9 @@ read_from_mpd (int mpd_fd){
 
 	switch (mpd_line_buf[mpd_line_len]) {
 		case '\n':
-			mpd_line_buf[++mpd_line_len]=0;			// Null terminate string 
+			if (mpd_line_len < BUFFER_SIZE - 2) 
+				mpd_line_len++;
+			mpd_line_buf[mpd_line_len]=0;			// Null terminate string 
 			response_line_complete = 1;				// Set flag
 			break;
 			
@@ -632,9 +690,12 @@ wait_for_input(int serialfd, int socketfd, int milliseconds){
 		numfds = max (serialfd + 1, socketfd + 1);
 	
 		// don't care about writefds and exceptfds:
+again2:		
 		res = select(numfds, &readfds, NULL, NULL, &tv);
 	
 		if (res == -1){
+			if (errno == EINTR)
+				goto again2;     /* just an interrupted system call */
 			perror("select()");
 			return 0;
 		};
@@ -650,9 +711,13 @@ wait_for_input(int serialfd, int socketfd, int milliseconds){
 	
 		if ( (socketfd != -1) && FD_ISSET(socketfd, &readfds) ){
 //			fprintf(stderr,"Reading from socket\n");
-        	res = read_from_mpd(socketfd);
-			if (res < 0)
-				return 0;
+again:
+			res = read_from_mpd(socketfd);
+			if (res < 0) {
+				if (errno == EINTR)
+					goto again;     /* just an interrupted system call */
+				return 0;   		/* handle other errors */
+        	};
 			if (res == 0)						// EOF but select() will return 1 anyway
 				socketfd = -1;					// ignore socket 
 			if (res > 0)
@@ -768,6 +833,7 @@ init_mpd(char *remote_host, int remote_port){
 #define PLAYLISTNAME_CMD (1 << 1)
 #define PLAYLISTCOUNT_CMD (1 << 2)
 #define SCRIPT_CMD (1<<3)
+#define SEARCH_CMD (1<<4)
 
 int mpd_cmds;
 
@@ -932,6 +998,13 @@ translate_to_mpd(char *buf){
 	} else 
 		mpd_emu &= ~LISTPLAYLISTS_CMD;
 		
+	/* We will filter the answers to the search command */
+	if ( 0 == strncmp(buf, "search", 6)) {
+		mpd_emu |= SEARCH_CMD;
+		mpd_emu_cnt = 0;
+	} else 
+		mpd_emu &= ~SEARCH_CMD;
+		
 };
 
 void
@@ -940,17 +1013,17 @@ translate_to_serial(){
 	// Convert line to iso8859-15			
 	utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
 	
-
 	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through	
 	if (mpd_emu & PLAYLISTNAME_CMD){
 		if ( (strncmp(mpd_line_buf, "playlist:", 9) == 0) ){
-			if (mpd_emu_cnt == mpd_emu_arg) 
-			{usleep(100000);
-serial_output(mpd_line_buf);}
+			if (mpd_emu_cnt == mpd_emu_arg) {
+				usleep(100000);
+				serial_output(mpd_line_buf);
+			};
 			mpd_emu_cnt++;
 		} else if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || 
 					(0 == strncmp(mpd_line_buf, "ACK", 3)) )
-				serial_output(mpd_line_buf);
+			serial_output(mpd_line_buf);
 	}
 	// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
 	else if (mpd_emu & LISTPLAYLISTS_CMD){
@@ -966,10 +1039,17 @@ serial_output(mpd_line_buf);}
 		} else if (0 == strncmp(mpd_line_buf, "OK", 2)) {
 			sprintf(mpd_line_buf, "playlistcount: %d\nOK\n",mpd_emu_cnt);
 			serial_output(mpd_line_buf);
-			sprintf(mpd_line_buf, "OK\n");
+//			sprintf(mpd_line_buf, "OK\n");
 		} else if 	(0 == strncmp(mpd_line_buf, "ACK", 3)) {
 				serial_output(mpd_line_buf);
 		}
+	} else if (mpd_emu & SEARCH_CMD){
+		if (0 == strncmp(mpd_line_buf, "OK", 2)) {
+			fprintf(stderr, "%d answer lines\n", mpd_emu_cnt);
+			serial_output(mpd_line_buf);
+		}
+		else mpd_emu_cnt++;	
+		
 	}	else  {	
 		// put the line in serial output buffer	
 		serial_output(mpd_line_buf);	
@@ -1142,14 +1222,15 @@ int main(int argc, char *argv[])
 			};
 			
 			if (response_line_complete){
-				translate_to_serial();
 				fprintf(stderr, "  MPD: %s", mpd_line_buf);
+				translate_to_serial();
+//				fprintf(stderr, "  Mpd: %s", mpd_line_buf);
 
 				// check for "OK" or "ACK"
 				if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) ){
 					response_finished = 1;
 					// Send EOT to serial out !
-					*(ser_out_start + ser_out_len++) = EOT;
+					ser_out_char(EOT);
 					fprintf(stderr,"\n");
 				};
 				
@@ -1158,7 +1239,7 @@ int main(int argc, char *argv[])
 		};
 	
 		/* Send out all unsent bytes to serial buffer (as long as there is not another cmd) */
-		while ( (!cmd_complete)  && (ser_out_len != 0) ){
+		while ( (!cmd_complete)  && ( (ser_out_wrt_idx - ser_out_rd_idx) > 0 ) ){
 			// Poll for a new command from serial
 			res = wait_for_input(serial_fd, client_socket, 0);
 			

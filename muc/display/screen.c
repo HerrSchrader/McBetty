@@ -81,20 +81,27 @@ screen_redraw(enum SCREEN screen){
 
 
 /* The current screen has been exited.
-	Just tell all windows of that screen not to draw their content any more. 
+	Find a new screen !
 */
 static void
 screen_exit(enum SCREEN screen){
-	screen_visible( screen, 0);
+	screen_list[screen].screen_exit();
 };
-/* ------------------------------------------------------------------------------------------------- */
 
 void
 screen_enter(enum SCREEN screen){
 	screen_list[screen].screen_enter();
 	cur_screen = screen;
 };
+	
+void 
+switch_screen(enum SCREEN oldscreen, enum SCREEN newscreen){
+	screen_exit(oldscreen);
+	screen_enter(newscreen);
+};
 
+
+/* ------------------------------------------------------------------------------------------------- */
 
 /* Initialize the main screen.
 	Start with top menu system.
@@ -132,12 +139,6 @@ void
 show_new_screen(enum SCREEN screen){
 	screen_exit(cur_screen);
 	screen_enter(screen);
-};
-
-	
-void switch_screen(enum SCREEN oldscreen, enum SCREEN newscreen){
-	screen_exit(oldscreen);
-	screen_enter(newscreen);
 };
 
 
@@ -221,6 +222,10 @@ mainscreen_keypress(int cur_key){
 		case INFO_SCREEN:
 			info_keypress( &(screen_list[INFO_SCREEN]), cur_key, &user_request);
 			break;	
+			
+		case SEARCH_SCREEN:
+			search_keypress( &(screen_list[INFO_SCREEN]), cur_key, &user_request);
+			break;
 				
 		default:
 			break;

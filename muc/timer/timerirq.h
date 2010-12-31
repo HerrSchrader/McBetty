@@ -27,6 +27,8 @@ struct timer {
 };
 
 void timer_init();
+void timer_set(struct timer *t, int start_time, int period);
+void timer_stop (struct timer *t);
 int timer_add(struct timer *t, int start_time, int period);
 void timer_del(struct timer *t);
 int timer_expired(struct timer *t);

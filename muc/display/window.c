@@ -24,6 +24,7 @@
 #include "screen.h"
 
 /* 
+TODO comment no longer valid
 These are the window manager functions.
 The window manager knows all about the current layout of the screen and handles it. 
 
@@ -477,10 +478,98 @@ We need a blink task. Cursor blinks in selected window at 1|2 HZ
 
 
 */
-#define BLINK_PERIOD (5 * (TICKS_PER_TENTH_SEC))
+#define BLINK_PERIOD (5 * TICKS_PER_TENTH_SEC)
+
+#define WAIT_KEY_TIME (3 * TICKS_PER_SEC)
 
 /* We only have one window where the cursor blinks */
 static struct Window *pcursor_win = NULL;
+/* Maximum length of text for this window */
+static int max_txt_len;
+
+static int cursor_new_pos = -1;
+static int cursor_pos = 0;				// position of cursor within text string (0 == first character)
+static uint8_t cursor_col = 0;			// column on screen where cursor has to be drawn
+
+static int last_key = -1;
+static int key_cnt = -1;
+
+static struct timer char_tmr;
+
+/* Redraws window and sets cursor_col, win->cur_char and win->cur_col */
+static void
+draw_cursor_win(struct Window *win){
+	if (NULL == win) return;
+	 
+	win_clear(win, 0);
+	set_font(win->font);
+
+	win->cur_char = 0;
+	win->cur_col = win_txt_col(win);
+	win->fits = 1;
+	
+	while (win->cur_char < win->text_len){
+		
+		// remember at which column the cursor has to be drawn
+		if (win->cur_char == cursor_pos)
+			cursor_col = win->cur_col;
+
+		if (draw_cur_char(win) == 0) {
+			win->fits = 0;
+			break;
+		};
+	};
+	win->cur_char = cursor_pos;
+	win->cur_col = cursor_col;
+};
+
+/* If pos is at end of string, increase text length (append a space) 
+	Returns 0 if text length limit was reached
+
+	Real name: increase text when necessary and possible
+*/
+static int
+inc_txt(int pos){
+	if (0 == pcursor_win->txt[pos]){
+		if (pos >= max_txt_len )
+			return 0;
+		pcursor_win->txt[pos] = ' ';
+		pcursor_win->txt[pos + 1] = 0;
+		pcursor_win->text_len++;
+	};
+	return 1;
+};
+
+static void
+advance_cursor(){
+	/* We must not move beyond end of string */
+	if (0 == pcursor_win->txt[cursor_pos])
+		return;
+	
+	/* Move to next position in text if possible ? */
+	if (cursor_pos < (max_txt_len - 1) )
+		cursor_new_pos = cursor_pos + 1;
+	else
+		cursor_new_pos = cursor_pos;
+	
+	/* Are we now at end of string ? Then insert a space at end of string */
+	inc_txt(cursor_new_pos);
+};
+
+/* Change the character at pos */
+static void
+store_char(int pos, char c){
+	if (!inc_txt(pos)) return;					// no space for a character
+	pcursor_win->txt[pos] = c;
+	cursor_new_pos = pos;						// Cursor stays the same, but text has changed
+	timer_set(&char_tmr, WAIT_KEY_TIME, 0);		// New character, start auto advance timer
+}
+
+/*
+	1. Nothing has changed. Wait for time out. Draw cursor on/off. Repeat.
+	2. New cursor position or new char at position (new_pos >= 0): Redraw string, remember new cursor column. Goto 2.
+	3. Character Timer has expired. New cursor position + 1. Goto 2
+*/
 
 /* ### Cursor Blinking Task ###  */
 PT_THREAD (win_cursor_blink(struct pt *pt)){
@@ -492,16 +581,34 @@ PT_THREAD (win_cursor_blink(struct pt *pt)){
 	timer_add(&tmr, BLINK_PERIOD, BLINK_PERIOD);
 	
 	while(1){
-		tmr.expired=0;
-		cursor_on ^= 1;
-		PT_WAIT_UNTIL(pt, timer_expired(&tmr));
+		tmr.expired = 0;
+		cursor_on ^= 1;	
 		
-		if (pcursor_win == NULL) continue;
-
+		PT_WAIT_UNTIL(pt, ( timer_expired(&tmr) || timer_expired(&char_tmr) || (cursor_new_pos >= 0) ) );
+		
+		if (pcursor_win == NULL) {
+			timer_stop(&char_tmr);
+			continue;
+		};
+		
 		if (! (pcursor_win->flags & WINFLG_VISIBLE)) continue;
 		if (pcursor_win->txt == NULL) continue; 	
 		if (pcursor_win->flags & WINFLG_HIDE) continue;
-	
+		
+		/* Check if we should advance the cursor because user did not press a key again within time */
+		if ( (cursor_new_pos < 0) && timer_expired(&char_tmr)) {	
+			advance_cursor();
+			timer_stop(&char_tmr);
+			key_cnt = -1;
+		};
+		
+		/* Set cursor to a new position ? */
+		if (cursor_new_pos >= 0){
+			cursor_pos = cursor_new_pos;
+			draw_cursor_win(pcursor_win);
+			cursor_new_pos = -1;
+		};
+		
 		set_font(pcursor_win->font);
 		draw_cursor(pcursor_win, cursor_on);
 	};
@@ -510,13 +617,91 @@ PT_THREAD (win_cursor_blink(struct pt *pt)){
 
 /* Giving NULL as parameter stops cursor blinking for this window. */
 void
-win_cursor_set(struct Window *pwin){
+win_cursor_set(struct Window *pwin, int size){
 	pcursor_win = pwin;
-};	
+	max_txt_len = size;
+	cursor_new_pos = -1;
+	cursor_pos = 0;						// TODO better jump to end of string
+	draw_cursor_win(pcursor_win);
+	last_key = -1;
+	key_cnt = -1;
+};
 
 void
 win_cursor_init(){
+	timer_add(&char_tmr, 0, 0);
+	timer_stop(&char_tmr);
 	task_add(&win_cursor_blink);
 };	
 
+
+static char
+key2char(int key, int cnt){
+//	const char key_table[10][5] = {" ", ".-@", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
+	const char key_table[10][5] = {" ", ".-@", "ABC", "DEF", "GHI", "JKL", "MNO", "PQRS", "TUV", "WXYZ"};
+	cnt = cnt % strlen(key_table[key]) ;
+	return key_table[key][cnt];
+};
+
+/* 
+	Our window with cursor has got some input
 	
+	key_cnt == -1 means no input has been taking place at this cursor position
+	key_cnt >= 0 means the same key has been pressed one or more times here
+*/
+void
+win_cursor_input(int new_key){
+	char c;
+	
+	if (new_key == CURSOR_LEFT){
+		if (cursor_pos <= 0) return;
+		cursor_new_pos = cursor_pos - 1;
+		key_cnt = -1;
+		last_key = -1;
+		timer_stop(&char_tmr);
+		return;
+	};
+	
+	if (new_key == CURSOR_RIGHT){
+		if ( (cursor_pos + 1)  >= strlen(pcursor_win->txt)) return;
+		cursor_new_pos = cursor_pos + 1;
+		key_cnt = -1;
+		last_key = -1;
+		timer_stop(&char_tmr);
+		return;
+	};	
+		
+	if (new_key == CURSOR_BACKSPACE){
+		if (cursor_pos <= 0) return;
+		cursor_new_pos = cursor_pos - 1;
+		key_cnt = -1;
+		last_key = -1;
+		timer_stop(&char_tmr);
+		pcursor_win->text_len = str_del(pcursor_win->txt, cursor_new_pos);
+		return;	
+	};
+		
+	/* This is the first time a key is pressed here */
+	if (key_cnt < 0){
+		key_cnt = 0;
+		c = key2char(new_key, 0);
+		store_char(cursor_pos, c);
+		
+	} else {
+		/* We already entered text at this cursor position */	
+		if (new_key == last_key){			// User pressed the same key twice before a time out occured 
+			key_cnt++;
+			c = key2char(new_key, key_cnt);
+			store_char(cursor_pos, c);
+
+		} else {
+		// User pressed a different key, advance to the next cursor position, store new char
+			key_cnt = 0;
+			c = key2char(new_key, 0);
+			advance_cursor();
+			store_char(cursor_new_pos, c);
+		};
+	};
+	last_key = new_key;		
+};
+

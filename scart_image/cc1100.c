@@ -40,7 +40,7 @@
 				De-asserts when the first byte is read from the RX FIFO.
 
 	0x06:PKTLEN = 0x3D: maximum packet length is 61 (allows room for 2 STATUS APPEND bytes, see Errata Sheet)	
-	0x07:PKTCTRL1 = 0x1A: Address check and 0 broadcast, no status append, autoflush of RX FIFO
+	0x07:PKTCTRL1 = 0x06: Address check and 0 broadcast, status append, no autoflush of RX FIFO
 	0x08:PKTCTRL0 = 0x45: variable packet length (first byte after sync), CRC enabled, whitening on
 
 	0x09:ADDR = 0x01: Device address is 1
@@ -49,8 +49,8 @@
 
 */
 
-
-#define SMARTRF_SETTING_PKTCTRL1	0x0E
+#define SMARTRF_SETTING_PKTCTRL0	0x45
+#define SMARTRF_SETTING_PKTCTRL1	0x06
 #define SMARTRF_SETTING_IOCFG0D		0x07
 #define SMARTRF_SETTING_IOCFG2		0x06
 #define SMARTRF_SETTING_FIFOTHR		0x00
@@ -239,14 +239,20 @@ unsigned char cc1100_read_status_reg_otf(unsigned char reg){
 	 return res2;
  }
 
-/* Read the MARCSTATE register on the fly and mask its value */
-#define cc1100_state() (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f)
+/* 
+ 	Read the status register of the cc1100
+	Works even when cc1100 is busy
+*/
  
+
+
+
  /* Bring the CC1100 to idle mode and wait until it is reached */
  void switch_to_idle() {
 	 cc1100_strobe(SIDLE);
-	 while (cc1100_state() != MARCSTATE_IDLE);
+	 while (cc1100_marcstate() != MARCSTATE_IDLE);
 }
+
 
 /* Returns TRUE iff the cc1100 is not in a TX mode,
 	i.e. either RX or IDLE 
@@ -258,7 +264,7 @@ unsigned char cc1100_read_status_reg_otf(unsigned char reg){
 unsigned char cc1100_tx_finished(){
 	unsigned char s;
 		
-	s = cc1100_state();
+	s = cc1100_marcstate();
 	return ( (s == MARCSTATE_IDLE ) || (s == MARCSTATE_RX) || (s == MARCSTATE_RXFIFO_OVERFLOW) 
 			|| (s == MARCSTATE_TXFIFO_UNDERFLOW)
 	   );

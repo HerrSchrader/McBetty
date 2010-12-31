@@ -58,6 +58,7 @@ struct MODEL {
 	int time_total;				// in seconds
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
 	unsigned int last_status;	// system time when we last got a valid status answer
+	char *search_string;		// is <> NULL iff the user wants to find something
 	unsigned int script;		// if the user wants a script to be executed this is >= 0
 };
 
@@ -156,6 +157,10 @@ char *mpd_get_title();
 char *mpd_get_artist();
 void user_song_unknown();
 void user_wants_song(int pos);
+
+void user_set_search_string(char * str);
+void mpd_find_ok();
+char *mpd_get_search_string();
 
 void model_set_last_response(unsigned int t);
 

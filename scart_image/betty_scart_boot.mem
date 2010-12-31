@@ -1,7 +1,7 @@
 Internal RAM layout:
       0 1 2 3 4 5 6 7 8 9 A B C D E F
 0x00:|0|0|0|0|0|0|0|0|a|a|a|a|a|a|a|a|
-0x10:|a|a|a|a|b|b|b|b|b|b|b|b|b|Q| | |
+0x10:|a|b|b|b|b|b|b|b|b|b|Q| | | | | |
 0x20:|B| | | | | | | | | | | | | | | |
 0x30:|A|A|A|A|A|A|A|A|A|A|A|A|A|A|A|A|
 0x40:|A|A|A|A|A|A|A|A|A|A|A|A|A|I|I|I|
@@ -25,4 +25,4 @@ Other memory:
    ---------------- -------- -------- -------- --------
    PAGED EXT. RAM                         0      256   
    EXTERNAL RAM                           0    65536   
-   ROM/EPROM/FLASH  0x0000   0x0625    2084     8192   
+   ROM/EPROM/FLASH  0x0000   0x05fb    2042     8192   

@@ -67,7 +67,7 @@ rx_reset(){
 */
 static void
 RF_send(unsigned char* b, int payload_cnt) {
-	int i, n;
+	int n;
 	
 	if (payload_cnt >= 255){
 		debug_out("payload_cnt invalid", payload_cnt);
@@ -141,7 +141,7 @@ void
 send_cmd(char *cmd_str){
 	if (send_token > 0){
 
-		RF_send((unsigned char *) cmd_str, str_len(cmd_str));
+		RF_send((unsigned char *) cmd_str, strlen(cmd_str));
 		send_token--;
 	} else debug_out("THROTTLED! ",00);
 };
