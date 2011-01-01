@@ -240,10 +240,18 @@ unsigned char cc1100_read_status_reg_otf(unsigned char reg){
  }
 
 /* 
- 	Read the status register of the cc1100
+ 	Read the status register of the cc1100 with RX_FIFO_AVAILABLE
 	Works even when cc1100 is busy
 */
- 
+unsigned char 
+cc1100_read_rxstatus(){
+	 unsigned char res1, res2;
+	
+	 res1 = cc1100_strobe(SNOP | READ);
+	 while ( (res2=cc1100_strobe(SNOP | READ)) != res1)
+		 res1 = res2;
+	 return res2;
+ }
 
 
 
@@ -261,7 +269,8 @@ unsigned char cc1100_read_status_reg_otf(unsigned char reg){
 	nevertheless for unknown reasons.
 	So we check if state is idle or RX or some error state.
 */
-unsigned char cc1100_tx_finished(){
+unsigned char 
+cc1100_tx_finished(){
 	unsigned char s;
 		
 	s = cc1100_marcstate();

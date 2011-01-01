@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ANSI-C Compiler
 ; Version 2.9.7 #5820 (May  6 2010) (Linux)
-; This file was generated Fri Dec 31 16:29:29 2010
+; This file was generated Sat Jan  1 04:08:16 2011
 ;--------------------------------------------------------
 	.module cc1100
 	.optsdcc -mmcs51 --model-small
@@ -10,7 +10,6 @@
 ; Public variables in this module
 ;--------------------------------------------------------
 	.globl _conf
-	.globl _cc1100_tx_finished
 	.globl _TCR20_0
 	.globl _TCR20_1
 	.globl _TCR20_2
@@ -207,7 +206,9 @@
 	.globl _cc1100_read1
 	.globl _cc1100_strobe
 	.globl _cc1100_read_status_reg_otf
+	.globl _cc1100_read_rxstatus
 	.globl _switch_to_idle
+	.globl _cc1100_tx_finished
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -858,18 +859,52 @@ _cc1100_read_status_reg_otf:
 	mov	dpl,r5
 	ret
 ;------------------------------------------------------------
+;Allocation info for local variables in function 'cc1100_read_rxstatus'
+;------------------------------------------------------------
+;res1                      Allocated to registers r2 
+;res2                      Allocated to registers r4 
+;------------------------------------------------------------
+;	cc1100.c:247: cc1100_read_rxstatus(){
+;	-----------------------------------------
+;	 function cc1100_read_rxstatus
+;	-----------------------------------------
+_cc1100_read_rxstatus:
+;	cc1100.c:250: res1 = cc1100_strobe(SNOP | READ);
+	mov	dpl,#0xBD
+	lcall	_cc1100_strobe
+	mov	r2,dpl
+;	cc1100.c:251: while ( (res2=cc1100_strobe(SNOP | READ)) != res1)
+00101$:
+	mov	dpl,#0xBD
+	push	ar2
+	lcall	_cc1100_strobe
+	mov	r3,dpl
+	pop	ar2
+	mov	a,r3
+	mov	r4,a
+	cjne	a,ar2,00108$
+	sjmp	00103$
+00108$:
+;	cc1100.c:252: res1 = res2;
+	mov	ar2,r4
+	sjmp	00101$
+00103$:
+;	cc1100.c:253: return res2;
+	mov	dpl,r4
+	ret
+;------------------------------------------------------------
 ;Allocation info for local variables in function 'switch_to_idle'
 ;------------------------------------------------------------
 ;------------------------------------------------------------
-;	cc1100.c:251: void switch_to_idle() {
+;	cc1100.c:259: void switch_to_idle() {
 ;	-----------------------------------------
 ;	 function switch_to_idle
 ;	-----------------------------------------
 _switch_to_idle:
-;	cc1100.c:252: cc1100_strobe(SIDLE);
+;	cc1100.c:260: cc1100_strobe(SIDLE);
 	mov	dpl,#0x36
 	lcall	_cc1100_strobe
-;	cc1100.c:253: while (cc1100_marcstate() != MARCSTATE_IDLE);
+;	cc1100.c:261: while (cc1100_marcstate() != MARCSTATE_IDLE);
 00101$:
 	mov	dpl,#0xF5
 	lcall	_cc1100_read_status_reg_otf
@@ -883,18 +918,18 @@ _switch_to_idle:
 ;------------------------------------------------------------
 ;s                         Allocated to registers r2 
 ;------------------------------------------------------------
-;	cc1100.c:264: unsigned char cc1100_tx_finished(){
+;	cc1100.c:273: cc1100_tx_finished(){
 ;	-----------------------------------------
 ;	 function cc1100_tx_finished
 ;	-----------------------------------------
 _cc1100_tx_finished:
-;	cc1100.c:267: s = cc1100_marcstate();
+;	cc1100.c:276: s = cc1100_marcstate();
 	mov	dpl,#0xF5
 	lcall	_cc1100_read_status_reg_otf
 	mov	a,dpl
 	anl	a,#0x1F
 	mov	r2,a
-;	cc1100.c:268: return ( (s == MARCSTATE_IDLE ) || (s == MARCSTATE_RX) || (s == MARCSTATE_RXFIFO_OVERFLOW) 
+;	cc1100.c:277: return ( (s == MARCSTATE_IDLE ) || (s == MARCSTATE_RX) || (s == MARCSTATE_RXFIFO_OVERFLOW) 
 	cjne	r2,#0x01,00118$
 	sjmp	00110$
 00118$:
@@ -918,7 +953,7 @@ _cc1100_tx_finished:
 00108$:
 	mov	a,r3
 	jnz	00104$
-;	cc1100.c:269: || (s == MARCSTATE_TXFIFO_UNDERFLOW)
+;	cc1100.c:278: || (s == MARCSTATE_TXFIFO_UNDERFLOW)
 	cjne	r2,#0x16,00123$
 	sjmp	00104$
 00123$:

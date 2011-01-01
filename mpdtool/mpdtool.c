@@ -623,7 +623,7 @@ scart_alive(){
 		fprintf(stderr, "scart radio_mode == RADIO_RX, but NACK!\n");
 		return 1;
 	};	
-	fprintf(stderr, "scart radio_mode unknown\n");
+	fprintf(stderr, "scart radio_mode unknown %02x\n", ser_in_buf[ser_in_len]);
 
 	return 0;
 };

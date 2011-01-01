@@ -61,6 +61,16 @@
 
 #define CC1100_VERSION		0x31
 
+// Mask to get the state bits from chip status byte
+#define STATE_MASK 0x70
+
+// Chip status state
+#define CHIP_IDLE		0x00
+#define CHIP_RX			0x10
+#define CHIP_TX 		0x20
+#define CHIP_RX_OVFL	0x60
+#define CHIP_TX_UNFL	0x70
+
 
 /* Set to 2 if sender (Betty) appends status bytes, else 0 */
 #define RX_USE_STATUS	2
@@ -68,11 +78,18 @@
 /* Set to 1 if we use address check when receiving (Betty sends address), else 0 */
 #define RX_USE_ADDR 1
 
+#define MAX_PKTLEN  255
+
 /* 
 	Number of actual data bytes that we can receive/send at once over the radio link.
 	This number does not include the length byte, the address byte and the appended status bytes.
 */
 #define PAYLOAD_SIZE (MAX_PKTLEN - 1 - USE_ADDR - USE_STATUS) 
+
+/* This is the maximum valid value of the length byte 
+	The length byte includes the address and the data bytes.
+*/
+#define MAX_LEN (MAX_PKTLEN - 1 - RX_USE_STATUS) 
 
 /* 
 	The answer from MPD can be very long, so we have to disassemble the answer into small packets
@@ -107,8 +124,9 @@ void waitTX(void);
 void sendWOR(unsigned char addr);
 void switch_to_idle();
 unsigned char cc1100_read_status_reg_otf(unsigned char reg);
- 
- 
+unsigned char cc1100_tx_finished() ;
+unsigned char cc1100_read_rxstatus();
+
 /* Read the MARCSTATE register on the fly and mask its value */
 #define cc1100_marcstate() (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f)
  

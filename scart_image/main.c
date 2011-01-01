@@ -50,7 +50,16 @@
 // Data Link Escape: sent after ENQ if radio_mode == RADIO_IDLE
 #define DLE 0x10
 
+// Device Control 2
+#define DC2	0x12
+// Device Control 4
+#define DC4	0x14
+
 #define NAK 0x15
+
+// Length byte invalid
+#define LEN_INVALID DC2
+#define ADR_INVALID DC4
 
 // Software Reset bit of AUXR1
 #define SRST	3
@@ -503,29 +512,49 @@ void check_radio_packet (){
 	None of these errors should lead to an infinite loop.
 	
 	TODO check CRC bytes and send a byte to mpdtool to cancel the command if CRC wrong
+
+	Returns 0 if everything ok, else an error byte
 */
-void check_radio_input (){
+int 
+check_radio_input (){
 	static unsigned char length = 0;
 	unsigned char address;
 	unsigned char n;
 	char x;
+		
+	unsigned char status;
+	
+	status = cc1100_read_rxstatus();
+	n = status & 0x0f;
 	
 	// Just to make sure that radio is not stuck in RX_FIFO_OVERFLOW.
-	rx_overflow_reset();
+	if ( (status & STATE_MASK) == CHIP_RX_OVFL){
+		rx_overflow_reset();
+		return 0;
+	};
 	
-	/* nothing received so far */
-	if (length == 0){
-		n = cc1100_read_status_reg_otf(RXBYTES) & 0x7f;
+	/* Ignore the other states, they are transitional */
+	if ( ( (status & STATE_MASK) != CHIP_RX) && ((status & STATE_MASK) != CHIP_IDLE) )
+		return 0;
+	
+	if (length == 0){										/* no length byte received so far */
 		if (n > 2) {
 			cc1100_read(RX_fifo|BURST, &length, 1);		// Length byte = payload length + 1 address byte
-			cc1100_read(RX_fifo|BURST, &address, 1); 	// Address byte (unused!)
+			if (length < 1) return LEN_INVALID;
+			if (length > MAX_LEN) return LEN_INVALID;
+			
+			cc1100_read(RX_fifo|BURST, &address, 1); 	// Address byte
+			if (address != DEV_ADDR) return ADR_INVALID;
+			
 			/* We do not decrement length here, so length is the remaining number of payload bytes + 1!
 				So we are finished when length == 1 !
+				We do this so that length never goes to 0 while a packet is in transmission
 			*/
-		} 
+		} else return 0;									// not safe to read length and address
+		 
 	} else {	// Already received length (and address), read payload 
 		/* Finished packet ? */
-		if ( cc1100_marcstate() == MARCSTATE_IDLE) {
+		if ( (status & STATE_MASK) == CHIP_IDLE) {
 			while (length > 1) {
 				cc1100_read(RX_fifo|BURST, &x, 1);
 				send_byte(x);	
@@ -535,7 +564,7 @@ void check_radio_input (){
 			start_rx();	
 			
 		} else {
-			n = cc1100_read_status_reg_otf(RXBYTES) & 0x7f;	
+//			n = cc1100_read_status_reg_otf(RXBYTES) & 0x7f;	
 		
 			/* are there enough bytes to read to avoid emptying the RX_FIFO */
 			if (n > 1){
@@ -545,6 +574,7 @@ void check_radio_input (){
 			}; 
 		};	
 	};
+	return 0;
 }
 
 
