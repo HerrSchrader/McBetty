@@ -71,6 +71,8 @@
 #define CHIP_RX_OVFL	0x60
 #define CHIP_TX_UNFL	0x70
 
+// This bit in the second appended status byte is the crc bit
+#define CRC_OK	0x80
 
 /* Set to 2 if sender (Betty) appends status bytes, else 0 */
 #define RX_USE_STATUS	2

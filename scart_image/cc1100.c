@@ -257,8 +257,10 @@ cc1100_read_rxstatus(){
 
  /* Bring the CC1100 to idle mode and wait until it is reached */
  void switch_to_idle() {
-	 cc1100_strobe(SIDLE);
-	 while (cc1100_marcstate() != MARCSTATE_IDLE);
+	cc1100_strobe(SFRX);		// to get out of possible RX_OVERFLOW state
+//	cc1100_strobe(SFTX);		// to get out of possible TX_UNDERFLOW state
+	cc1100_strobe(SIDLE);
+	while ( (cc1100_read_rxstatus() & STATE_MASK) != CHIP_IDLE);
 }
 
 

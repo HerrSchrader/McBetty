@@ -81,6 +81,7 @@
 #define DLE	0x10
 
 #define NAK	0x15
+#define CAN	0x18
 
 #define LF	0x0a
 #define ESC	0x1b
@@ -521,6 +522,8 @@ send_to_serial(int serial_fd){
 	The buffer is null terminated so that it is a valid C string.
 	Sets flag ack_received if a ACK character was received.
 	Does not store ACK character.
+	
+	If scart sends a CANCEL character, the buffer is cleared, The command was invalid.
 */
 void 
 read_from_serial (int fd){
@@ -541,6 +544,11 @@ read_from_serial (int fd){
 		case EOT:
 			ser_in_buf[ser_in_len]='\0';			// Null terminate string 
 			cmd_complete = 1;					// Set flag
+			return;
+			
+		case CAN:
+			fprintf(stderr, "Command cancelled\n");	
+			reset_ser_in();
 			return;
 			
 		case ACK:
@@ -1149,9 +1157,8 @@ int main(int argc, char *argv[])
 		
 		// if nothing to do, wait for some time (61 secs) for input	
 		if (! cmd_complete){
-//			fprintf(stderr, "Waiting for input ...");
 			res = wait_for_input(serial_fd, client_socket, 61000);
-//			fprintf(stderr,".\n");
+
 			// if still no input, check if scart adapter (and Betty) is alive.
 			if (res == 0) {
 				/* No (more) input for some time. Forget all previous bytes */

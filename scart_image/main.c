@@ -57,6 +57,8 @@
 
 #define NAK 0x15
 
+#define CAN 0x18
+
 // Length byte invalid
 #define LEN_INVALID DC2
 #define ADR_INVALID DC4
@@ -314,22 +316,10 @@ unsigned char has_room(){
 #define MARCSTATE_RX	0x0D
 #define MARCSTATE_IDLE	0x01
 
-void
-rx_overflow_reset(){
-	if ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) == RX_OVERFLOW){
-		cc1100_strobe(SFRX);
-		cc1100_strobe(SRX);
-	};
-}
-
 
 /* Start radio reception */
 void start_rx() {
-	// Reset state and set radio in RX mode
-	rx_overflow_reset();
 	switch_to_idle();
-	
-	cc1100_strobe(SFRX);
 	cc1100_strobe(SCAL);
 	cc1100_strobe(SRX);
 	radio_mode = RADIO_RX;
@@ -338,9 +328,7 @@ void start_rx() {
 
 /* Start radio transmission */
 void start_tx() {	
-	rx_overflow_reset();
 	switch_to_idle();
-	
 	cc1100_strobe(SCAL);
 	cc1100_strobe(STX);
 	radio_mode = RADIO_TX;
@@ -494,6 +482,7 @@ void check_radio_packet (){
 }
 #endif
 
+
 /* We check if there are some bytes to read from the RX_FIFO
 	and output one of them to the serial line.
 	We make sure to empty the RX_FIFO only when a complete packet has been received. (see CC1100 errata)
@@ -515,66 +504,80 @@ void check_radio_packet (){
 
 	Returns 0 if everything ok, else an error byte
 */
-int 
+void
 check_radio_input (){
-	static unsigned char length = 0;
-	unsigned char address;
-	unsigned char n;
-	char x;
-		
-	unsigned char status;
+	static unsigned char length = 0;	// number of bytes in current packet (incl. adr. and status bytes)
+	unsigned char n;					// number of bytes currently in RX_FIFO
+	unsigned char status;				// current chip status byte
+	unsigned char x;					// data byte read from cc1100 
+	unsigned char appended;				// appended status byte (first and second)
 	
 	status = cc1100_read_rxstatus();
 	n = status & 0x0f;
 	
 	// Just to make sure that radio is not stuck in RX_FIFO_OVERFLOW.
 	if ( (status & STATE_MASK) == CHIP_RX_OVFL){
-		rx_overflow_reset();
-		return 0;
+		start_rx();
+		length = 0;
+		return;
 	};
 	
 	/* Ignore the other states, they are transitional */
 	if ( ( (status & STATE_MASK) != CHIP_RX) && ((status & STATE_MASK) != CHIP_IDLE) )
-		return 0;
+		return;
 	
 	if (length == 0){										/* no length byte received so far */
 		if (n > 2) {
 			cc1100_read(RX_fifo|BURST, &length, 1);		// Length byte = payload length + 1 address byte
-			if (length < 1) return LEN_INVALID;
-			if (length > MAX_LEN) return LEN_INVALID;
-			
-			cc1100_read(RX_fifo|BURST, &address, 1); 	// Address byte
-			if (address != DEV_ADDR) return ADR_INVALID;
-			
-			/* We do not decrement length here, so length is the remaining number of payload bytes + 1!
-				So we are finished when length == 1 !
-				We do this so that length never goes to 0 while a packet is in transmission
-			*/
-		} else return 0;									// not safe to read length and address
-		 
-	} else {	// Already received length (and address), read payload 
-		/* Finished packet ? */
-		if ( (status & STATE_MASK) == CHIP_IDLE) {
-			while (length > 1) {
-				cc1100_read(RX_fifo|BURST, &x, 1);
-				send_byte(x);	
-				length--;
+			if ( (length < 1) || (length > MAX_LEN) ){
+				start_rx();
+				length = 0;		
+				return;
 			};
-			length = 0;
-			start_rx();	
+			cc1100_read(RX_fifo|BURST, &x, 1); 			// Address byte
+			if (x != DEV_ADDR){
+				start_rx();
+				length = 0;
+				return;
+			};
 			
-		} else {
-//			n = cc1100_read_status_reg_otf(RXBYTES) & 0x7f;	
-		
-			/* are there enough bytes to read to avoid emptying the RX_FIFO */
-			if (n > 1){
-				cc1100_read(RX_fifo|BURST, &x, 1);
-				send_byte(x);	
-				length--;	
-			}; 
-		};	
+			/* We should decrement length by 1 (address byte) and then increment by 2 (appended status bytes)
+				so we simply increment!
+				Now length is the number of remaining bytes in the packet (incl. status) !
+			*/
+			length++;
+			n -= 2;			// Number of bytes in fifo (len and addr read)
+			
+		} else return;									// not safe to read length and address
 	};
-	return 0;
+	
+	// Already received length (and address), read rest of packet
+	if (length > 3){				// still payload data to read
+		/* are there enough bytes to read to avoid emptying the RX_FIFO */
+		if (n > 1){
+			cc1100_read(RX_fifo|BURST, &x, 1);
+			send_byte(x);	
+			length--;	n--;
+		};
+	} else {						// only EOT and status bytes remaining
+		if (n >= length){			// packet finished ? 
+		/* Finished packet ? */
+			cc1100_read(RX_fifo|BURST, &x, 1);
+			cc1100_read(RX_fifo|BURST, &appended, 1);		// 1. appended status byte
+			cc1100_read(RX_fifo|BURST, &appended, 1);		// 2. appended status byte
+			
+			if ( (x != EOT) || (0 == (appended & CRC_OK)) ) {		// Betty always sends an EOT as last character!
+				send_byte(CAN);
+			} else 
+				send_byte(EOT);
+
+			length = 0;
+			start_rx();
+
+		} else return;				// not all status bytes in buffer
+
+	};
+	return;
 }
 
 

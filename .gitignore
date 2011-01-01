@@ -15,4 +15,18 @@ scart_image/betty_scart.ihx
 scart_image/betty_scart.bin
 scart_image/betty_scart_boot.ihx
 scart_image/betty_scart_boot.bin
+scart_image/betty_scart.map
+scart_image/betty_scart.mem
+scart_image/betty_scart_boot.map
+scart_image/boop.orig/boop_rom.hex
+scart_image/boop.orig/tools/scart_image.h
+scart_image/betty_scart.lnk
+scart_image/betty_scart_boot.lnk
+scart_image/betty_scart_boot.mem
+scart_image/cc1100.asm
+scart_image/main.asm
+scart_image/scart_image.h
+scart_image/scart_image_boot.h
+scart_image/serial.asm
+
 
