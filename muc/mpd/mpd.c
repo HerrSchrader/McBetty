@@ -319,7 +319,15 @@ ans_plname_line(char *s){
 		model_store_playlistname(response+10, request.arg);
 };
 
-/* We sent a "PLAY xxx" command and got "ACK". */
+/* We sent a "SEARCH xxx xxx" command */
+static void
+ans_find_line(char *s){
+	/* Compare with "playlist: " */
+	if (strstart(response, "results: "))
+		model_store_num_results(atoi(response+9));
+};
+
+/* We sent a "SEARCH xxx xxx" command and got "OK". */
 static void
 ans_find_ok(char *s){
 	mpd_find_ok();	
@@ -437,10 +445,10 @@ PT_THREAD (collect_lines(struct pt *pt,
 	PT_BEGIN(pt);
 	response_finished = 0;
 	
-	/* We should receive all the answers in a relatively short time frame, else something went wrong anyway */
-
-	/* We should receive all the answers in a relatively short time frame, else something went wrong anyway */
-	timer_add(&tmr, 17*TICKS_PER_TENTH_SEC, 0);
+	/* We should receive all the answers in a relatively short time frame, else something went wrong anyway 
+		Searching takes somewaht longer, wo we are waiting around 2 seconds.
+	*/
+	timer_add(&tmr, 22 * TICKS_PER_TENTH_SEC, 0);
 	
 	while (1){
 
@@ -572,6 +580,10 @@ inform_view(int model_changed){
 		view_playlists_changed();
 	};
 
+	if (model_changed & RESULTS_CHANGED){
+		view_results_changed();
+	};
+	
 	model_reset_changed();
 };
 	
@@ -724,10 +736,10 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 	};
 	
 	if (cmd == FIND_CMD){
-		strn_cpy (cmd_str, "search any ", CMDSTR_LEN);
+		strn_cpy (cmd_str, "search title ", CMDSTR_LEN);
 		str_cat_max (cmd_str, mpd_get_search_string(), CMDSTR_LEN);
 		str_cat_max (cmd_str, "\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_find_ok, NULL));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_find_line, ans_find_ok, NULL));
 		PT_EXIT(pt);
 	};
 	

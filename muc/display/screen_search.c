@@ -31,7 +31,7 @@
 #define WL_SIZE 12
 
 /* Number of lines in scrolling window list */
-#define RL_SIZE (WL_SIZE -2)
+#define RL_SIZE (WL_SIZE -3)
 
 /* The window list */
 static struct Window win[WL_SIZE];
@@ -48,6 +48,8 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 /* Window to enter the search string */
 #define input_win (win[1])
 
+/* Window showing the number of search reseults */
+#define num_results_win (win[2])
 
 static scroll_list results_list;
 
@@ -101,12 +103,26 @@ search_screen_init(Screen *this_screen) {
 	
 	win_init(&input_win, cur_start_row, 0, 20, 128, 1, win_txt[1]);
 	input_win.font = MEDIUMFONT;	
+	input_win.txt_offs_row = 3;
 	win_new_text(&input_win, " ");
 	cur_start_row += 20;
 	
-	init_scroll_list(&results_list, &(win[2]), win_txt[2], WIN_TXT_SIZE, RL_SIZE, &get_result, cur_start_row);
+	win_init(&num_results_win, cur_start_row, 0, WL_SMALL_HEIGHT, 128, 0, win_txt[2]);
+	num_results_win.font = SMALLFONT;	
+	num_results_win.flags |= WINFLG_CENTER;
+	num_results_win.fg_color = BLACK;
+	num_results_win.bg_color = DARK_GREY;	
+	win_new_text(&num_results_win, " ");
+	cur_start_row += WL_SMALL_HEIGHT;
+	
+	init_scroll_list(&results_list, &(win[3]), win_txt[3], WIN_TXT_SIZE, RL_SIZE, &get_result, cur_start_row);
 
 }
+
+void 
+view_results_changed(int num){
+	win_new_text(&num_results_win, " results:");
+};
 
 
 void 
@@ -116,7 +132,7 @@ search_keypress(Screen *this_screen, int cur_key, UserReq *req){
 			user_set_search_string(input_win.txt);
 			
 			/* The user wants to leave this screen */
-			switch_screen(SEARCH_SCREEN, PLAYLIST_SCREEN);
+//			switch_screen(SEARCH_SCREEN, PLAYLIST_SCREEN);
 			break;
 			
 		case KEY_Left:	

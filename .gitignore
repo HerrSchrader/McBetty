@@ -29,4 +29,7 @@ scart_image/scart_image.h
 scart_image/scart_image_boot.h
 scart_image/serial.asm
 
+#intermediate files generated in muc
+muc/boop.map
+muc/muc_rom.hex
 

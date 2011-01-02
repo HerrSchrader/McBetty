@@ -1044,17 +1044,20 @@ translate_to_serial(){
 		} else if (0 == strncmp(mpd_line_buf, "OK", 2)) {
 			sprintf(mpd_line_buf, "playlistcount: %d\nOK\n",mpd_emu_cnt);
 			serial_output(mpd_line_buf);
-//			sprintf(mpd_line_buf, "OK\n");
+
 		} else if 	(0 == strncmp(mpd_line_buf, "ACK", 3)) {
 				serial_output(mpd_line_buf);
 		}
 	} else if (mpd_emu & SEARCH_CMD){
 		if (0 == strncmp(mpd_line_buf, "OK", 2)) {
-			fprintf(stderr, "%d answer lines\n", mpd_emu_cnt);
+			sprintf(mpd_line_buf, "results: %d\nOK\n", mpd_emu_cnt);
 			serial_output(mpd_line_buf);
 		}
-		else mpd_emu_cnt++;	
-		
+		else {
+			mpd_emu_cnt++;	
+//			if (mpd_emu_cnt < 20) 
+//				serial_output(mpd_line_buf);
+		};
 	}	else  {	
 		// put the line in serial output buffer	
 		serial_output(mpd_line_buf);	

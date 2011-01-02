@@ -1016,6 +1016,12 @@ user_set_search_string(char * str){
 	user_model.search_string = str;
 };
 
+void
+model_store_num_results(int n){
+	mpd_model.num_results = n;
+	model_changed(RESULTS_CHANGED);
+};
+
 /* -------------------------------------- Timing information -------------------------------------------------- */
 
 
@@ -1056,6 +1062,7 @@ model_reset(struct MODEL *m){
 	m->repeat = -1;
 	m->single = -1;
 	m->search_string = NULL;
+	m->num_results = -1;
 	m->script = -1;
 };
 

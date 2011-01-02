@@ -20,7 +20,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define REPEAT_CHANGED		(1<<9)
 #define SINGLE_CHANGED		(1<<10)
 #define ERROR_FLAG			(1<<11)
-
+#define RESULTS_CHANGED		(1<<12)
 
 // Length of artist and title strings each, some songs and some albums really have long titles
 #define TITLE_LEN 150
@@ -59,6 +59,7 @@ struct MODEL {
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
 	unsigned int last_status;	// system time when we last got a valid status answer
 	char *search_string;		// is <> NULL iff the user wants to find something
+	int num_results;			// number of results after a search command
 	unsigned int script;		// if the user wants a script to be executed this is >= 0
 };
 
