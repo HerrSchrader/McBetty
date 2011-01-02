@@ -604,7 +604,7 @@ scart_alive(){
 		perror("check_scart_alive()");
 		printf("We could not write ENQ!\n");
 	}
-	res = read(serial_fd, ser_in_buf+ser_in_len, 1);
+	res = read(serial_fd, ser_in_buf+ser_in_len, 4);
 	if (res == 0){ 
 		fprintf(stderr,"scart_alive() -> no answer \n");
 		return 0;
@@ -615,25 +615,19 @@ scart_alive(){
 		return 0;
 	};
 	
-	if (ser_in_buf[ser_in_len] == SO){
-		fprintf(stderr, "scart radio_mode == RADIO_TX\n");
-		return 1;
+	if (ser_in_buf[ser_in_len] != 'V'){
+		fprintf(stderr, "Scart did not answer with firmware version!n");
+		return 0;
 	};
-	if (ser_in_buf[ser_in_len] == SI){
-		fprintf(stderr, "scart radio_mode == RADIO_RX\n");
-		return 1;
-	};
-	if (ser_in_buf[ser_in_len] == DLE){
-		fprintf(stderr, "scart radio_mode == RADIO_IDLE\n");
-		return 1;
-	};
-	if (ser_in_buf[ser_in_len] == NAK){
-		fprintf(stderr, "scart radio_mode == RADIO_RX, but NACK!\n");
-		return 1;
-	};	
-	fprintf(stderr, "scart radio_mode unknown %02x\n", ser_in_buf[ser_in_len]);
 
-	return 0;
+	fprintf(stderr, "Scart adapter firmware %c%c%c%c\n", 
+			ser_in_buf[ser_in_len],
+			ser_in_buf[ser_in_len+1],
+			ser_in_buf[ser_in_len+2],
+		   	ser_in_buf[ser_in_len+3]
+		   );
+
+	return 1;
 };
 	
 /* 
@@ -860,10 +854,12 @@ int mpd_emu_cnt;
 
 /* 
 Find out version of mpd and which commands it understands
+and read all available playlists
 */
 void
 discover_mpd(int *mpd_socket){
 	int response_finished;
+	int count = 0;
 	
 	mpd_cmds = 0;
 	
@@ -882,7 +878,7 @@ discover_mpd(int *mpd_socket){
 
 			// Convert line to iso8859-15	
 //			utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
-			fprintf(stderr, "  MPD: %s", mpd_line_buf);
+//			fprintf(stderr, "  MPD: %s", mpd_line_buf);
 			
 			if (0 == strncmp(mpd_line_buf, "command: listplaylists", strlen("command: listplaylists")) )	
 				mpd_cmds |= LISTPLAYLISTS_CMD;
@@ -913,7 +909,7 @@ discover_mpd(int *mpd_socket){
 
 			// Convert line to iso8859-15	
 //			utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
-			fprintf(stderr, "  MPD: %s", mpd_line_buf);
+//			fprintf(stderr, "  MPD: %s", mpd_line_buf);
 				
 			// check for "OK" or "ACK"
 			if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) ){
@@ -922,10 +918,11 @@ discover_mpd(int *mpd_socket){
 			};
 	
 			reset_mpd_line();
+			count++;
 		};
 	}
 	mpd_emu = 0;
-			
+	fprintf(stderr,"MPD: Available Playlists = %d\n\n", count);
 };
 
 /* Copy the command in ser_in_buf() to local buf() to free ser_in_buf */	

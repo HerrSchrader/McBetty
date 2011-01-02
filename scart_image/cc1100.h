@@ -116,22 +116,24 @@
 void cc1100_init(void);
 unsigned char cc1100_write(unsigned char addr, unsigned char* dat, unsigned char length);
 unsigned char cc1100_write1(unsigned char addr, unsigned char dat);
-unsigned char cc1100_read(unsigned char addr, unsigned char* dat, unsigned char lenght);
 unsigned char cc1100_read1(unsigned char addr);
 unsigned char cc1100_strobe(unsigned char cmd);
-unsigned char spi_rw(unsigned char write);
-void cc1100_getfifo(__idata char* b);
-unsigned char cc1100_single(unsigned char b,__bit end);
-void waitTX(void);
-void sendWOR(unsigned char addr);
 void switch_to_idle();
-unsigned char cc1100_read_status_reg_otf(unsigned char reg);
 unsigned char cc1100_tx_finished() ;
 unsigned char cc1100_read_rxstatus();
 
 /* Read the MARCSTATE register on the fly and mask its value */
 #define cc1100_marcstate() (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f)
  
- 
-#endif
+/* Write a single byte to the CC1100 TX_FIFO */
+#define cc1100_write_fifo(x) cc1100_write1(TX_fifo, (x))
 
+/* read a single byte from the CC1100 RX_FIFO */
+#define cc1100_read_fifo() cc1100_read1(RX_fifo | READ)
+
+/* returns TRUE iff cc1100 is no longer in TX state */
+#define tx_finished() (cc1100_tx_finished())
+//#define tx_finished() ((cc1100_read_rxstatus() & STATE_MASK) != CHIP_TX)
+
+
+#endif

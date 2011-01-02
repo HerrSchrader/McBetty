@@ -1,6 +1,6 @@
 /*
     main.c
-    Copyright (C) 2007  
+    Copyright (C) 2010 H. Raap 
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -23,10 +23,10 @@
 #include "smartrf_CC1100.h"
 #include "serial.h"
 
-//#define DEBUG
+#define VERSION_MAJOR '1'
+#define VERSION_MINOR '0'
 
-
-// Some ASCII codes below 0x20 needed for out of band communication
+// Some ASCII control codes below 0x20 needed for out of band communication
 
 // End of Text: mpdtool waits for an ACK before sending more bytes over serial line
 #define ETX	0x03
@@ -34,34 +34,13 @@
 // End Of Transmission: Answer from MPD is complete or command from Betty is complete
 #define EOT	0x04
 
-// Only for debugging
-// Enquiry: mpdtools asks what state we are in
+// Enquiry: mpdtools asks for debugging information
 #define ENQ 0x05
 
 // Acknowledge: We are ready to receive more bytes over serial line
 #define ACK	0x06
 
-// Shift Out: sent after ENQ if radio_mode == RADIO_TX
-#define SO 0x0E
-
-// Shift In: sent after ENQ if radio_mode == RADIO_RX
-#define ASCII_SI 0x0F
-
-// Data Link Escape: sent after ENQ if radio_mode == RADIO_IDLE
-#define DLE 0x10
-
-// Device Control 2
-#define DC2	0x12
-// Device Control 4
-#define DC4	0x14
-
-#define NAK 0x15
-
 #define CAN 0x18
-
-// Length byte invalid
-#define LEN_INVALID DC2
-#define ADR_INVALID DC4
 
 // Software Reset bit of AUXR1
 #define SRST	3
@@ -79,8 +58,9 @@
 //#define ESR	4
 //#define EA	7
 
-#if 0
+
 // A simple random number generator, was only used for debugging
+#if 0
 #define znew  ((z=36969*(z&65535)+(z>>16))<<16)
 #define wnew  ((w=18000*(w&65535)+(w>>16))&65535)
 #define RAND  (znew+wnew)
@@ -88,7 +68,6 @@
 static unsigned long z=362436069, w=521288629;
 void setseed(unsigned long i1,unsigned long i2){z=i1; w=i2;}
 #endif
-
 
 
 /* Pin Belegung laut BettyHacks Forum  
@@ -133,19 +112,6 @@ P3.1 	8 	XTAL2,CLKIN I 	= 	EPM3064A 		CLK OUT 	Prozessor Takt
 */
 
 
-/* Global variable. Gives current direction of half duplex radio link. 
-	Is RADIO_RX if we are ready to receive or already receiving via radio.
-	Is RADIO_TX if we are sending a packet via radio.
-	Is RADIO_IDLE otherwise.
-*/
-#define RADIO_IDLE 0
-#define RADIO_RX 1
-#define RADIO_TX 2
-unsigned char radio_mode;
-
-__sfr __at (0xAD) CMP2_;
-
-
 /* --------------------------------------- radio output buffer ---------------------------------- */
 
 /* Our radio transmit output data buffer has the following semantics:
@@ -175,11 +141,20 @@ __sfr __at (0xAD) CMP2_;
 /* Number of bytes that mpdtool sends before ETX/ACK pair. */
 #define MPDTOOL_PKTSIZE	16
 
-#define BUFSIZE (MAX_TX_PAYLOAD + MPDTOOL_PKTSIZE + 2)
-__idata char buf[BUFSIZE];
 
+/* Global variable. Gives current direction of half duplex radio link. 
+	Is RADIO_RX if we are ready to receive or already receiving via radio.
+	Is RADIO_TX if we are sending a packet via radio.
+*/
+#define RADIO_RX 0
+#define RADIO_TX 1
+unsigned char radio_mode;
+
+
+#define BUFSIZE (MAX_TX_PAYLOAD + MPDTOOL_PKTSIZE + 2)
 /* Highest index into buf */
 #define BUFMAX (BUFSIZE - 1)
+__idata char buf[BUFSIZE];
 
 unsigned char bufstart;
 volatile unsigned char bufcnt;
@@ -188,14 +163,6 @@ volatile __bit got_etx;
 volatile __bit got_eot;
 volatile __bit got_enq;
 
-
-void
-feed_wd(){
-	EA = 0;
-	WFEED1 = 0xA5;
-	WFEED2 = 0x5A;
-	EA = 1;
-}
 
 void buffer_init(){
 	bufcnt = 0;			// Number of bytes in the buffer
@@ -249,7 +216,7 @@ void serial_isr (void) __interrupt (4) {
 		return;
 	};
 	
-	//TODO this need not be enforced here. mpdtool should take care of this,
+	// mpdtool should not send us bytes after an EOT, but we just make sure.
 	if (got_eot){
 		return;
 	};
@@ -309,15 +276,9 @@ unsigned char has_room(){
 }
 
 
-/* This routine checks if reception is stuck in RX_OVERFLOW state.
-	If so, it flushes the buffer and resets radio to RX */
-
-#define RX_OVERFLOW		0x11
-#define MARCSTATE_RX	0x0D
-#define MARCSTATE_IDLE	0x01
-
-
-/* Start radio reception */
+/* Start radio reception 
+	switch_to_idle() flushes RX_FIFO !
+*/
 void start_rx() {
 	switch_to_idle();
 	cc1100_strobe(SCAL);
@@ -333,8 +294,6 @@ void start_tx() {
 	cc1100_strobe(STX);
 	radio_mode = RADIO_TX;
 }
-
-#define tx_finished() (cc1100_tx_finished())
 
 /* If we are in RADIO_TX mode and transmission is finished, enter RADIO_RX mode */
 void re_enter_rx(){
@@ -363,41 +322,37 @@ void re_enter_rx(){
 #define TX_COPY		1
 #define TX_SEND		2
 
+static 
 void handle_tx(){
-
-	/* This byte is the status of the handle_tx routine */
+	/* This byte is the state of the handle_tx routine */
 	static unsigned char tx_state = TX_IDLE;
-	static unsigned char tx_cnt;
-	char x;
+	static unsigned char tx_cnt;	// number of payload bytes to be transferred to TXFIFO (not counting address and length byte)
 
 	switch (tx_state){
 		
 	case TX_IDLE:
 		/* Is a new packet ready ? */
 		if (got_eot) {
+			got_eot=0;
 			tx_cnt = bufcnt;	/* = number of payload bytes to be transferred to TXFIFO (not counting address and length byte) */
 		
 			/* Transfer the length byte to TXFIFO (just add 1 for the address) */
-			cc1100_write1(TX_fifo, tx_cnt + 1);
+			cc1100_write_fifo(tx_cnt + 1);
 		
 			/* Transfer the address to TXFIFO */
-			cc1100_write1(TX_fifo, DEV_ADDR);	
+			cc1100_write_fifo(DEV_ADDR);	
 			
 			tx_state = TX_COPY;
-			got_eot=0;
-			
 			break;
 			
 		} else if ( bufcnt >= MAX_TX_PAYLOAD ) {
-			
-			/* tx_cnt = number of payload bytes to be transferred to TXFIFO (not counting address and length byte) */
 			tx_cnt = MAX_TX_PAYLOAD;	
 			
 			/* Transfer the length byte to TXFIFO (just add 1 for the address) */
-			cc1100_write1(TX_fifo, MAX_TX_PAYLOAD + 1);
+			cc1100_write_fifo(MAX_TX_PAYLOAD + 1);
 			
 			/* Transfer the address to TXFIFO */
-			cc1100_write1(TX_fifo, DEV_ADDR);	
+			cc1100_write_fifo(DEV_ADDR);	
 			
 			tx_state = TX_COPY;
 		};
@@ -406,8 +361,7 @@ void handle_tx(){
 	case TX_COPY:
 		/* Are there still bytes to copy to TXFIFO? */
 		if (tx_cnt > 0){
-			x = buffer_out();
-			cc1100_write1(TX_fifo, x);	
+			cc1100_write_fifo(buffer_out());	
 			tx_cnt--;
 		} else {
 			/* Finished copying ! */ 
@@ -434,83 +388,66 @@ void check_etx(){
 	
 	
 
-/* Checks if mpdtool has sent an ENQ character. Sends SO or SI or DLE*/
-void check_enq(){
+/* Checks if mpdtool has sent an ENQ character. 
+	This is our out-of-band communication channel with mpdtool.
+	Can be used to send arbitrary debugging information.
+	Currently we simply return the firmware version number.
+	mpdtool must make sure that this does not interfere with the communication with Betty.
+*/
+static void 
+check_enq(){
 	if (got_enq) {
 		got_enq = 0;		// Atomic Operation ! (see sdcc manual)
 		
-		if (radio_mode == RADIO_RX){
-			/* This is the mode where we are stuck in */
-			/* Do some sanity checks */
-			if ( (cc1100_read_status_reg_otf(MARCSTATE) & 0x1f) != MARCSTATE_RX) {
-				send_byte(NAK);
-				return;
-			};
-			send_byte(ASCII_SI);
-		} else if (radio_mode == RADIO_TX)
-			send_byte(SO);
-		else
-			send_byte(DLE);
+		send_byte('V');
+		send_byte(VERSION_MAJOR);
+		send_byte('.');
+		send_byte(VERSION_MINOR);
 	};
 }
-	
-#if 0
-/* checks if a complete packet has been received via radio 
-	Transfers this packet to serial line
-	Stops if EOT is received, EOT is sent over serial, radio_mode is set to IDLE
-*/
-void check_radio_packet (){
-	char x;
-	unsigned char i, length, address;
-	
-	if ( GDO0 ){
-		// We have received a complete packet over radio
-
-		cc1100_read(RX_fifo|BURST, &length, 1);		// Length byte = payload length + 1
-		
-		cc1100_read(RX_fifo|BURST, &address, 1); 	// Address byte (unused!)
-
-		// We are reading the RX_fifo one byte at a time and sending this byte to serial output 
-		for (i=0; i < (length - 1); i++){
-			cc1100_read(RX_fifo|BURST, &x, 1);
-			send_byte(x);
-			if (x == EOT)
-				break;
-		};
-		start_rx();	
-	};
-}
-#endif
-
 
 /* We check if there are some bytes to read from the RX_FIFO
 	and output one of them to the serial line.
 	We make sure to empty the RX_FIFO only when a complete packet has been received. (see CC1100 errata)
 	
-	NOTE what can go wrong?
+	What can possibly go wrong?
 		a) We might read a wrong length byte.
-		b) The CRC might not match.
-		c) The address might be wrong.
-		d) Reception somehow stops before the full packet has been received.
+			1)  length read is shorter than it really is:
+				We will read all bytes up to the wrong length (+2)
+				We expect the last payload byte to be an EOT, which it is not
+				The packet is cancelled and the remaining bytes are flushed.
+				
+			2)  length read is longer than it really is:
+				We will read some bytes and send them to mpdtool.
+				At least one byte is left in RX_FIFO and we wait indefinately for more bytes.
+				mpdtool will recognize the EOT and send an answer.
+				Transmitting the answer will happen even if we are in RX mode (see main()) and flush the RX_FIFO.	
+				The next RX will also fail, because our length byte was still wrong.
+				But length will be decremented with every byte and eventually we will reach state a1.
 		
-		a)  length read is shorter than it should be:
-				we do not read the end of the packet, missing the EOT character.
-			length read is longer than it should be:
-				we read the complete packet and send it to serial line, but
-				we also send some status bytes via serial and maybe the RX_FIFO underflows.
-	None of these errors should lead to an infinite loop.
-	
-	TODO check CRC bytes and send a byte to mpdtool to cancel the command if CRC wrong
+		b) The address might be wrong.
+				Should not happen because it is checked in hardware. But who knows?
+				Packet is discarded. Nothing is sent to mpdtool and reception is restarted.
+				
+		b) The CRC might not match.
+				The packet is cancelled and the remaining bytes are flushed.
 
-	Returns 0 if everything ok, else an error byte
+		d) Reception somehow stops before the full packet has been received.
+				We try receiving until the next packet arrives. Then similar to state a2.
+		
+		e) RX_FIFO overflows. Too many bytes arrive too fast.
+				Packet is lost. Reception is restarted. An incomplete packet might have been sent to mpdtool.
+
+	None of these errors should lead to an infinite loop!
+	
 */
-void
+static void
 check_radio_input (){
 	static unsigned char length = 0;	// number of bytes in current packet (incl. adr. and status bytes)
 	unsigned char n;					// number of bytes currently in RX_FIFO
 	unsigned char status;				// current chip status byte
 	unsigned char x;					// data byte read from cc1100 
-	unsigned char appended;				// appended status byte (first and second)
+	unsigned char appended;				// second appended status byte 
 	
 	status = cc1100_read_rxstatus();
 	n = status & 0x0f;
@@ -528,13 +465,13 @@ check_radio_input (){
 	
 	if (length == 0){										/* no length byte received so far */
 		if (n > 2) {
-			cc1100_read(RX_fifo|BURST, &length, 1);		// Length byte = payload length + 1 address byte
+			length = cc1100_read_fifo();					// Length byte = payload length + 1 address byte
 			if ( (length < 1) || (length > MAX_LEN) ){
 				start_rx();
 				length = 0;		
 				return;
 			};
-			cc1100_read(RX_fifo|BURST, &x, 1); 			// Address byte
+			x = cc1100_read_fifo(); 					// Address byte
 			if (x != DEV_ADDR){
 				start_rx();
 				length = 0;
@@ -555,16 +492,16 @@ check_radio_input (){
 	if (length > 3){				// still payload data to read
 		/* are there enough bytes to read to avoid emptying the RX_FIFO */
 		if (n > 1){
-			cc1100_read(RX_fifo|BURST, &x, 1);
+			x = cc1100_read_fifo();
 			send_byte(x);	
 			length--;	n--;
 		};
 	} else {						// only EOT and status bytes remaining
 		if (n >= length){			// packet finished ? 
 		/* Finished packet ? */
-			cc1100_read(RX_fifo|BURST, &x, 1);
-			cc1100_read(RX_fifo|BURST, &appended, 1);		// 1. appended status byte
-			cc1100_read(RX_fifo|BURST, &appended, 1);		// 2. appended status byte
+			x = cc1100_read_fifo();
+			cc1100_read_fifo();								// 1. appended status byte
+			appended = cc1100_read_fifo();					// 2. appended status byte
 			
 			if ( (x != EOT) || (0 == (appended & CRC_OK)) ) {		// Betty always sends an EOT as last character!
 				send_byte(CAN);
@@ -575,12 +512,11 @@ check_radio_input (){
 			start_rx();
 
 		} else return;				// not all status bytes in buffer
-
 	};
 	return;
 }
 
-
+// not used
 #if 0	
 unsigned char timeout;
 
@@ -600,6 +536,15 @@ unsigned char check_timeout(){
 	return 0;
 }
 #endif
+
+/* Must be called regularily to keep the watchdog timer running. */
+void
+feed_wd(){
+	EA = 0;
+	WFEED1 = 0xA5;
+	WFEED2 = 0x5A;
+	EA = 1;
+}
 
 void main(void) {
 
@@ -634,8 +579,8 @@ void main(void) {
 	P3 = 0;
 	/* ----------------------------------------------------------------- */
 	
-	
-/*
+// not used 	
+#if 0
 	PT0AD = 0x24;		// enable P0.5 and P0.2 as analog pins
 	
 	TMOD = 0x22;		// Timer 0 Mode, Timer 1 mode
@@ -649,7 +594,7 @@ void main(void) {
 	KBPATN = 0x08;
 	KBMASK = 0x08;
 	KBCON = 0x02;
-	*/
+#endif
 	
 	/* Enable Break detection and enter ISP when Break occurs */
 	AUXR1 |= (1<<6);
@@ -708,9 +653,14 @@ void main(void) {
 		Within the loop some tasks are called, which all return relatively fast (say 10 ms or shorter).
 		That way we create the illusion of multitasking.
 	
-		Task 1: check_etx
-			Checks if we got an ETX character. If we have room in our radio-tx-buffer, we send an ACK. 
+		Task 1a: check_etx
+			Checks if we got an ETX character from mpdtool. If we have room in our radio-tx-buffer, we send an ACK. 
 			Takes less than 0.3 ms, even if serial TX is busy.
+			
+		Task 1b: check_enq
+			Checks if we got an ENQ character from mpdtool. We send the requested information to mpdtool. 
+			Duration depends on amount of information sent to mpdtool.
+			This is used to get the version of the scart firmware and for other debugging info.
 	
 		Task 2: handle_radio_tx
 			If there is a packet in our radio-tx-buffer ready to be sent (either because max packet length is 
@@ -736,18 +686,20 @@ void main(void) {
 	/* Init Watchdog Timer */
 	WDL = 0xFF;			// WDT counter
 	EA = 0;
-	WDCON = 0xE5;		// Start WDT
+	WDCON = 0xE5;		// Start and feed WDT
 	WFEED1 = 0xA5;
 	WFEED2 = 0x5A;
 	EA = 1;
 	
 	while (1) {						/* Forever: */
 		
+		/* keep watchdog timer quiet */ 
 		feed_wd();
 		
 		/* Check if mpdtool has sent ETX. Sends ACK if there is room in buffer */
 		check_etx();
 		
+		/* Check if mpdtool wants some other info from us (out of band communication) */
 		check_enq();
 		
 		/* Our radio link is only half duplex. We decide here if we receive or transmit 

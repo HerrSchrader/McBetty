@@ -61,7 +61,7 @@ void send_byte(unsigned char h) {
         SBUF = h;  
 }
 
-
+// unused
 #if 0
 void send_string(const unsigned char* string) {
  

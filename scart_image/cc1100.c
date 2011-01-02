@@ -19,17 +19,12 @@
 #include <P89LPC932.h>
 #include "cc1100.h"
 #include "smartrf_CC1100.h"
-#include "cmd.h"
-
-
-/* GDO0 from cc1100 is connected with P0.6 from 89LPC31 ! 
-	This is already defined in cc1100.h
-	So we can use this pin to detect if a complete packet has been received
-*/
 
 
 /* Configuration bytes for cc1100
 	Will be loaded into cc100 registers at initialization
+	
+	We redefine some of the definitions of SMARTRF. This is intended.
 	
 	0x02:IOCFG0 = 0x06: GD0 active high	
 				Asserts when sync word has been sent / received, and de-asserts at the end of the packet. 
@@ -39,18 +34,16 @@
 				Asserts when a packet has been received with CRC OK. 
 				De-asserts when the first byte is read from the RX FIFO.
 
-	0x06:PKTLEN = 0x3D: maximum packet length is 61 (allows room for 2 STATUS APPEND bytes, see Errata Sheet)	
+	0x06:PKTLEN = 0xFF: maximum packet length is 255 (allows room for 2 STATUS APPEND bytes, see Errata Sheet)	
 	0x07:PKTCTRL1 = 0x06: Address check and 0 broadcast, status append, no autoflush of RX FIFO
 	0x08:PKTCTRL0 = 0x45: variable packet length (first byte after sync), CRC enabled, whitening on
 
 	0x09:ADDR = 0x01: Device address is 1
 	0x0a:CHANNR = 0x01: Channel 1
-	0x17:MCSM1 = 0x0C: Goto IDLE after TX, stay in RX after packet received
-
+	0x17:MCSM1 = Goto IDLE after TX, goto IDLE after RX 
 */
-
-#define SMARTRF_SETTING_PKTCTRL0	0x45
 #define SMARTRF_SETTING_PKTCTRL1	0x06
+#define SMARTRF_SETTING_PKTCTRL0	0x45
 #define SMARTRF_SETTING_IOCFG0D		0x07
 #define SMARTRF_SETTING_IOCFG2		0x06
 #define SMARTRF_SETTING_FIFOTHR		0x00
@@ -62,10 +55,10 @@
 
 const unsigned char conf[0x2F] = {
 	SMARTRF_SETTING_IOCFG2, 	// CC1100_IOCFG2     0x00;
-	0x2E,				// IOCFG1
+	0x2E,						// IOCFG1
 	SMARTRF_SETTING_IOCFG0D,	// CC1100_IOCFG0D    0x02;
 	SMARTRF_SETTING_FIFOTHR,	//Adr. 03 FIFOTHR   RXFIFO and TXFIFO thresholds.
-	0xD3 , 0x91, 			// Adr. 4, Adr. 5 
+	0xD3 , 0x91, 				// Adr. 4, Adr. 5 
 	SMARTRF_SETTING_PKTLEN,		//Adr. 06 PKTLEN    Packet length.
 	SMARTRF_SETTING_PKTCTRL1,	//Adr. 07 PKTCTRL1  Packet automation control.
 	SMARTRF_SETTING_PKTCTRL0,	//Adr. 08 PKTCTRL0  Packet automation control.
@@ -82,7 +75,7 @@ const unsigned char conf[0x2F] = {
 	SMARTRF_SETTING_MDMCFG1,	//Adr. 13 MDMCFG1   Modem configuration.
 	SMARTRF_SETTING_MDMCFG0,	//Adr. 14 MDMCFG0   Modem configuration.
 	SMARTRF_SETTING_DEVIATN,	//Adr. 15 DEVIATN   Modem deviation setting (when FSK modulation is enabled).
-	0x07,				// Adr. 16 MCSM2
+	0x07,						// Adr. 16 MCSM2
 	0x00 | RXOFF_IDLE | TXOFF_IDLE,	// Adr. 17 MCSM1
 	SMARTRF_SETTING_MCSM0,		//Adr. 18 MCSM0     Main Radio Control State Machine configuration.
 	SMARTRF_SETTING_FOCCFG,		//Adr. 19 FOCCFG    Frequency Offset Compensation Configuration.
@@ -111,18 +104,18 @@ const unsigned char conf[0x2F] = {
 /* write 1 byte to spi interface and simultaneously read 1 byte 
 	This is of course not the real SPI but our bit banged pseudo SPI
 */
-unsigned char spi_rw(unsigned char write) {
+static unsigned char 
+spi_rw(unsigned char write) {
+	unsigned char i;
 
-	unsigned char z;
-
-	for (z= 8; z > 0; z--) {
+	for (i=8; i > 0; i--) {
 		SCK = 0;
 		if (write & 0x80)
 			MOSI1 = 1;
 		else
 			MOSI1 = 0;
 		SCK = 1;
-		write <<=1;
+		write <<= 1;
 		if (MISO1)
 			write |= 0x01;
 	}
@@ -130,9 +123,41 @@ unsigned char spi_rw(unsigned char write) {
  
 	return(write);  
 }
+
+static unsigned char 
+cc1100_write(unsigned char addr, unsigned char* dat, unsigned char length) {
  
+	unsigned char i;
+	unsigned char status;
+ 
+	CS = 0;
+	while (MISO1);
+	status = spi_rw(addr | WRITE | BURST);
+	for (i=0; i < length; i++) 
+		spi_rw(dat[i]); 
+	CS = 1;
+ 
+	return(status);
+} 
+
+/* Write one data byte to addr of cc1100 */
+unsigned char 
+cc1100_write1(unsigned char addr, unsigned char dat) {
+ 
+	unsigned char status;
+ 
+	CS = 0;
+	while (MISO1);
+	status = spi_rw(addr | WRITE); 
+	spi_rw(dat); 
+	CS = 1;
+ 
+	return(status);
+} 
+
 /* Initialize cc1100 */
-void cc1100_init(void) {
+void 
+cc1100_init(void) {
  
 	unsigned char i = 0xff;
   
@@ -158,36 +183,10 @@ void cc1100_init(void) {
 
 }
 
-unsigned char cc1100_write(unsigned char addr, unsigned char* dat, unsigned char length) {
- 
-	unsigned char i;
-	unsigned char status;
- 
-	CS = 0;
-	while (MISO1);
-	status = spi_rw(addr | WRITE | BURST);
-	for (i=0; i < length; i++) 
-		spi_rw(dat[i]); 
-	CS = 1;
- 
-	return(status);
-} 
-
-unsigned char cc1100_write1(unsigned char addr,unsigned char dat) {
- 
-	unsigned char status;
- 
-	CS = 0;
-	while (MISO1);
-	status = spi_rw(addr | WRITE); 
-	spi_rw(dat); 
-	CS = 1;
- 
-	return(status);
-} 
-
-unsigned char cc1100_read(unsigned char addr, unsigned char* dat, unsigned char length) {
- 
+// not used
+#if 0
+unsigned char 
+cc1100_read(unsigned char addr, unsigned char* dat, unsigned char length) {
 	unsigned char i;
 	unsigned char status;
  
@@ -200,24 +199,27 @@ unsigned char cc1100_read(unsigned char addr, unsigned char* dat, unsigned char 
  
 	return(status);
 }
+#endif
 
-unsigned char cc1100_read1(unsigned char addr) {
- 
+/* read 1 byte from addr of cc1100 and return it */
+unsigned char
+cc1100_read1(unsigned char addr) {
 	unsigned char r;
  
 	CS = 0;
 	while (MISO1);
-	r = spi_rw(addr | READ);
-	r=spi_rw(0x00);
+	spi_rw(addr | READ);
+	r = spi_rw(0x00);
 	CS = 1;
  
 	return(r);
 }
 
-unsigned char cc1100_strobe(unsigned char cmd) {
-
+/* Send a command strobe to cc1100 */
+unsigned char 
+cc1100_strobe(unsigned char cmd) {
 	unsigned char status;
-  
+
 	CS = 0;
 	while (MISO1);
 	status = spi_rw(cmd);
@@ -230,7 +232,8 @@ unsigned char cc1100_strobe(unsigned char cmd) {
 /* Read a status register (0x30 - 0x3D) of CC1100 on the fly.
  	Means we have to read until no change occurs because of a bug in the CC1100
 */
-unsigned char cc1100_read_status_reg_otf(unsigned char reg){
+static unsigned char 
+cc1100_read_status_reg_otf(unsigned char reg){
 	 unsigned char res1, res2;
 	
 	 res1 = cc1100_read1(reg | BURST);
@@ -254,11 +257,10 @@ cc1100_read_rxstatus(){
  }
 
 
-
  /* Bring the CC1100 to idle mode and wait until it is reached */
- void switch_to_idle() {
+ void 
+switch_to_idle() {
 	cc1100_strobe(SFRX);		// to get out of possible RX_OVERFLOW state
-//	cc1100_strobe(SFTX);		// to get out of possible TX_UNDERFLOW state
 	cc1100_strobe(SIDLE);
 	while ( (cc1100_read_rxstatus() & STATE_MASK) != CHIP_IDLE);
 }
@@ -275,9 +277,9 @@ unsigned char
 cc1100_tx_finished(){
 	unsigned char s;
 		
-	s = cc1100_marcstate();
-	return ( (s == MARCSTATE_IDLE ) || (s == MARCSTATE_RX) || (s == MARCSTATE_RXFIFO_OVERFLOW) 
-			|| (s == MARCSTATE_TXFIFO_UNDERFLOW)
-	   );
+	s = cc1100_read_rxstatus() & STATE_MASK;
+	return ( (s == CHIP_IDLE ) || (s == CHIP_RX) || (s == CHIP_RX_OVFL) || (s == CHIP_TX_UNFL));
 }
+
+
 
