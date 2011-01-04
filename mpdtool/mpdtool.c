@@ -63,6 +63,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#include <string.h>
+
 // All our buffers can hold 1024 characters (+ trailing 0)
 #define BUFFER_SIZE 1024
 
@@ -86,11 +88,71 @@
 #define LF	0x0a
 #define ESC	0x1b
 
+
+
+int min(int x, int y){
+	if (x <= y)
+		return x;
+	return y;
+};
+
+int max(int x, int y){
+	if (x >= y)
+		return x;
+	return y;
+};
+
+/* Initialize a timer variable with the current time */
+void init_timer(double *tmr){
+	struct timeval start_time;
+	gettimeofday(&start_time, NULL);
+	*tmr = (double) start_time.tv_sec +  ((double) start_time.tv_usec) / 1000000;
+};
+
+/* time difference since last call of init_timer(&tmr) in seconds */
+double timer_diff(double tmr){
+	struct timeval t1;
+	
+	gettimeofday(&t1, NULL);
+	return ((double) t1.tv_sec) + ((double) t1.tv_usec) / 1000000 - tmr;
+};
+
+/* Print time difference since init of tmr to stderr */
+void prt_timer(double tmr){
+	fprintf (stderr,"[%.1lf ] ", timer_diff(tmr) );
+};
+
+/* General routine to send a buffer with bytes_to_send bytes to the given file descriptor.
+	Handles short writes, so that either all bytes are successfully written
+	or an error message is printed.
+	Returns TRUE iff successful, else 0.
+*/
+int 
+write_all(int fd, char *buffer, int bytes_to_send){
+	int bytes_written;
+	int num = 0;
+	
+	for (bytes_written = 0; bytes_written < bytes_to_send; bytes_written += num)
+	{
+		/* Write all remaining bytes to fd at once (if possible). */
+		num = write(fd, (void *)(buffer + bytes_written), (bytes_to_send - bytes_written) );
+		
+		/* Did our write fail completely ? */
+		if (num == -1) {
+			perror("write_all()");
+			return 0;
+		};
+		/* Now num is the number of bytes really written. Can be shorter than expected */
+	};
+	return 1;
+};
+
+/*--------------------------- Communication over serial line ---------------- */
 // file descriptor of our serial line
 int serial_fd;
 
 /* 
-	Global buffers and flags 
+	Global buffers and flags and other variables
 */
 
 char ser_in_buf[BUFFER_SIZE + 1];
@@ -101,11 +163,6 @@ char ser_out_buf[BUFFER_SIZE + 1];
 int ser_out_wrt_idx;
 int ser_out_rd_idx;
 int wait_ack;
-
-char mpd_line_buf[BUFFER_SIZE + 1];
-int mpd_line_len;
-int response_line_complete;
-int response_finished;
 
 
 /* resets the serial input buffer */
@@ -140,46 +197,6 @@ serial_output (char *buf){
 	while (*buf) 
 		ser_out_char( *(buf++) );
 }
-
-
-// Reset the line buffer for input from mpd
-void
-reset_mpd_line(){	
-	mpd_line_len = 0;
-	response_line_complete = 0;
-};
-	
-int min(int x, int y){
-	if (x <= y)
-		return x;
-	return y;
-};
-
-int max(int x, int y){
-	if (x >= y)
-		return x;
-	return y;
-};
-
-/* Initialize a timer variable with the current time */
-void init_timer(double *tmr){
-	struct timeval start_time;
-	gettimeofday(&start_time, NULL);
-	*tmr = (double) start_time.tv_sec +  ((double) start_time.tv_usec) / 1000000;
-};
-
-/* time difference since last call of init_timer(&tmr) in seconds */
-double timer_diff(double tmr){
-	struct timeval t1;
-	
-	gettimeofday(&t1, NULL);
-	return ((double) t1.tv_sec) + ((double) t1.tv_usec) / 1000000 - tmr;
-};
-
-/* Print time difference since init of tmr to stderr */
-void prt_timer(double tmr){
-	fprintf (stderr,"[%.1lf ] ", timer_diff(tmr) );
-};
 
 /* 
 	Initialize the serial line 
@@ -219,32 +236,6 @@ init_serial(int serial_fd, int baudrate, int time_out){
 	/* now clean the modem line and activate the settings for the port */
 	tcflush(serial_fd, TCIFLUSH);
 	tcsetattr(serial_fd,TCSANOW,&newtio);
-};
-
-/* General routine to send a buffer with bytes_to_send bytes to the given file descriptor.
-	Handles short writes, so that either all bytes are successfully written
-	or an error message is printed.
-	Returns TRUE iff successful, else 0.
-*/
-int 
-write_all(int fd, char *buffer, int bytes_to_send){
-	int bytes_written;
-	int num = 0;
-	
-	for (bytes_written = 0; bytes_written < bytes_to_send; bytes_written += num)
-	{
-		/* Write all remaining bytes to fd at once (if possible). */
-		num = write(fd, (void *)(buffer + bytes_written), (bytes_to_send - bytes_written) );
-		
-		/* Did our write fail completely ? */
-		if (num == -1) {
-			perror("write_all()");
-			return 0;
-		};
-		
-		/* Now num is the number of bytes really written. Can be shorter than expected */
-	};
-	return 1;
 };
 
 /* Read a boot loader response from serial line 
@@ -412,39 +403,6 @@ void reboot_scart(int serial_fd){
 	
 	tcflush(serial_fd, TCIOFLUSH);	
 };
-
-
-
-/* Convert a string to ISO 8859-15 
-	Attention: Length of the string may change !
-*/
-void
-utf8_to_iso8859_15(unsigned char *s){
-	unsigned char *rd = s;
-	unsigned char *wr = s;
-	unsigned char b0, b1;
-	unsigned int o1;
-	
-	while ( (b0 = *rd++) != '\0'){
-		if (b0 & 0x80) {
-			b1 = *rd;			// we may read next character here, because we have not hit '\0'.
-			if ( ((b0 & 0xE0) != 0xC0) || ((b1 & 0xC0) != 0x80) ){
-				/* error: not in the range of ISO 8859-15 */
-				*wr++ = '?';
-				continue;
-			};
-			/* We now know b1 is not 0. */
-			rd++;
-			
-			o1 = ((b0 & 0x1f) << 6 ) | (b1 & 0x3f);
-			if (o1 > 256) o1 = '?';
-			*wr++ = o1;
-		} else 
-			*wr++ = b0;
-	};
-	*wr = '\0';
-};
-
 
 /*
 	Send at most MAX_TX bytes to serial
@@ -630,17 +588,35 @@ scart_alive(){
 	return 1;
 };
 	
+
+/* ------------------- Communication with MPD --------------- */
+char mpd_resp_buf[BUFFER_SIZE + 1];
+int mpd_resp_len;
+int response_line_complete;
+int mpd_socket;
+struct sockaddr_in serverName = { 0 };
+double response_tmr;
+int response_finished;			// TODO here ?
+
+// Reset the line buffer for input from mpd
+void
+reset_mpd_line(){	
+	mpd_resp_len = 0;
+	response_line_complete = 0;
+};
+
 /* 
-	Read a byte from mpd socket into mpd_line_buf 
+	Read a byte from mpd socket into mpd_resp_buf 
 	Returns 0 if end-of-file was reached
 	Returns < 0 if error occured
 	Return 1 if byte was read
+	Sets response_line_complete flag if a '\n' was detected !
 */
 int 
 read_from_mpd (int mpd_fd){
 	int res;		 
 		
-	res = read(mpd_fd, mpd_line_buf+mpd_line_len, 1);
+	res = read(mpd_fd, mpd_resp_buf+mpd_resp_len, 1);
 	if (res == 0)
 		return res;
 	
@@ -649,22 +625,121 @@ read_from_mpd (int mpd_fd){
 		return res;
 	};	
 
-	switch (mpd_line_buf[mpd_line_len]) {
+	switch (mpd_resp_buf[mpd_resp_len]) {
 		case '\n':
-			if (mpd_line_len < BUFFER_SIZE - 2) 
-				mpd_line_len++;
-			mpd_line_buf[mpd_line_len]=0;			// Null terminate string 
+			if (mpd_resp_len < BUFFER_SIZE - 2) 
+				mpd_resp_len++;
+			mpd_resp_buf[mpd_resp_len]=0;			// Null terminate string 
 			response_line_complete = 1;				// Set flag
 			break;
 			
 		default:
-			if (mpd_line_len < BUFFER_SIZE - 2) 
-				mpd_line_len++;
-			else
-				fprintf(stderr, "Error, too many characters from mpd!\n");	
+			if (mpd_resp_len < BUFFER_SIZE - 2) 
+				mpd_resp_len++;
+			else {
+				fprintf(stderr, "Error, too many characters from mpd!\n");
+			}
 	};
 	return 1;
 };
+
+/* Sets up sockaddr_in structure for MPD connection */
+void
+init_mpd(char *remote_host, int remote_port){
+	struct hostent *host_ptr = NULL;
+	
+	/*
+	 * need to resolve the remote server name or
+	 * IP address 
+	*/
+	host_ptr = gethostbyname(remote_host);
+	if (NULL == host_ptr) {
+		host_ptr = gethostbyaddr(remote_host,
+				 strlen(remote_host), AF_INET);
+		if (NULL == host_ptr) {
+			perror("Error resolving server address");
+			exit(1);
+	 	}
+	}
+
+	serverName.sin_family = AF_INET;
+	serverName.sin_port = htons(remote_port);
+	(void) memcpy(&serverName.sin_addr, host_ptr->h_addr, host_ptr->h_length);
+	mpd_socket = -1;
+};
+
+/*
+	Close the connection to MPD 
+*/
+void
+close_mpd_socket(){
+	if (mpd_socket != -1) 
+		close(mpd_socket);
+	mpd_socket = -1;
+};
+
+/* Opens a new socket to MPD if the old one was closed 
+	Returns 1 if already connected to MPD, 2 if a new conncetion was established 
+	and 0 if unsuccessful.
+*/
+int
+open_mpd_socket(){
+	if (-1 != mpd_socket)
+		return 1;
+		
+	mpd_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (-1 == mpd_socket)	{
+		perror("socket()");
+		return 0;
+	};
+	return 2;
+}
+
+// the same as write_all(), but computes length of string itself
+int
+write_mpd(char * s){
+	return (write_all(mpd_socket, s, strlen(s) ) );	
+};
+
+/* This routine returns TRUE, iff the given line is the last line in
+	an mpd response, i.e. it starts with "OK" or "ACK"
+*/
+int
+mpd_eot(char *line){
+	return ( (0 == strncmp(line, "OK", 2)) || (0 == strncmp(line, "ACK", 3)) );
+};
+
+
+/* Convert a string to ISO 8859-15 
+	Attention: Length of the string may change !
+*/
+void
+utf8_to_iso8859_15(unsigned char *s){
+	unsigned char *rd = s;
+	unsigned char *wr = s;
+	unsigned char b0, b1;
+	unsigned int o1;
+	
+	while ( (b0 = *rd++) != '\0'){
+		if (b0 & 0x80) {
+			b1 = *rd;			// we may read next character here, because we have not hit '\0'.
+			if ( ((b0 & 0xE0) != 0xC0) || ((b1 & 0xC0) != 0x80) ){
+				/* error: not in the range of ISO 8859-15 */
+				*wr++ = '?';
+				continue;
+			};
+			/* We now know b1 is not 0. */
+			rd++;
+			
+			o1 = ((b0 & 0x1f) << 6 ) | (b1 & 0x3f);
+			if (o1 > 256) o1 = '?';
+			*wr++ = o1;
+		} else 
+			*wr++ = b0;
+	};
+	*wr = '\0';
+};
+
 
 /* 
 	Wait for input, either from serial line or from MPD socket
@@ -729,120 +804,90 @@ again:
     return 1;
 } 
 
-/*
-	Close the connection to MPD 
-*/
-void
-close_mpd_socket(int *mpd_socket){
-	if (*mpd_socket != -1) 
-		close(*mpd_socket);
-	*mpd_socket = -1;
-};
-
 
 /* 
 	Creates a new connection to MPD if there was no previous one.
-	Connects to MPD, sets the variable *client_socket to the established socket if successful,
-	else *client_socket is set to -1.
-	If a successful new connection was established, mpd_line_buf contains the initial answer from MPD
+	Connects to MPD.
+	If a successful NEW connection was established, mpd_resp_buf contains the initial answer from MPD
 	Returns 0 if connection could not be made.
 	If serial_fd is <> -1, a complete command from serial line aborts this routine
 	and no connection to MPD is made.
 */
 int
-open_mpd_connection(int *mpd_socket,  struct sockaddr_in *pserverName, int serial_fd){
+open_mpd_connection(int serial_fd){
 	int res;
-	
-	if (-1 != *mpd_socket)
-		return 1;
-		
-	*mpd_socket = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (-1 == *mpd_socket)	{
-		perror("socket()");
+
+	res = open_mpd_socket();
+	if (0 == res)
 		return 0;
-	};
 	
-	res = connect(*mpd_socket, (struct sockaddr*) pserverName, sizeof(*pserverName));
+ 	if (1 == res) 
+		return 1;
+	
+	res = connect(mpd_socket, (struct sockaddr*) &serverName, sizeof(serverName));
 	if (-1 == res){
 		perror("connect() to mpd failed");
 		fprintf(stderr,"Please check that MPD is running and is accepting connections from another computer!\n");
 		fprintf(stderr,"Maybe restarting MPD helps.\n");
-		close_mpd_socket(mpd_socket);
+		close_mpd_socket();
 		return 0;
-	}
- 
+	};	
+	
 	// The mpd server responds to a new connection with a version line beginning with "OK"
 	reset_mpd_line();
 
 	while (! response_line_complete){
 		// Wait 1 second for next MPD response character(s) or maybe another command from serial
-		res = wait_for_input(serial_fd, *mpd_socket, 1000);
+		res = wait_for_input(serial_fd, mpd_socket, 1000);
 
 		// Maybe we were too slow and Betty sent another command
 		if (cmd_complete){
 			fprintf(stderr, "  Betty sent new command.\n");
-			close_mpd_socket(mpd_socket);
+			close_mpd_socket();
 			return 0;
 		};
 		
 		if (res == 0){
 			fprintf(stderr, "  No answer when connecting to MPD.\n");
-			close_mpd_socket(mpd_socket);
+			close_mpd_socket();
 			return 0;
 		};	
 	};	
 	
-	if (strncmp(mpd_line_buf, "OK", 2) != 0) {
-		fprintf(stderr,"  Bad initial response from mpd: %s\n", mpd_line_buf);	
-		close_mpd_socket(mpd_socket);
+	if (strncmp(mpd_resp_buf, "OK", 2) != 0) {
+		fprintf(stderr,"  Bad initial response from mpd: %s\n", mpd_resp_buf);	
+		close_mpd_socket();
 		return 0;
 	};	
-	fprintf(stderr," MPD: %s\n", mpd_line_buf);
+	fprintf(stderr," MPD: %s\n", mpd_resp_buf);
 	return 1;
 };
 
 
-struct sockaddr_in serverName = { 0 };
-
-void
-init_mpd(char *remote_host, int remote_port){
-	struct hostent *host_ptr = NULL;
-	
-	/*
-	 * need to resolve the remote server name or
-	 * IP address 
-	*/
-	host_ptr = gethostbyname(remote_host);
-	if (NULL == host_ptr) {
-		host_ptr = gethostbyaddr(remote_host,
-				 strlen(remote_host), AF_INET);
-		if (NULL == host_ptr) {
-			perror("Error resolving server address");
-			exit(1);
-	 	}
-	}
-
-	serverName.sin_family = AF_INET;
-	serverName.sin_port = htons(remote_port);
-	(void) memcpy(&serverName.sin_addr, host_ptr->h_addr, host_ptr->h_length);
-
-};
-
 /* 
 	These commands are important and can be emulated if not present
+	or they are simply ignored (and an appropriate answer returned to Betty)
+	Some commands are always present, but we need to change their answers 
+	for Betty to be useful.
+	We have a bit for those commands too.
 */
 #define LISTPLAYLISTS_CMD	(1 << 0)
 #define PLAYLISTNAME_CMD (1 << 1)
 #define PLAYLISTCOUNT_CMD (1 << 2)
 #define SCRIPT_CMD (1<<3)
 #define SEARCH_CMD (1<<4)
+#define SEND_SEARCH_OK (1<<5)
+#define RESULT_CMD (1<<6)
 
-int mpd_cmds;
+/* A bit set to 1 means this command is available.
+	No need to emulate it.
+*/
+int mpd_cmd_avail;
 
-/* Here we set a bit if a response has to be modified before it is sent to Betty 
+/* 
+	Here we set a bit if a response has to be modified before it is sent to Betty.
 	The bits are the same as in mpd_cmds.
 */
-
 int mpd_emu;
 
 /* Some emulated cmds need to remember an argument.
@@ -850,79 +895,157 @@ int mpd_emu;
 */
 int mpd_emu_arg;
 
+/* Some emulated cmds need to count the results.
+	Use this.
+*/
 int mpd_emu_cnt;
+
+/* Send a command to MPD and prepare for the answers.
+	Starts response_tmr and resets (clears) mpd_response_line
+*/ 
+int
+mpd_start_cmd(char *cmd_str){
+	if ( 0 == open_mpd_connection(-1) ){
+		return 0;
+	};
+	reset_mpd_line();
+	
+	init_timer(&response_tmr);	
+	return write_mpd(cmd_str);	
+};
+
+
+/* Send a command to MPD
+	Ignore Betty while this is going on.
+	We use this routine to emulate some commands needed by Betty.
+	We use a generous timeout of 5 seconds.
+	
+	The answer lines (except "OK" and "ACK") are processed 
+	by ans_func() if not NULL.
+*/
+void
+mpd_cmd(char *cmd_str, void (*ans_func)(char *) ){
+	int response_finished = 0;
+		
+	if (0 == mpd_start_cmd(cmd_str))
+		return;
+
+	while (!response_finished) {
+		wait_for_input(-1, mpd_socket, 0);
+		if (response_line_complete){
+//			fprintf(stderr, "(MPD): %s", mpd_resp_buf);
+				
+			// check for "OK" or "ACK"
+			if ( mpd_eot(mpd_resp_buf) ) {
+				response_finished = 1;
+
+			} else {
+				if (ans_func) 
+					ans_func(mpd_resp_buf) ;
+			};
+			reset_mpd_line();
+		};
+		
+		if (timer_diff(response_tmr) > 5.0){
+			fprintf(stderr,"MPD response is too late\n");
+			close_mpd_socket();
+			break;
+		};
+	}
+};
+
+void
+prt_ans(char *s){
+	fprintf(stderr, "ANS: %s", s);
+};
+
+void
+prt_file(char *s){
+	if (0 != strncmp(s, "file: ", 6))
+		return; 
+	fprintf(stderr, "ANS: %s", s+6);
+};
+
+void
+cnt_playlists(char *s){
+	if (0 != strncmp(s, "playlist: ", 10))
+		return; 	
+//	fprintf(stderr, "ANS: %s", s+10);
+	mpd_emu_cnt++;
+};
+
+/* We save all the filenames that we get from MPD
+	(up to 500)
+*/
+#define FNAME_MAX	499
+#define FNAME_LEN	399
+char fname[FNAME_MAX+1][FNAME_LEN+1];			// 200 kB
+int fname_cnt;
+
+void
+save_file(char *s){
+	if (0 != strncmp(s, "file: ", 6))
+		return; 
+	if (fname_cnt >= FNAME_MAX)
+		return;
+	strncpy(fname[fname_cnt++], s+6, FNAME_LEN);
+	 
+//	fprintf(stderr, "ANS: %s",fname[fname_cnt-1]);
+};
+
+/* Not every version of MPD has all the commands that we use
+	So we get a list of the commands and remember which are not available
+*/
+void
+check_commands(char *s){
+	if (0 != strncmp(s, "command: ", 9))
+		return;
+//	fprintf(stderr, "ANS: %s", s+9);
+	
+	if (0 == strncmp(s+9, "listplaylists", strlen("listplaylists")) )	
+		mpd_cmd_avail |= LISTPLAYLISTS_CMD;
+};
 
 /* 
 Find out version of mpd and which commands it understands
 and read all available playlists
 */
 void
-discover_mpd(int *mpd_socket){
-	int response_finished;
-	int count = 0;
+check_mpd(){
+
+	char cmd[400];
+	int i;	
 	
-	mpd_cmds = 0;
+	mpd_cmd_avail = 0;
+
+	mpd_cmd("commands\n", check_commands);
 	
-	if ( 0 == open_mpd_connection(mpd_socket, &serverName, -1) ){
+	if ( 0 == open_mpd_connection(-1) ){
 		return;
 	};
-	reset_mpd_line();
 	
-	write_all(*mpd_socket, "commands\n", strlen("commands\n") );
+	mpd_emu_cnt = 0;
+	if ( mpd_cmd_avail & LISTPLAYLISTS_CMD )
+		mpd_cmd("listplaylists\n", cnt_playlists);
+	else
+		mpd_cmd("lsinfo\n", cnt_playlists);
 	
-	response_finished = 0;
+	fprintf(stderr,"MPD: Available Playlists = %d\n\n", mpd_emu_cnt);
 	
-	while (!response_finished) {
-		wait_for_input(-1, *mpd_socket, 0);
-		if (response_line_complete){
-
-			// Convert line to iso8859-15	
-//			utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
-//			fprintf(stderr, "  MPD: %s", mpd_line_buf);
-			
-			if (0 == strncmp(mpd_line_buf, "command: listplaylists", strlen("command: listplaylists")) )	
-				mpd_cmds |= LISTPLAYLISTS_CMD;
-				
-			// check for "OK" or "ACK"
-			if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) ){
-				response_finished = 1;
-				fprintf(stderr,"\n");
-			};
+// TODO debug only !
+#if 1
+	mpd_cmd("count artist \"Neil Young\"\n", prt_ans);	
 	
-			reset_mpd_line();
-		};
-	}
+	fname_cnt = 0;
+	mpd_cmd("find artist \"Neil Young\"\n", save_file);	
 	
-	
-	if ( 0 == open_mpd_connection(mpd_socket, &serverName, -1) ){
-		return;
+	for (i=0; i<fname_cnt; i++){
+		sprintf(cmd,"add \"%s\"\n",fname[i]);
+		mpd_cmd(cmd, NULL);
 	};
-	reset_mpd_line();
+#endif
 	
-	write_all(*mpd_socket, "lsinfo\n", strlen("lsinfo\n") );
-	
-	response_finished = 0;
-	
-	while (!response_finished) {
-		wait_for_input(-1, *mpd_socket, 0);
-		if (response_line_complete){
-
-			// Convert line to iso8859-15	
-//			utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
-//			fprintf(stderr, "  MPD: %s", mpd_line_buf);
-				
-			// check for "OK" or "ACK"
-			if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) ){
-				response_finished = 1;
-				fprintf(stderr,"\n");
-			};
-	
-			reset_mpd_line();
-			count++;
-		};
-	}
 	mpd_emu = 0;
-	fprintf(stderr,"MPD: Available Playlists = %d\n\n", count);
 };
 
 /* Copy the command in ser_in_buf() to local buf() to free ser_in_buf */	
@@ -932,22 +1055,41 @@ copy_serial_in(char *buf){
 	reset_ser_in();		// reset the serial input buffer, ready to get next command
 };	
 
-/* 
-	This routine sends a command string from buf to mpd.
-	If the socket is -1, it tries to connect to mpd.
-	When the connection is successful, the variable *client_socket is set to the connection.
-	The mpd_line_buf is reset to allow fresh input from MPD afterwards.
-	Returns TRUE iff successful, else 0.
+
+#define MAX_NAME_LEN 254
+/* Here we keep info about returned results from a search */
+typedef struct {
+ 	char name[MAX_NAME_LEN+1];			// this is the info returned to Betty
+} search_result;
+
+// This number has to be the same as in Betty
+#define MAX_NUM_RESULTS 50
+/* We store up to MAX_NUM_RESULTS answers to our search */
+search_result results[MAX_NUM_RESULTS];
+
+/* Number of results in list */
+int num_results;
+
+/* We check if s is already in our result list.
+	If it is, we return 0.
+	If it is not and we still have room to store it, we store it and return 1 
 */
-int
-send_to_mpd (int *mpd_socket, struct sockaddr_in *pserverName, char *buf){
-	if ( 0 == open_mpd_connection(mpd_socket, pserverName, serial_fd) ){
-		fprintf(stderr,"Sending to MPD cancelled.\n");
+int 
+cmp_and_store(char *s){
+	int i;
+	
+	for (i=0; i<num_results; i++){
+		if (0 == strcmp(s, results[i].name))	
+			return 0;
+	};	
+	if (num_results >= MAX_NUM_RESULTS)
 		return 0;
-	};
-	reset_mpd_line();
-	return (write_all(*mpd_socket, buf, strlen(buf)));
-};	
+	strncpy(results[num_results].name, s, MAX_NAME_LEN);
+	results[num_results].name[MAX_NAME_LEN] = 0;			// Null terminate
+	num_results++;
+	return 1;
+};
+
 
 
 /* Copy the serial input buffer to the given mpd_input_buffer buf.
@@ -957,6 +1099,8 @@ send_to_mpd (int *mpd_socket, struct sockaddr_in *pserverName, char *buf){
 void
 translate_to_mpd(char *buf){
 
+	/* NOTE the order of the ifs is important */
+	
 	/* Just to make sure we have a valid C-string */
 	buf[BUFFER_SIZE] = 0;
 	
@@ -973,12 +1117,20 @@ translate_to_mpd(char *buf){
 		system("./script_2.sh");
 	};		
 	
+	/* We have the command "result n" which will return the nth result of our search result cache. */
+	if (0 == strncmp(buf, "result ", strlen("result ")) ){
+		mpd_emu_arg = atoi(buf+7);
+		mpd_emu |= RESULT_CMD;
+		strcpy(buf, "ping\n");
+	} else
+		mpd_emu &= ~RESULT_CMD;
+
 	/* The command "playlistname x" is our own invention.
 		It returns the name of playlist number x (x starts with 0).
 		We emulate it by sending "listplaylists" and counting the responses. 
 	*/
 	if (0 == strncmp(buf, "playlistname ", strlen("playlistname ")) ){
-		strcpy(buf, "lsinfo\n");
+		strcpy(buf, "listplaylists\n");
 		mpd_emu |= PLAYLISTNAME_CMD;
 		mpd_emu_arg = atoi(buf + strlen("playlistname "));
 		mpd_emu_cnt = 0;
@@ -987,80 +1139,142 @@ translate_to_mpd(char *buf){
 		
 	/* The command "playlistcount" is our own invention.
 		It returns the number of playlists known to MPD.
-		We emulate it by sending "lsinfo" and counting the responses. 
+		We emulate it by sending "listplaylists" and counting the responses. 
 	*/
 	if (0 == strncmp(buf, "playlistcount\n", strlen("playlistcount\n")) ){
-		strcpy(buf, "lsinfo\n");
+		strcpy(buf, "listplaylists\n");
 		mpd_emu |= PLAYLISTCOUNT_CMD;
 		mpd_emu_cnt = 0;
 	} else 
 		mpd_emu &= ~PLAYLISTCOUNT_CMD;
 
 	/* The listplaylists command is not available in older versions of mpd */
-	if ( (0 == (mpd_cmds && LISTPLAYLISTS_CMD)) && (0 == strncmp(buf, "listplaylists\n", 14)) ){
+	if ( (0 == (mpd_cmd_avail & LISTPLAYLISTS_CMD)) && (0 == strncmp(buf, "listplaylists\n", 14)) ){
 		strcpy(buf, "lsinfo\n");
 		mpd_emu |= LISTPLAYLISTS_CMD;
 	} else 
 		mpd_emu &= ~LISTPLAYLISTS_CMD;
 		
-	/* We will filter the answers to the search command */
+	/* We will filter the answers to the search command because we may get too many */
 	if ( 0 == strncmp(buf, "search", 6)) {
-		mpd_emu |= SEARCH_CMD;
+		mpd_emu |= SEARCH_CMD | SEND_SEARCH_OK;
 		mpd_emu_cnt = 0;
-	} else 
+		num_results = 0;
+	} else {
 		mpd_emu &= ~SEARCH_CMD;
-		
+		mpd_emu &= ~SEND_SEARCH_OK;
+	};
 };
 
 void
 translate_to_serial(){
 	
 	// Convert line to iso8859-15			
-	utf8_to_iso8859_15( (unsigned char *) mpd_line_buf);
+	utf8_to_iso8859_15( (unsigned char *) mpd_resp_buf);
 	
 	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through	
 	if (mpd_emu & PLAYLISTNAME_CMD){
-		if ( (strncmp(mpd_line_buf, "playlist:", 9) == 0) ){
+		if ( (strncmp(mpd_resp_buf, "playlist:", 9) == 0) ){
 			if (mpd_emu_cnt == mpd_emu_arg) {
 				usleep(100000);
-				serial_output(mpd_line_buf);
+				serial_output(mpd_resp_buf);
 			};
 			mpd_emu_cnt++;
-		} else if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || 
-					(0 == strncmp(mpd_line_buf, "ACK", 3)) )
-			serial_output(mpd_line_buf);
+		} else if ( (0 == strncmp(mpd_resp_buf, "OK", 2)) || 
+					(0 == strncmp(mpd_resp_buf, "ACK", 3)) )
+			serial_output(mpd_resp_buf);
 	}
 	// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
 	else if (mpd_emu & LISTPLAYLISTS_CMD){
-		if ( (strncmp(mpd_line_buf, "playlist:", 9) == 0) ||
-			(0 == strncmp(mpd_line_buf, "OK", 2)) || 
-			(0 == strncmp(mpd_line_buf, "ACK", 3)) )
-				serial_output(mpd_line_buf);
+		if ( (strncmp(mpd_resp_buf, "playlist:", 9) == 0) ||
+			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
+			(0 == strncmp(mpd_resp_buf, "ACK", 3)) )
+				serial_output(mpd_resp_buf);
 	}
 	// If the PLAYLISTCOUNT emulation is on, we count playlist: entries and return the total number
 	else if (mpd_emu & PLAYLISTCOUNT_CMD){
-		if  (0 == strncmp(mpd_line_buf, "playlist:", 9)) {
+		if  (0 == strncmp(mpd_resp_buf, "playlist:", 9)) {
 			mpd_emu_cnt++;
-		} else if (0 == strncmp(mpd_line_buf, "OK", 2)) {
-			sprintf(mpd_line_buf, "playlistcount: %d\nOK\n",mpd_emu_cnt);
-			serial_output(mpd_line_buf);
+		} else if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+			sprintf(mpd_resp_buf, "playlistcount: %d\nOK\n",mpd_emu_cnt);
+			serial_output(mpd_resp_buf);
 
-		} else if 	(0 == strncmp(mpd_line_buf, "ACK", 3)) {
-				serial_output(mpd_line_buf);
+		} else if 	(0 == strncmp(mpd_resp_buf, "ACK", 3)) {
+				serial_output(mpd_resp_buf);
 		}
-	} else if (mpd_emu & SEARCH_CMD){
-		if (0 == strncmp(mpd_line_buf, "OK", 2)) {
-			sprintf(mpd_line_buf, "results: %d\nOK\n", mpd_emu_cnt);
-			serial_output(mpd_line_buf);
+	} 
+
+	else if (mpd_emu & SEARCH_CMD){
+		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+			sprintf(mpd_resp_buf, "results: %d\n", num_results);
+			serial_output(mpd_resp_buf);
+
+			sprintf(mpd_resp_buf, "OK\n");
+			serial_output(mpd_resp_buf);
+			
+		} else 			
+		if (0 == strncmp(mpd_resp_buf, "ACK", 3)) {
+			serial_output(mpd_resp_buf);
+			
+		} else {
+				mpd_emu_cnt++;
+				
+				if (0 == strncmp(mpd_resp_buf, "Artist: ", 8)){
+				if (num_results < MAX_NUM_RESULTS)	
+					cmp_and_store(mpd_resp_buf + 8);
+				
+				/* MPD sends every single matching file, which can take very long.
+					So after MAX_NUM_RESULTS or 1000 lines we cancel the connection to stop mpd.
+					We must fake the OK answer.
+				*/				
+				if ( (num_results == MAX_NUM_RESULTS) || (mpd_emu_cnt > 1000) ){
+					if (num_results == MAX_NUM_RESULTS)
+						sprintf(mpd_resp_buf, "results: 99\n");
+					else 
+						sprintf(mpd_resp_buf, "results: %d\n", num_results);
+					
+					serial_output(mpd_resp_buf);
+					close_mpd_socket();	
+					sprintf(mpd_resp_buf, "OK\n");
+					serial_output(mpd_resp_buf);
+				};	
+			};
 		}
-		else {
-			mpd_emu_cnt++;	
-//			if (mpd_emu_cnt < 20) 
-//				serial_output(mpd_line_buf);
+#if 0
+		if (mpd_emu & SEND_SEARCH_OK){
+			sprintf(mpd_resp_buf, "OK\n");
+			serial_output(mpd_resp_buf);
+			mpd_emu &= ~ SEND_SEARCH_OK;
+			
 		};
+
+		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+			sprintf(mpd_resp_buf, "results: %d\nOK\n", mpd_emu_cnt);
+			serial_output(mpd_resp_buf);
+		}
+
+		else {
+
+		mpd_emu_cnt++;	
+		if (mpd_emu_cnt > 50) {
+			strcpy(mpd_resp_buf, "OK\n");
+			serial_output(mpd_resp_buf);
+		};
+#endif	
+	}	else if (mpd_emu & RESULT_CMD) {
+			// check if argument is within bounds
+			if (mpd_emu_arg < num_results){
+				sprintf(mpd_resp_buf, "name: %s\n", results[mpd_emu_arg].name);
+				serial_output(mpd_resp_buf);
+				strcpy(mpd_resp_buf, "OK\n");
+				serial_output(mpd_resp_buf);
+			} else {
+				sprintf(mpd_resp_buf, "ACK: wrong result index %d\n", mpd_emu_arg);
+				serial_output(mpd_resp_buf);
+			};
 	}	else  {	
 		// put the line in serial output buffer	
-		serial_output(mpd_line_buf);	
+		serial_output(mpd_resp_buf);	
 	};	
 };
 
@@ -1078,12 +1292,11 @@ translate_to_serial(){
 
 int main(int argc, char *argv[])
 {
-	int res, client_socket;
+	int res;
 	char *serial_device;
 	struct termios oldtio;
 	int time_out_lim = 1, time_out_cnt = 0;
 	double total_tmr;
-	double response_tmr;
 	char mpd_input_buf[BUFFER_SIZE+1];
 	
 	
@@ -1117,9 +1330,8 @@ int main(int argc, char *argv[])
 	};	
 	
 	init_mpd(argv[2], atoi(argv[3]));
-	client_socket = -1;
-	
-	discover_mpd(&client_socket);
+
+	check_mpd();
 	
 	/*
 		This main loop has to be very error tolerant.	
@@ -1157,7 +1369,7 @@ int main(int argc, char *argv[])
 		
 		// if nothing to do, wait for some time (61 secs) for input	
 		if (! cmd_complete){
-			res = wait_for_input(serial_fd, client_socket, 61000);
+			res = wait_for_input(serial_fd, mpd_socket, 61000);
 
 			// if still no input, check if scart adapter (and Betty) is alive.
 			if (res == 0) {
@@ -1175,6 +1387,8 @@ int main(int argc, char *argv[])
 			};
 		};
 		// if we got input from MPD here, something must be wrong.
+		if (response_line_complete)
+			reset_mpd_line();
 		
 		// read more bytes until command is complete
 		if (!cmd_complete) continue;
@@ -1189,30 +1403,29 @@ int main(int argc, char *argv[])
 		prt_timer(total_tmr); fprintf(stderr, "Betty: %s", mpd_input_buf);
 		
 		// got a complete input via serial line
-		// send it to MPD, if necessary check initial response from mpd
-		// resets serial input buffer
-		res = send_to_mpd (&client_socket, &serverName, mpd_input_buf);
+		// send it to MPD, start response_tmr
+		// resets mpd_resp_buf to allow fresh input
+		res = mpd_start_cmd (mpd_input_buf);
 
 		// reset the serial output buffer
 		// All previous bytes are not a response to this command
 		reset_ser_out();
 
-		reset_mpd_line();
-	
 		// The response is not finished yet. 
 		response_finished = 0;
-		init_timer(&response_tmr);
 		
 		/* We will break out of this loop if another command from serial is detected */
 		while (! response_finished){
 			// Poll for MPD response or maybe another command from serial
-			res = wait_for_input(serial_fd, client_socket, 0);
+			res = wait_for_input(serial_fd, mpd_socket, 0);
 
 			// Maybe we were too slow and Betty sent another command
 			if (cmd_complete){
 				prt_timer(total_tmr);
 				fprintf(stderr, "  Time out. MPD response cancelled.\n");
-				close_mpd_socket(&client_socket);
+				close_mpd_socket();
+				reset_ser_out();
+				response_line_complete = 0;
 				break;
 			};
 				
@@ -1223,18 +1436,18 @@ int main(int argc, char *argv[])
 				if (timer_diff(response_tmr) > 10.0){
 					prt_timer(total_tmr);
 					fprintf(stderr,"MPD response is too late\n");
-					close_mpd_socket(&client_socket);
+					close_mpd_socket();
 					break;
 				}
 			};
 			
 			if (response_line_complete){
-				fprintf(stderr, "  MPD: %s", mpd_line_buf);
+				fprintf(stderr, "  MPD: %s", mpd_resp_buf);
 				translate_to_serial();
-//				fprintf(stderr, "  Mpd: %s", mpd_line_buf);
+//				fprintf(stderr, "  Mpd: %s", mpd_resp_buf);
 
 				// check for "OK" or "ACK"
-				if ( (0 == strncmp(mpd_line_buf, "OK", 2)) || (0 == strncmp(mpd_line_buf, "ACK", 3)) ){
+				if ( mpd_eot(mpd_resp_buf) ) {
 					response_finished = 1;
 					// Send EOT to serial out !
 					ser_out_char(EOT);
@@ -1248,7 +1461,7 @@ int main(int argc, char *argv[])
 		/* Send out all unsent bytes to serial buffer (as long as there is not another cmd) */
 		while ( (!cmd_complete)  && ( (ser_out_wrt_idx - ser_out_rd_idx) > 0 ) ){
 			// Poll for a new command from serial
-			res = wait_for_input(serial_fd, client_socket, 0);
+			res = wait_for_input(serial_fd, mpd_socket, 0);
 			
 			// if there are bytes in the output buffer, send them to serial if it is ready
 			send_to_serial(serial_fd);

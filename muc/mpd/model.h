@@ -21,6 +21,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define SINGLE_CHANGED		(1<<10)
 #define ERROR_FLAG			(1<<11)
 #define RESULTS_CHANGED		(1<<12)
+#define RESULT_NAMES_CHANGED	(1<<13)
 
 // Length of artist and title strings each, some songs and some albums really have long titles
 #define TITLE_LEN 150
@@ -58,7 +59,8 @@ struct MODEL {
 	int time_total;				// in seconds
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
 	unsigned int last_status;	// system time when we last got a valid status answer
-	char *search_string;		// is <> NULL iff the user wants to find something
+	char *search_string;		// is <> NULL iff the user wants to search for something
+	char *add_string;			// is <> NULL iff the user wants to add something to the playlist
 	int num_results;			// number of results after a search command
 	unsigned int script;		// if the user wants a script to be executed this is >= 0
 };
@@ -160,8 +162,9 @@ void user_song_unknown();
 void user_wants_song(int pos);
 
 void user_set_search_string(char * str);
-void mpd_find_ok();
+void mpd_search_ok();
 char *mpd_get_search_string();
+void mpd_findadd_ok();
 
 void model_set_last_response(unsigned int t);
 

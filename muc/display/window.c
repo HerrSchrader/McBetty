@@ -480,7 +480,7 @@ We need a blink task. Cursor blinks in selected window at 1|2 HZ
 */
 #define BLINK_PERIOD (5 * TICKS_PER_TENTH_SEC)
 
-#define WAIT_KEY_TIME (3 * TICKS_PER_SEC)
+#define WAIT_KEY_TIME (25 * TICKS_PER_TENTH_SEC)
 
 /* We only have one window where the cursor blinks */
 static struct Window *pcursor_win = NULL;
@@ -489,20 +489,28 @@ static int max_txt_len;
 
 static int cursor_new_pos = -1;
 static int cursor_pos = 0;				// position of cursor within text string (0 == first character)
-static uint8_t cursor_col = 0;			// column on screen where cursor has to be drawn
+static int cursor_col = 0;				// column on screen where cursor has to be drawn
 
 static int last_key = -1;
 static int key_cnt = -1;
 
 static struct timer char_tmr;
 
-/* Redraws window and sets cursor_col, win->cur_char and win->cur_col */
+/* Redraws window and remembers cursor_col, win->cur_char and win->cur_col 
+	The variable cursor_pos tells us at which position the cursor currently is.
+	cursor_pos >= 0 and <= win->text_len.
+	If cursor_pos == win_text_len, the cursor is past the end of string (at NULL character).
+	This routine will nevertheless set the correct column for cursor_col.
+	
+*/
 static void
 draw_cursor_win(struct Window *win){
 	if (NULL == win) return;
 	 
 	win_clear(win, 0);
 	set_font(win->font);
+	
+	cursor_col = -1;
 
 	win->cur_char = 0;
 	win->cur_col = win_txt_col(win);
@@ -519,9 +527,13 @@ draw_cursor_win(struct Window *win){
 			break;
 		};
 	};
+	if (cursor_col == -1)			// we were past the end of string
+		cursor_col = win->cur_col;
+	
 	win->cur_char = cursor_pos;
 	win->cur_col = cursor_col;
 };
+
 
 /* If pos is at end of string, increase text length (append a space) 
 	Returns 0 if text length limit was reached
@@ -540,20 +552,20 @@ inc_txt(int pos){
 	return 1;
 };
 
-static void
+/* Returns 1 if cursor could be advanced */
+static int
 advance_cursor(){
 	/* We must not move beyond end of string */
 	if (0 == pcursor_win->txt[cursor_pos])
-		return;
+		return 0;
 	
 	/* Move to next position in text if possible ? */
-	if (cursor_pos < (max_txt_len - 1) )
+	if (cursor_pos < (max_txt_len - 1) ){
 		cursor_new_pos = cursor_pos + 1;
-	else
+		return 1;
+	} else
 		cursor_new_pos = cursor_pos;
-	
-	/* Are we now at end of string ? Then insert a space at end of string */
-	inc_txt(cursor_new_pos);
+	return 0;
 };
 
 /* Change the character at pos */
@@ -663,11 +675,13 @@ win_cursor_input(int new_key){
 	};
 	
 	if (new_key == CURSOR_RIGHT){
-		if ( (cursor_pos + 1)  >= strlen(pcursor_win->txt)) return;
-		cursor_new_pos = cursor_pos + 1;
-		key_cnt = -1;
-		last_key = -1;
-		timer_stop(&char_tmr);
+		/* We must not move beyond end of string */
+		if (advance_cursor()){
+			cursor_new_pos = cursor_pos + 1;
+			key_cnt = -1;
+			last_key = -1;
+			timer_stop(&char_tmr);
+		};
 		return;
 	};	
 		

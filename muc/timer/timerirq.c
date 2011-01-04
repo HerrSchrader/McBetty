@@ -39,7 +39,7 @@ timer_init(){
 	If start_time != 0, t->expired is cleared else it is set.
 	It is safe to reset a running timer.
 	
-	A timer with a start_time of 0 is stopped.
+	A timer with a start_time of 0 is stopped but expired.
 	A period of 0 means the timer will not reload automatically.
 */
 void

@@ -321,7 +321,7 @@ ans_plname_line(char *s){
 
 /* We sent a "SEARCH xxx xxx" command */
 static void
-ans_find_line(char *s){
+ans_search_line(char *s){
 	/* Compare with "playlist: " */
 	if (strstart(response, "results: "))
 		model_store_num_results(atoi(response+9));
@@ -329,8 +329,26 @@ ans_find_line(char *s){
 
 /* We sent a "SEARCH xxx xxx" command and got "OK". */
 static void
-ans_find_ok(char *s){
-	mpd_find_ok();	
+ans_search_ok(char *s){
+	mpd_search_ok();	
+};
+
+/* We sent a search command and got "ACK" */
+static void 
+ans_search_ack(char *s){
+	mpd_search_ack();	
+};	
+
+static void
+ans_result_line(char *s){
+	/* Compare with "playlist: " */
+	if (strstart(response, "name: "))
+		model_store_resultname(response+6, request.arg);	
+};
+
+static void
+ans_result_ack(char *s){
+		model_store_resultname("", request.arg);	
 };
 
 static void 
@@ -581,8 +599,12 @@ inform_view(int model_changed){
 	};
 
 	if (model_changed & RESULTS_CHANGED){
-		view_results_changed();
+		view_results_changed(model_get_num_results());
 	};
+	
+	if (model_changed & RESULT_NAMES_CHANGED){
+		view_resultnames_changed();
+	};	
 	
 	model_reset_changed();
 };
@@ -735,11 +757,26 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 		PT_EXIT(pt);
 	};
 	
-	if (cmd == FIND_CMD){
-		strn_cpy (cmd_str, "search title ", CMDSTR_LEN);
+	if (cmd == SEARCH_CMD){
+		strn_cpy (cmd_str, "search artist \"", CMDSTR_LEN);
 		str_cat_max (cmd_str, mpd_get_search_string(), CMDSTR_LEN);
-		str_cat_max (cmd_str, "\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_find_line, ans_find_ok, NULL));
+		str_cat_max (cmd_str, "\"\n", CMDSTR_LEN);
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_search_line, ans_search_ok, ans_search_ack));
+		PT_EXIT(pt);
+	};
+	
+	if (cmd == RESULT_CMD){
+		compose_string (cmd_str, "result ", arg, CMDSTR_LEN);
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_result_line, NULL, ans_result_ack));
+		PT_EXIT(pt);
+	};
+	
+	if (cmd == FINDADD_CMD){
+		strn_cpy (cmd_str, "findadd artist \"", CMDSTR_LEN);
+//		str_cat_max (cmd_str, mpd_get_find_string(), CMDSTR_LEN);
+		str_cat_max (cmd_str, "Bogshed", CMDSTR_LEN);
+		str_cat_max (cmd_str, "\"\n", CMDSTR_LEN);
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, mpd_findadd_ok, NULL));
 		PT_EXIT(pt);
 	};
 	

@@ -66,22 +66,24 @@ model_reset_changed(){
 /* ================ Playlist variables, keeping info about all known playlists ========================= */
 static STR_CACHE playlists;
 
-
 /* ============== Tracklist variables, keeping info about songs in the current playlist. ==============
 * Track lists can be very long (100's of songs). So we only cache a few of them and request
 	more information from MPD if we need it.
 	And of course we only keep information for one track list (the current one),
 	so after loading a new track list we have to empty the cache and refill it.
 */
-
 static STR_CACHE tracklist;
 
-/* -------------------------------- Retrieving information from the model ---------------------------------- */
+/* ================ This cache holds results from searches ========================= */
+static STR_CACHE resultlist;
+
+
 
 // Maximum number of seconds that we wait for MPD to send anything to us before raising an error
-// Currently we rely on the fact that we send a "status" command every 20 seconds,
+// Currently we rely on the fact that we send a "status" command regularily,
 // so we should get our regular responses from MPD
 #define MAX_MPD_TIMEOUT 34
+// status command interval, must be smaller than MAX_MPD_TIMEOUT
 #define STATUS_SYNC_TIME 25
 
 /* TODO
@@ -274,6 +276,14 @@ model_needs_action(UserReq *req){
 		return PLINFO_CMD;
 	};
 	
+	/* Something to add to the playlist ? */
+	if (user_model.add_string != NULL)
+		return FINDADD_CMD;
+	
+	/* Something to search ? */
+	if (user_model.search_string != NULL)
+		return SEARCH_CMD;
+	
 	/* TODO the available playlists may change by an outside action (another client created/deleted one etc.)
 			So we should regularily (every 5 minutes or so) reread this information
 	*/ 
@@ -285,10 +295,15 @@ model_needs_action(UserReq *req){
 		return PLAYLISTNAME_CMD;
 	};
 
-	/* Something to search ? */
-	if (user_model.search_string != NULL)
-		return FIND_CMD;
-	
+	/* Find the first unknown result */
+	if (mpd_model.num_results > 0){
+		pos = cache_find_empty(&resultlist);
+		if ( (pos >= 0) && (pos < mpd_model.num_results) ) {
+			req->arg = pos;
+			return RESULT_CMD;
+		};
+	};
+
 	/* Maybe the user wants some script to be executed */
 	if (user_model.script != -1){
 		req->arg = user_model.script;
@@ -536,7 +551,105 @@ user_wants_playlist(int idx){
 	user_model.state = UNKNOWN;			// user accepts that state changes while doing this command
 };
 
+/* --------------------------------------- Search results ------------------------------- */
 
+/* Given an index starting from 0, we return the corresponding resultlist name entry.
+	If we have no info or the result does not exist we return "".
+*/
+char *
+mpd_get_resultlistname(int pos){
+	char *s;
+	s = cache_entry(&resultlist, pos);
+	if (NULL == s) return "";
+	return s;
+};
+
+/* 
+	The cache containing result info has to follow the information that we show on screen.
+	Here we tell the cache which positions we want to show,
+	namely all infos between start_pos and end_pos inclusive.
+
+	We return the start value that we really used.
+*/
+int
+resultlist_range_set(int start_pos, int end_pos){
+	return cache_range_set(&resultlist, start_pos, end_pos, mpd_model.num_results);
+};
+
+void
+mpd_set_resultlistcount(int n){
+	mpd_model.num_results = n;
+};
+
+void
+model_store_resultname(char *name, int result_pos){
+	cache_store(&resultlist, result_pos, name);
+	model_changed(RESULT_NAMES_CHANGED);
+};
+
+/* 
+	Returns pos of the last result known to MPD
+	Is < 0 if the total number of results is unknown
+	or if no result at all.
+*/
+int 
+mpd_resultlist_last(){
+	return mpd_model.num_results - 1;
+};
+
+/* -------------------------------------- Searching ----------------------------------------------------------- */
+
+/* Our search command returned the number of results */
+void
+model_store_num_results(int n){
+	mpd_model.num_results = n;
+	cache_empty(&resultlist, 0);			// all result names in cache are unknown
+	model_changed(RESULTS_CHANGED);
+	model_changed(RESULT_NAMES_CHANGED);
+};
+
+int
+model_get_num_results(){
+	return	(mpd_model.num_results);
+}
+char *
+mpd_get_search_string(){
+	return user_model.search_string;
+};
+
+/* A search command has been successfully executed. */
+void
+mpd_search_ok(){
+	user_model.search_string = NULL;	// wish fulfilled
+};
+
+/* A search command returned an error. */
+void
+mpd_search_ack(){
+	user_model.search_string = NULL;	// abort this search
+	model_store_num_results(0);
+};
+
+/* The user has maybe changed his search string 
+	We do not copy the string, but keep a pointer to it.
+	It may again change before we are really doing the search command.
+	But that is ok, because so our search string is always up to date.
+*/
+void
+user_set_search_string(char * s){
+	user_model.search_string = s;
+};
+
+void
+mpd_findadd_ok(){
+	user_model.add_string = NULL;
+};
+
+void
+user_set_add_string(char *s){
+	user_model.add_string = s;
+};
+	
 
 /* ------------------ Elapsed and total time ------------------------------- */
 int
@@ -1000,27 +1113,6 @@ user_toggle_mute(){
 			user_model.volume = 15;			// we use a default here in case we have no idea of old volume
 };
 
-/* -------------------------------------- Searching ----------------------------------------------------------- */
-char *
-mpd_get_search_string(){
-	return user_model.search_string;
-};
-
-void
-mpd_find_ok(){
-	user_model.search_string = NULL;
-};
-
-void
-user_set_search_string(char * str){
-	user_model.search_string = str;
-};
-
-void
-model_store_num_results(int n){
-	mpd_model.num_results = n;
-	model_changed(RESULTS_CHANGED);
-};
 
 /* -------------------------------------- Timing information -------------------------------------------------- */
 
@@ -1062,6 +1154,7 @@ model_reset(struct MODEL *m){
 	m->repeat = -1;
 	m->single = -1;
 	m->search_string = NULL;
+	m->add_string = NULL;
 	m->num_results = -1;
 	m->script = -1;
 };
@@ -1085,6 +1178,7 @@ model_init(){
 	
 	cache_init(&tracklist);
 	cache_init(&playlists);
+	cache_init(&resultlist);
 
 	/* 
 		This task updates the models notion of playtime once per second.

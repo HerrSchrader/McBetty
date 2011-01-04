@@ -16,9 +16,12 @@
 */
 
 /* 
-	User can enter search strings here
+	User can enter search strings in this screen
 */
 
+#include "global.h"
+#include "kernel.h"
+#include "timerirq.h"
 #include "screen.h"
 #include "window.h"
 #include "keyboard.h"
@@ -51,7 +54,44 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 /* Window showing the number of search reseults */
 #define num_results_win (win[2])
 
-static scroll_list results_list;
+static scroll_list result_list;
+
+
+/* ### Automatic search task ###  */
+/* This task is started when the search screen is entered and stopped on exit.
+	It will check the value of the current search input window for any changes.
+	If we have a stable change (i.e. search string is new and unchanged for 2 second,
+	we start a serach with this string.
+*/
+PT_THREAD (auto_search(struct pt *pt)){
+	static struct timer tmr;
+	static char search_string[WIN_TXT_SIZE];
+	static int is_new;
+	static int len;	// not used, but needed by strn_cpy_cmp()
+	 
+	PT_BEGIN(pt);
+	
+	search_string[0] = 0;
+	is_new = 0;
+	timer_add(&tmr, 10 * TICKS_PER_TENTH_SEC, 0);
+	
+	while(1){
+		PT_WAIT_UNTIL(pt, ( timer_expired(&tmr) ));
+		
+		if (1 == strn_cpy_cmp(search_string, input_win.txt, WIN_TXT_SIZE -1, &len) ){
+			// input string has not changed
+			if (is_new) {
+				user_set_search_string(input_win.txt);
+			};
+			is_new = 0;
+		} else {
+			is_new = 1;	
+		};	
+		timer_set(&tmr, 10 * TICKS_PER_TENTH_SEC, 0);
+	};
+	
+	PT_END(pt);
+};
 
 
 static void 
@@ -60,10 +100,12 @@ screen_enter(){
 	screen_visible(SEARCH_SCREEN, 1);
 	screen_redraw(SEARCH_SCREEN);	
 	win_cursor_set(&input_win, WIN_TXT_SIZE-1);
+	task_add(&auto_search);
 };
 
 static void 
 screen_exit(){
+	task_del(&auto_search);
 	win_cursor_set(NULL, WIN_TXT_SIZE-1);
 	screen_visible(SEARCH_SCREEN, 0);
 };
@@ -79,7 +121,7 @@ screen_exit(){
 
 static char * 
 get_result(int i){
-	return "";
+	return mpd_get_resultlistname(i);
 };
 		
 /* Initialize the search screen 
@@ -98,30 +140,52 @@ search_screen_init(Screen *this_screen) {
 	title_win.flags |= WINFLG_CENTER;
 	title_win.fg_color = WHITE;
 	title_win.bg_color = BLACK;
-	win_new_text(&title_win, "Search Album");	
+	win_new_text(&title_win, "Search Artist");	
 	cur_start_row += WL_SMALL_HEIGHT;
 	
 	win_init(&input_win, cur_start_row, 0, 20, 128, 1, win_txt[1]);
-	input_win.font = MEDIUMFONT;	
+	input_win.font = BIGFONT;	
 	input_win.txt_offs_row = 3;
 	win_new_text(&input_win, " ");
 	cur_start_row += 20;
 	
 	win_init(&num_results_win, cur_start_row, 0, WL_SMALL_HEIGHT, 128, 0, win_txt[2]);
 	num_results_win.font = SMALLFONT;	
-	num_results_win.flags |= WINFLG_CENTER;
 	num_results_win.fg_color = BLACK;
 	num_results_win.bg_color = DARK_GREY;	
-	win_new_text(&num_results_win, " ");
+	win_new_text(&num_results_win, "");
 	cur_start_row += WL_SMALL_HEIGHT;
 	
-	init_scroll_list(&results_list, &(win[3]), win_txt[3], WIN_TXT_SIZE, RL_SIZE, &get_result, cur_start_row);
+	init_scroll_list(&result_list, &(win[3]), win_txt[3], WIN_TXT_SIZE, RL_SIZE, &get_result, cur_start_row);
 
 }
 
 void 
 view_results_changed(int num){
-	win_new_text(&num_results_win, " results:");
+	char newstr[50];
+	char number[20];
+	char *numstr;
+	
+	strn_cpy (newstr, "Results:  ", 50);
+	if (num > 30)
+		str_cat_max(newstr, "> 50\n", 50);
+	else {
+		numstr = get_digits(num, number, 0); 
+		str_cat_max(newstr, numstr, 50);
+		str_cat_max(newstr, "\n", 50);
+	};
+	if (num_results_win.bg_color == DARK_GREY)
+		num_results_win.bg_color = LIGHT_GREY;	
+	else
+		num_results_win.bg_color = DARK_GREY;	
+
+	win_new_text(&num_results_win, newstr);	
+};
+
+
+void
+view_resultnames_changed(){
+	scroll_list_changed(&result_list);
 };
 
 
@@ -129,12 +193,38 @@ void
 search_keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 		case KEY_OK:
-			user_set_search_string(input_win.txt);
+			user_set_add_string(input_win.txt);
 			
 			/* The user wants to leave this screen */
 //			switch_screen(SEARCH_SCREEN, PLAYLIST_SCREEN);
 			break;
 			
+		case KEY_Pplus:	
+		case KEY_Up:
+			if (result_list.sel_win > 0)
+				sel_win_up(&result_list);
+			else {					// We want to scroll past the upper end of the window list
+				if ( info_idx(&result_list, 0)  > 0){		// We have information to show
+					result_list.first_info_idx = resultlist_range_set(result_list.first_info_idx-1, last_info_idx(&result_list)-1 );
+					view_resultnames_changed();
+				};
+			};	
+			break;
+			
+		case KEY_Pminus:	
+		case KEY_Down:
+			if (result_list.sel_win < (result_list.num_windows - 1)) {
+				// We need only move our selected window one position down
+				// But we check if we have already reached the last info pos
+				if ( (mpd_resultlist_last() == -1) || (info_idx(&result_list, result_list.sel_win) < mpd_resultlist_last()) )
+						sel_win_down(&result_list);
+
+			} else {					// We want to scroll past the lower end of the window list
+				result_list.first_info_idx = resultlist_range_set(result_list.first_info_idx+1, last_info_idx(&result_list)+1 );
+				view_resultnames_changed();
+			};
+			break;
+									
 		case KEY_Left:	
 			win_cursor_input(CURSOR_LEFT);
 			break;

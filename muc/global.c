@@ -143,23 +143,23 @@ str_cat_max(char *dest, const char *src, int n){
 	The length of the resulting string is stored in *length:
 */
 int
-strn_cpy_cmp(char *str1, char *str2, int n, int *length){
+strn_cpy_cmp(char *dest, char *str2, int n, int *length){
 	int ident = 1;
 	int len = 0;
 
 	do {	
-		if (*str1 != *str2){
-			*str1 = *str2;
+		if (*dest != *str2){
+			*dest = *str2;
 			ident = 0;
 		};
-		str1++;
+		dest++;
 	} while ( *(str2++) && ( ++len < n ) );
 	/* Now *(str2-1) is 0 or len == n 
-		If *(str2-1) is 0 we have just terminated the string str1 and we are finished.
-		if (len == n) we have found no terminating 0 in str2. Write one and return not identical. 
+		If *(str2-1) is 0 we have just terminated the string dest and we are finished.
+		if (len == n) we have found no terminating 0 in str2. Write 0 to dest and return not identical. 
 	*/
 	if (len == n) {
-		*(str1-1) = '\0';
+		*(dest-1) = '\0';
 		len--;
 		ident = 0;
 	};

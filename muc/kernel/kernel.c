@@ -232,7 +232,6 @@ task_add(char (*func) (struct pt *pt)){
 			PT_INIT(&(t->thread_pt));
 			return (t);
 		}
-
 	return NULL;
 }
 
@@ -241,9 +240,7 @@ task_add(char (*func) (struct pt *pt)){
 // TODO add a function to delete a task if we already know where it is.
 void 
 task_del(struct task *t){
-	int i;
 	t->state = FINISHED;
-	/* Find the given task in the task list */
 	num_tasks--;
 };
 
