@@ -773,10 +773,9 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
 	
 	if (cmd == FINDADD_CMD){
 		strn_cpy (cmd_str, "findadd artist \"", CMDSTR_LEN);
-//		str_cat_max (cmd_str, mpd_get_find_string(), CMDSTR_LEN);
-		str_cat_max (cmd_str, "Bogshed", CMDSTR_LEN);
+		str_cat_max (cmd_str, mpd_get_resultlistname(arg), CMDSTR_LEN);
 		str_cat_max (cmd_str, "\"\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, mpd_findadd_ok, NULL));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, mpd_findadd_ok, mpd_findadd_ok));
 		PT_EXIT(pt);
 	};
 	

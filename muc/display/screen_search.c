@@ -193,10 +193,8 @@ void
 search_keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 		case KEY_OK:
-			user_set_add_string(input_win.txt);
-			
-			/* The user wants to leave this screen */
-//			switch_screen(SEARCH_SCREEN, PLAYLIST_SCREEN);
+			user_wants_add(info_idx(&result_list, result_list.sel_win) );
+			switch_screen(SEARCH_SCREEN, TRACKLIST_SCREEN);
 			break;
 			
 		case KEY_Pplus:	

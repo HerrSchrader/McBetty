@@ -60,7 +60,7 @@ struct MODEL {
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
 	unsigned int last_status;	// system time when we last got a valid status answer
 	char *search_string;		// is <> NULL iff the user wants to search for something
-	char *add_string;			// is <> NULL iff the user wants to add something to the playlist
+	int add;					// is <> -1 iff the user wants to add something to the playlist
 	int num_results;			// number of results after a search command
 	unsigned int script;		// if the user wants a script to be executed this is >= 0
 };

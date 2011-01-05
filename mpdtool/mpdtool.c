@@ -740,7 +740,34 @@ utf8_to_iso8859_15(unsigned char *s){
 	*wr = '\0';
 };
 
-
+/* Convert a string to UTF8 	Attention: Length of the string may change !
+*/
+void
+iso8859_15_to_utf8(unsigned char *s_new, unsigned char *s_old, int max_len){
+	unsigned char c, b0, b1;
+	int len = 0;
+	
+	while ((c=*s_old++)){
+		if (c <= 0x7f){
+			if (len < max_len){
+				*s_new++ = c;
+				len++;
+			};
+		} else {
+			b0 = 0xC0;
+			b1 = 0x80;
+			b0 |= ((c & 0xC0) >> 6); 
+			b1 |= (c & 0x3F);
+			if (len < (max_len-1) ){
+				*s_new++ = b0;
+				*s_new++ = b1;
+				len+=2;
+			};
+		};
+	};
+	*s_new=0;
+};
+	
 /* 
 	Wait for input, either from serial line or from MPD socket
 	Uses select so does sleep when nothing to do
@@ -878,6 +905,8 @@ open_mpd_connection(int serial_fd){
 #define SEARCH_CMD (1<<4)
 #define SEND_SEARCH_OK (1<<5)
 #define RESULT_CMD (1<<6)
+#define FINDADD_CMD (1<<7)
+
 
 /* A bit set to 1 means this command is available.
 	No need to emulate it.
@@ -911,6 +940,7 @@ mpd_start_cmd(char *cmd_str){
 	reset_mpd_line();
 	
 	init_timer(&response_tmr);	
+//	fprintf(stderr,"start_cmd: %s\n", cmd_str);
 	return write_mpd(cmd_str);	
 };
 
@@ -923,12 +953,12 @@ mpd_start_cmd(char *cmd_str){
 	The answer lines (except "OK" and "ACK") are processed 
 	by ans_func() if not NULL.
 */
-void
+int
 mpd_cmd(char *cmd_str, void (*ans_func)(char *) ){
 	int response_finished = 0;
 		
 	if (0 == mpd_start_cmd(cmd_str))
-		return;
+		return 0;
 
 	while (!response_finished) {
 		wait_for_input(-1, mpd_socket, 0);
@@ -938,6 +968,7 @@ mpd_cmd(char *cmd_str, void (*ans_func)(char *) ){
 			// check for "OK" or "ACK"
 			if ( mpd_eot(mpd_resp_buf) ) {
 				response_finished = 1;
+				fprintf(stderr, "(MPD): %s", mpd_resp_buf);
 
 			} else {
 				if (ans_func) 
@@ -949,9 +980,10 @@ mpd_cmd(char *cmd_str, void (*ans_func)(char *) ){
 		if (timer_diff(response_tmr) > 5.0){
 			fprintf(stderr,"MPD response is too late\n");
 			close_mpd_socket();
-			break;
+			return 0;
 		};
 	}
+	return 1;
 };
 
 void
@@ -983,14 +1015,23 @@ char fname[FNAME_MAX+1][FNAME_LEN+1];			// 200 kB
 int fname_cnt;
 
 void
+line_copy(char *new, char *line){
+	while (*line != '\n')
+		*(new++) = *(line++);
+	*new = 0;
+};
+	
+/* We save the filenames without terminating newline!
+*/
+void
 save_file(char *s){
 	if (0 != strncmp(s, "file: ", 6))
 		return; 
 	if (fname_cnt >= FNAME_MAX)
 		return;
-	strncpy(fname[fname_cnt++], s+6, FNAME_LEN);
-	 
-//	fprintf(stderr, "ANS: %s",fname[fname_cnt-1]);
+	line_copy(fname[fname_cnt++], s+6);
+
+	fprintf(stderr, "saving: %s\n",fname[fname_cnt-1]);
 };
 
 /* Not every version of MPD has all the commands that we use
@@ -1004,6 +1045,9 @@ check_commands(char *s){
 	
 	if (0 == strncmp(s+9, "listplaylists", strlen("listplaylists")) )	
 		mpd_cmd_avail |= LISTPLAYLISTS_CMD;
+	
+	if (0 == strncmp(s+9, "findadd", strlen("findadd")) )	
+		mpd_cmd_avail |= FINDADD_CMD;
 };
 
 /* 
@@ -1033,7 +1077,7 @@ check_mpd(){
 	fprintf(stderr,"MPD: Available Playlists = %d\n\n", mpd_emu_cnt);
 	
 // TODO debug only !
-#if 1
+#if 0
 	mpd_cmd("count artist \"Neil Young\"\n", prt_ans);	
 	
 	fname_cnt = 0;
@@ -1130,10 +1174,10 @@ translate_to_mpd(char *buf){
 		We emulate it by sending "listplaylists" and counting the responses. 
 	*/
 	if (0 == strncmp(buf, "playlistname ", strlen("playlistname ")) ){
-		strcpy(buf, "listplaylists\n");
 		mpd_emu |= PLAYLISTNAME_CMD;
 		mpd_emu_arg = atoi(buf + strlen("playlistname "));
 		mpd_emu_cnt = 0;
+		strcpy(buf, "listplaylists\n");
 	} else 
 		mpd_emu &= ~PLAYLISTNAME_CMD;
 		
@@ -1164,6 +1208,34 @@ translate_to_mpd(char *buf){
 		mpd_emu &= ~SEARCH_CMD;
 		mpd_emu &= ~SEND_SEARCH_OK;
 	};
+	
+	/* The findadd command is not available in older versions of mpd */
+	if ( (!(mpd_cmd_avail & FINDADD_CMD)) && (0 == strncmp(buf, "findadd ", 8)) ){
+		
+		/* We already do the main work of the emulation here.
+			Later on we only send ping to mpd.
+			Betty may have to wait quite long for this answer !
+		*/
+		char newbuf[400];
+		int i;
+		
+		newbuf[399] = 0;
+		iso8859_15_to_utf8(newbuf, buf+8, 399);
+		mpd_emu |= FINDADD_CMD;
+		sprintf(buf, "find %s\n", newbuf);
+
+		fname_cnt = 0;
+		mpd_cmd(buf, save_file);	
+	
+		for (i=0; i<fname_cnt; i++){
+			sprintf(newbuf,"add \"%s\"\n",fname[i]);
+			if (!mpd_cmd(newbuf, NULL))
+				break;;
+		};
+		mpd_emu &= ~FINDADD_CMD;
+		strcpy(buf, "ping\n");
+	} else
+		mpd_emu &= ~FINDADD_CMD;
 };
 
 void
@@ -1184,13 +1256,7 @@ translate_to_serial(){
 					(0 == strncmp(mpd_resp_buf, "ACK", 3)) )
 			serial_output(mpd_resp_buf);
 	}
-	// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
-	else if (mpd_emu & LISTPLAYLISTS_CMD){
-		if ( (strncmp(mpd_resp_buf, "playlist:", 9) == 0) ||
-			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
-			(0 == strncmp(mpd_resp_buf, "ACK", 3)) )
-				serial_output(mpd_resp_buf);
-	}
+	
 	// If the PLAYLISTCOUNT emulation is on, we count playlist: entries and return the total number
 	else if (mpd_emu & PLAYLISTCOUNT_CMD){
 		if  (0 == strncmp(mpd_resp_buf, "playlist:", 9)) {
@@ -1203,6 +1269,13 @@ translate_to_serial(){
 				serial_output(mpd_resp_buf);
 		}
 	} 
+	// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
+	else if (mpd_emu & LISTPLAYLISTS_CMD){
+		if ( (strncmp(mpd_resp_buf, "playlist:", 9) == 0) ||
+			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
+			(0 == strncmp(mpd_resp_buf, "ACK", 3)) )
+				serial_output(mpd_resp_buf);
+	}
 
 	else if (mpd_emu & SEARCH_CMD){
 		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {

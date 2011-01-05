@@ -270,15 +270,17 @@ model_needs_action(UserReq *req){
 		return CLEAR_CMD;
 	};
 		
-	pos = cache_find_empty(&tracklist);	
+	pos = cache_find_empty(&tracklist);		
 	if ( (pos >= 0) && (pos < mpd_model.playlistlength) ) {
 		req->arg = pos;
 		return PLINFO_CMD;
 	};
 	
 	/* Something to add to the playlist ? */
-	if (user_model.add_string != NULL)
+	if (user_model.add != -1){
+		req->arg = user_model.add;
 		return FINDADD_CMD;
+	};
 	
 	/* Something to search ? */
 	if (user_model.search_string != NULL)
@@ -412,7 +414,6 @@ set_playlistlength(int n){
 	*/
 };
 
-
 /* Called after a successful LOAD command. 
 	Currently we interpret the LOAD as a CLEAR_AND_LOAD, i.e. the old playlist is cleared and the new one loaded.
 	We assume the user wish has been fulfilled 
@@ -421,11 +422,11 @@ set_playlistlength(int n){
 */
 void
 mpd_load_ok(){
-	dbg("mlo");
 	user_model.cur_playlist = -1;			// wish fulfilled
 	user_model.playlistlength = -1;
 	
 	set_playlistlength(-1);				// the new playlistlength is unknown
+	cache_range_set(&tracklist, 0, CACHE_MAX, -1);
 	cache_empty(&tracklist, 0);			// all tracks in cache are unknown
 	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR_AND_LOAD command!
 	mpd_set_pos(SONG_UNKNOWN);			// the previous current song is no longer valid
@@ -454,6 +455,7 @@ mpd_clear_ok(){
 	user_model.playlistlength = -1;	
 	user_model.cur_playlist = -1;			// wish fulfilled
 	set_playlistlength(0);	
+	cache_range_set(&tracklist, 0, CACHE_MAX, -1);
 	cache_empty(&tracklist, 0);			// all tracks in cache are non-existant
 	model_changed(TRACKLIST_CHANGED);
 	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR command!
@@ -642,14 +644,20 @@ user_set_search_string(char * s){
 
 void
 mpd_findadd_ok(){
-	user_model.add_string = NULL;
+	user_model.add = -1;				// wish fulfilled
+	user_model.playlistlength = -1;
+	set_playlistlength(-1);				// the new playlistlength is unknown
+	cache_range_set(&tracklist, 0, CACHE_MAX, -1);
+	cache_empty(&tracklist, 0);			// all tracks in cache are unknown
+	model_changed(TRACKLIST_CHANGED);
 };
 
+
+/* index into the result list */
 void
-user_set_add_string(char *s){
-	user_model.add_string = s;
+user_wants_add(int idx){
+	user_model.add = idx;
 };
-	
 
 /* ------------------ Elapsed and total time ------------------------------- */
 int
@@ -1154,7 +1162,7 @@ model_reset(struct MODEL *m){
 	m->repeat = -1;
 	m->single = -1;
 	m->search_string = NULL;
-	m->add_string = NULL;
+	m->add = -1;
 	m->num_results = -1;
 	m->script = -1;
 };
