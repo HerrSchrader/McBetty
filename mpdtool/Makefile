@@ -38,7 +38,7 @@ install: mpdtool
 	cp mpdtool $(INSTALLDIR_BIN)
 
 uninstall:
-	rm $(INSTALLDIR_BIN)/lpctool
+	rm $(INSTALLDIR_BIN)/mpdtool
 	
 	
 REMOTE_HOST=s101
