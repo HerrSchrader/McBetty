@@ -1,6 +1,5 @@
 /*
     global.h
-    Copyright (C) 2007  Colibri <colibri_dvb@lycos.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,7 +18,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#define VERSION "0.8.3"
+#define VERSION "0.9.5"
 
 /* This device address is used for radio communication.
 	Betty and SCART-Adapter must have equal addresses  !

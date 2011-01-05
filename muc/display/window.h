@@ -119,5 +119,9 @@ void sel_win_down(scroll_list *sl);
 void scroll_list_changed(scroll_list *sl);
 void init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt_len, int nw, char * (*info_text) (), int start_row );
 
+void win_cursor_set(struct Window *pwin, int size);
+void win_cursor_input(int new_key);
+void win_cursor_init();
+
 #endif
 

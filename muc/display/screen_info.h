@@ -1,4 +1,4 @@
-/* screen.h */
+/* info_screen.h */
 
 #ifndef INFO_PLAYING_H
 #define INFO_PLAYING_H

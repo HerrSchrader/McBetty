@@ -43,6 +43,7 @@
 #include "screen_playlist.h"
 #include "screen_playing.h"
 #include "screen_tracklist.h"
+#include "screen_search.h"
 #include "mpd.h"
 
 /* Returns TRUE iff the semaphore count is not zero, i. e. the semaphore is available */

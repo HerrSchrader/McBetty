@@ -25,6 +25,7 @@
 #include "screen.h"
 #include "window.h"
 #include "keyboard.h"
+#include "model.h"
 
 #include "screen_search.h"
 
@@ -56,6 +57,7 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 
 static scroll_list result_list;
 
+static struct task *auto_search_task;
 
 /* ### Automatic search task ###  */
 /* This task is started when the search screen is entered and stopped on exit.
@@ -100,12 +102,12 @@ screen_enter(){
 	screen_visible(SEARCH_SCREEN, 1);
 	screen_redraw(SEARCH_SCREEN);	
 	win_cursor_set(&input_win, WIN_TXT_SIZE-1);
-	task_add(&auto_search);
+	auto_search_task = task_add(&auto_search);
 };
 
 static void 
 screen_exit(){
-	task_del(&auto_search);
+	task_del(auto_search_task);
 	win_cursor_set(NULL, WIN_TXT_SIZE-1);
 	screen_visible(SEARCH_SCREEN, 0);
 };

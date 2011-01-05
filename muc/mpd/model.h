@@ -165,8 +165,15 @@ void user_set_search_string(char * str);
 void mpd_search_ok();
 char *mpd_get_search_string();
 void mpd_findadd_ok();
-
+char *mpd_get_resultlistname(int pos);
+void model_store_num_results(int n);
+int model_get_num_results();
 void model_set_last_response(unsigned int t);
+void mpd_search_ack();
+void model_store_resultname(char *name, int result_pos);
+void user_wants_add(int idx);
+int resultlist_range_set(int start_pos, int end_pos);
+int  mpd_resultlist_last();
 
 #endif
 

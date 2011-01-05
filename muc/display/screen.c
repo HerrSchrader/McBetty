@@ -34,6 +34,8 @@
 #include "screen_playing.h"
 #include "screen_tracklist.h"
 #include "screen_playlist.h"
+#include "screen_info.h"
+#include "screen_search.h"
 #include "model.h"
 #include "mpd.h"
 
@@ -134,7 +136,10 @@ mainscreen_init(void) {
 	set_keypress_handler(mainscreen_keypress);
 };
 	
-
+/* This is called when the current task does not know which screen is shown, 
+	so that switch_screen() can not be used.
+	We simply exit the current screen and enter the new one.
+*/
 void
 show_new_screen(enum SCREEN screen){
 	screen_exit(cur_screen);

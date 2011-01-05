@@ -40,6 +40,7 @@ void mainscreen_init(void);
 void user_pressed_a_key(int cur_key);
 void switch_screen(enum SCREEN oldscreen, enum SCREEN newscreen);
 void get_user_request(UserReq *req);
+void show_new_screen(enum SCREEN screen);
 
 #endif
 
