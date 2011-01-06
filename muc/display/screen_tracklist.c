@@ -182,7 +182,7 @@ tracklist_screen_init(Screen *this_screen){
 	
 	init_scroll_list(&track_list, &(win[1]), win_txt[1], WIN_TXT_SIZE, TL_SIZE, &track_info, cur_start_row);
 	
-	win_new_text(&win[0], "Choose a track");
+	win_new_text(&win[0], "Current playlist");
 	
 
 };	

@@ -426,8 +426,8 @@ mpd_load_ok(){
 	user_model.playlistlength = -1;
 	
 	set_playlistlength(-1);				// the new playlistlength is unknown
-	cache_range_set(&tracklist, 0, CACHE_MAX, -1);
-	cache_empty(&tracklist, 0);			// all tracks in cache are unknown
+	cache_empty(&tracklist, 0);
+	tracklist_range_set(0, CACHE_MAX);
 	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR_AND_LOAD command!
 	mpd_set_pos(SONG_UNKNOWN);			// the previous current song is no longer valid
 	model_changed(TRACKLIST_CHANGED);
@@ -455,8 +455,8 @@ mpd_clear_ok(){
 	user_model.playlistlength = -1;	
 	user_model.cur_playlist = -1;			// wish fulfilled
 	set_playlistlength(0);	
-	cache_range_set(&tracklist, 0, CACHE_MAX, -1);
-	cache_empty(&tracklist, 0);			// all tracks in cache are non-existant
+	cache_empty(&tracklist, 0);
+	tracklist_range_set(0, 0);
 	model_changed(TRACKLIST_CHANGED);
 	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR command!
 	mpd_set_pos(SONG_UNKNOWN);			// the previous current song is no longer valid
@@ -632,7 +632,7 @@ mpd_search_ack(){
 	model_store_num_results(0);
 };
 
-/* The user has maybe changed his search string 
+/* Maybe the user has changed his search string 
 	We do not copy the string, but keep a pointer to it.
 	It may again change before we are really doing the search command.
 	But that is ok, because so our search string is always up to date.
