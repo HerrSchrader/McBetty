@@ -903,9 +903,8 @@ open_mpd_connection(int serial_fd){
 #define PLAYLISTCOUNT_CMD (1 << 2)
 #define SCRIPT_CMD (1<<3)
 #define SEARCH_CMD (1<<4)
-#define SEND_SEARCH_OK (1<<5)
-#define RESULT_CMD (1<<6)
-#define FINDADD_CMD (1<<7)
+#define RESULT_CMD (1<<5)
+#define FINDADD_CMD (1<<6)
 
 
 /* A bit set to 1 means this command is available.
@@ -1192,7 +1191,9 @@ translate_to_mpd(char *buf){
 	} else 
 		mpd_emu &= ~PLAYLISTCOUNT_CMD;
 
-	/* The listplaylists command is not available in older versions of mpd */
+	/* The listplaylists command is not available in older versions of mpd 
+		We substitute "lsinfo" for it
+	*/
 	if ( (0 == (mpd_cmd_avail & LISTPLAYLISTS_CMD)) && (0 == strncmp(buf, "listplaylists\n", 14)) ){
 		strcpy(buf, "lsinfo\n");
 		mpd_emu |= LISTPLAYLISTS_CMD;
@@ -1201,12 +1202,12 @@ translate_to_mpd(char *buf){
 		
 	/* We will filter the answers to the search command because we may get too many */
 	if ( 0 == strncmp(buf, "search", 6)) {
-		mpd_emu |= SEARCH_CMD | SEND_SEARCH_OK;
+		mpd_emu |= SEARCH_CMD; //| SEND_SEARCH_OK;
 		mpd_emu_cnt = 0;
 		num_results = 0;
 	} else {
 		mpd_emu &= ~SEARCH_CMD;
-		mpd_emu &= ~SEND_SEARCH_OK;
+//		mpd_emu &= ~SEND_SEARCH_OK;
 	};
 	
 	/* The findadd command is not available in older versions of mpd */
@@ -1238,117 +1239,113 @@ translate_to_mpd(char *buf){
 		mpd_emu &= ~FINDADD_CMD;
 };
 
+/* We have an answer from mpd in mpd_resp_buf.
+	Convert it to the character set understood by Betty
+	and do any necessary emulation and/or filtering
+	normally just sends the translated string to serial_output()
+	
+	NOTE the main loop depends on an "OK" or "ACK" answer to detect the end of the MPD response.
+		So we have to return that when we leave this routine
+		When we send a fake "OK"/"ACK" to Betty we must make sure it is not at the start
+		of mpd_resp_buf when we leave the routine
+*/
 void
 translate_to_serial(){
 	
 	// Convert line to iso8859-15			
 	utf8_to_iso8859_15( (unsigned char *) mpd_resp_buf);
 	
-	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through	
-	if (mpd_emu & PLAYLISTNAME_CMD){
-		if ( (strncmp(mpd_resp_buf, "playlist:", 9) == 0) ){
-			if (mpd_emu_cnt == mpd_emu_arg) {
-				usleep(100000);
-				serial_output(mpd_resp_buf);
-			};
-			mpd_emu_cnt++;
-		} else if ( (0 == strncmp(mpd_resp_buf, "OK", 2)) || 
-					(0 == strncmp(mpd_resp_buf, "ACK", 3)) )
-			serial_output(mpd_resp_buf);
+	// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
+	if (mpd_emu & LISTPLAYLISTS_CMD){
+		if (! (
+			(0 == strncmp(mpd_resp_buf, "playlist:", 9)) ||
+			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
+			(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )
+		return;
 	}
-	
+
+	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through
+	// as well as "OK" or "ACK"	
+	if (mpd_emu & PLAYLISTNAME_CMD){
+		if ( (0 == strncmp(mpd_resp_buf, "playlist:", 9)) ){
+			if (mpd_emu_cnt++ != mpd_emu_arg)
+				return;
+		};
+	}
+
 	// If the PLAYLISTCOUNT emulation is on, we count playlist: entries and return the total number
-	else if (mpd_emu & PLAYLISTCOUNT_CMD){
+	if (mpd_emu & PLAYLISTCOUNT_CMD){
 		if  (0 == strncmp(mpd_resp_buf, "playlist:", 9)) {
 			mpd_emu_cnt++;
-		} else if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
-			sprintf(mpd_resp_buf, "playlistcount: %d\nOK\n",mpd_emu_cnt);
+			return;
+		};
+
+		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+			sprintf(mpd_resp_buf, "playlistcount: %d\n",mpd_emu_cnt);
 			serial_output(mpd_resp_buf);
+			
+			strcpy(mpd_resp_buf, "OK\n");
+			serial_output(mpd_resp_buf);
+			return;
+		};
+	};
 
-		} else if 	(0 == strncmp(mpd_resp_buf, "ACK", 3)) {
-				serial_output(mpd_resp_buf);
-		}
-	} 
-	// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
-	else if (mpd_emu & LISTPLAYLISTS_CMD){
-		if ( (strncmp(mpd_resp_buf, "playlist:", 9) == 0) ||
-			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
-			(0 == strncmp(mpd_resp_buf, "ACK", 3)) )
-				serial_output(mpd_resp_buf);
-	}
-
-	else if (mpd_emu & SEARCH_CMD){
+	if (mpd_emu & SEARCH_CMD){
 		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
 			sprintf(mpd_resp_buf, "results: %d\n", num_results);
 			serial_output(mpd_resp_buf);
 
-			sprintf(mpd_resp_buf, "OK\n");
-			serial_output(mpd_resp_buf);
-			
-		} else 			
-		if (0 == strncmp(mpd_resp_buf, "ACK", 3)) {
-			serial_output(mpd_resp_buf);
-			
-		} else {
-				mpd_emu_cnt++;
-				
-				if (0 == strncmp(mpd_resp_buf, "Artist: ", 8)){
-				if (num_results < MAX_NUM_RESULTS)	
-					cmp_and_store(mpd_resp_buf + 8);
-				
-				/* MPD sends every single matching file, which can take very long.
-					So after MAX_NUM_RESULTS or 1000 lines we cancel the connection to stop mpd.
-					We must fake the OK answer.
-				*/				
-				if ( (num_results == MAX_NUM_RESULTS) || (mpd_emu_cnt > 1000) ){
-					if (num_results == MAX_NUM_RESULTS)
-						sprintf(mpd_resp_buf, "results: 99\n");
-					else 
-						sprintf(mpd_resp_buf, "results: %d\n", num_results);
-					
-					serial_output(mpd_resp_buf);
-					close_mpd_socket();	
-					sprintf(mpd_resp_buf, "OK\n");
-					serial_output(mpd_resp_buf);
-				};	
-			};
-		}
-#if 0
-		if (mpd_emu & SEND_SEARCH_OK){
-			sprintf(mpd_resp_buf, "OK\n");
-			serial_output(mpd_resp_buf);
-			mpd_emu &= ~ SEND_SEARCH_OK;
-			
-		};
-
-		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
-			sprintf(mpd_resp_buf, "results: %d\nOK\n", mpd_emu_cnt);
-			serial_output(mpd_resp_buf);
-		}
-
-		else {
-
-		mpd_emu_cnt++;	
-		if (mpd_emu_cnt > 50) {
 			strcpy(mpd_resp_buf, "OK\n");
 			serial_output(mpd_resp_buf);
+			return;
 		};
-#endif	
-	}	else if (mpd_emu & RESULT_CMD) {
-			// check if argument is within bounds
-			if (mpd_emu_arg < num_results){
-				sprintf(mpd_resp_buf, "name: %s\n", results[mpd_emu_arg].name);
+				
+		if (0 == strncmp(mpd_resp_buf, "ACK", 3)) {
+			serial_output(mpd_resp_buf);
+			return;
+		}; 
+		
+		mpd_emu_cnt++;
+	
+		if (0 == strncmp(mpd_resp_buf, "Artist: ", 8)){
+			if (num_results < MAX_NUM_RESULTS)	
+				cmp_and_store(mpd_resp_buf + 8);
+				
+			/* MPD sends every single matching file, which can take very long.
+				So after MAX_NUM_RESULTS or 1000 lines we cancel the connection to stop mpd.
+				We must fake the OK answer.
+			*/				
+			if ( (num_results == MAX_NUM_RESULTS) || (mpd_emu_cnt > 1000) ){
+				if (num_results == MAX_NUM_RESULTS)
+					sprintf(mpd_resp_buf, "results: 99\n");
+				else 
+					sprintf(mpd_resp_buf, "results: %d\n", num_results);
+
 				serial_output(mpd_resp_buf);
-				strcpy(mpd_resp_buf, "OK\n");
+				close_mpd_socket();	
+				sprintf(mpd_resp_buf, "OK\n");
 				serial_output(mpd_resp_buf);
-			} else {
-				sprintf(mpd_resp_buf, "ACK: wrong result index %d\n", mpd_emu_arg);
-				serial_output(mpd_resp_buf);
-			};
-	}	else  {	
-		// put the line in serial output buffer	
-		serial_output(mpd_resp_buf);	
-	};	
+			};	
+		};
+		return;
+	};
+
+	if (mpd_emu & RESULT_CMD) {
+		// check if argument is within bounds
+		if (mpd_emu_arg < num_results){
+			sprintf(mpd_resp_buf, "name: %s\n", results[mpd_emu_arg].name);
+			serial_output(mpd_resp_buf);
+			strcpy(mpd_resp_buf, "OK\n");
+			serial_output(mpd_resp_buf);
+		} else {
+			sprintf(mpd_resp_buf, "ACK: wrong result index %d\n", mpd_emu_arg);
+			serial_output(mpd_resp_buf);
+		};
+		return;
+	};
+	
+	// put the line in serial output buffer	
+	serial_output(mpd_resp_buf);	
 };
 
 
