@@ -34,3 +34,7 @@ muc/boop.map
 muc/muc_rom.hex
 muc/muc_rom.elf
 
+# binary files
+muc/muc_rom.bin
+scart_image/flashtool
+
