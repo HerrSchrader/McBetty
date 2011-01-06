@@ -132,7 +132,7 @@ playing_screen_init(Screen *this_screen) {
 	/* Our indicator for the volume (triangle progress bar) */
 	win_init(&vol_ramp_win, VOL_ROW, 31, 16, 50, 0, win_txt[6]);
 	vol_ramp_win.flags = WINFLG_RAMP;
-	vol_ramp_win.fg_color = DARK_GREY;
+	vol_ramp_win.fg_color = BLACK;
 	vol_ramp_win.cur_char = 100/2;		/* We initialize the volume with 100 % */
 
 	/* The text portion of the volume follows on the same line as the ramp */
