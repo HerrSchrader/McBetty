@@ -156,6 +156,9 @@ screen_exit(){
 	screen_visible(TRACKLIST_SCREEN, 0);
 };
 
+// Forward declaration
+static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+
 void
 tracklist_screen_init(Screen *this_screen){
 	int cur_start_row;
@@ -164,6 +167,7 @@ tracklist_screen_init(Screen *this_screen){
 	this_screen->win_list = win;
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
+	this_screen->keypress = keypress;
 	
 	cur_start_row = WL_START_ROW;	
 	
@@ -193,7 +197,7 @@ tracklist_screen_init(Screen *this_screen){
 	- pass the key through to PLAYING screen
 */
 void
-tracklist_keypress(Screen *track_screen, int cur_key, UserReq *req){
+keypress(Screen *track_screen, int cur_key, UserReq *req){
 		
 	switch (cur_key) {
 

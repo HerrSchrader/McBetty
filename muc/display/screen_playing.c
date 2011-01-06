@@ -89,6 +89,9 @@ screen_exit(){
 	screen_visible(PLAYING_SCREEN, 0);
 };
 
+// Forward declaration
+static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+
 /* Initialize the playing screen 
 	We clear the whole screen.
 */
@@ -98,6 +101,7 @@ playing_screen_init(Screen *this_screen) {
 	this_screen->win_list = win;
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
+	this_screen->keypress = keypress;
 	
 	win_init(&title_win, 0, 0, 50, 128, 1, win_txt[0]);
 	title_win.font = MEDIUMFONT;	
@@ -284,7 +288,7 @@ view_state_changed(enum PLAYSTATE state){
 };
 
 void 
-playing_keypress(Screen *this_screen, int cur_key, UserReq *req){
+keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
 		case KEY_Yellow:

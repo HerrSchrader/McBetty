@@ -83,7 +83,6 @@ screen_redraw(enum SCREEN screen){
 
 
 /* The current screen has been exited.
-	Find a new screen !
 */
 static void
 screen_exit(enum SCREEN screen){
@@ -193,12 +192,12 @@ mainscreen_keypress(int cur_key){
 		case KEY_Vplus:	
 			/* Inform the controller that the user wants a volume increase */
 			user_wants_volume_add(+5);
-			break;
+			return;
 			
 		case KEY_Vminus:
 			/* Inform the controller that the user wants a volume decrease */
 			user_wants_volume_add(-5);
-			break;
+			return;
 		
 	/* The first video text key toggles the serial debug output. */
 		case KEY_VTX1:
@@ -210,29 +209,6 @@ mainscreen_keypress(int cur_key){
 			return;
 	};
 	
-	switch(cur_screen){	
+	screen_list[cur_screen].keypress( &(screen_list[cur_screen]), cur_key, &user_request);
 
-		case PLAYING_SCREEN:
-			playing_keypress( &(screen_list[PLAYING_SCREEN]), cur_key, &user_request);	
-			break;
-			
-		case PLAYLIST_SCREEN:
-			playlist_keypress( &(screen_list[PLAYLIST_SCREEN]), cur_key, &user_request);
-			break;
-			
-		case TRACKLIST_SCREEN:
-			tracklist_keypress( &(screen_list[TRACKLIST_SCREEN]), cur_key, &user_request);
-			break;
-			
-		case INFO_SCREEN:
-			info_keypress( &(screen_list[INFO_SCREEN]), cur_key, &user_request);
-			break;	
-			
-		case SEARCH_SCREEN:
-			search_keypress( &(screen_list[INFO_SCREEN]), cur_key, &user_request);
-			break;
-				
-		default:
-			break;
-	}
 };
