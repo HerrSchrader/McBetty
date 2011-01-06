@@ -88,6 +88,9 @@ screen_exit(){
 	screen_visible(PLAYLIST_SCREEN, 0);
 };
 
+// Forward declaration
+static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+
 void
 playlist_screen_init(Screen *this_screen){
 	int cur_start_row;
@@ -96,6 +99,7 @@ playlist_screen_init(Screen *this_screen){
 	this_screen->win_list = win;
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
+	this_screen->keypress = keypress;
 
 	cur_start_row = WL_START_ROW;	
 	
@@ -116,7 +120,7 @@ playlist_screen_init(Screen *this_screen){
 
 
 void
-playlist_keypress(Screen *pl_screen, int cur_key, UserReq *req){
+keypress(Screen *pl_screen, int cur_key, UserReq *req){
 		
 	switch (cur_key) {
 

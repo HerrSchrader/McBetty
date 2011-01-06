@@ -61,6 +61,9 @@ screen_exit(){
 	screen_visible(INFO_SCREEN, 0);
 };
 
+// Forward declaration
+static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+
 /* Initialize the playing screen 
 	We clear the whole screen.
 */
@@ -70,6 +73,7 @@ info_screen_init(Screen *this_screen) {
 	this_screen->win_list = win;
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
+	this_screen->keypress = keypress;
 	
 	win_init(&title_win, 0, 0, 40, 128, 1, win_txt[0]);
 	title_win.font = BIGFONT;	
@@ -170,7 +174,7 @@ void detect_errors(){
 };
 
 void 
-info_keypress(Screen *this_screen, int cur_key, UserReq *req){
+keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 		case KEY_OK:
 			/* The user wants to leave this screen 

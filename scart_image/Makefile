@@ -29,16 +29,16 @@ CC=$(SDCCPATH)/sdcc
 -include Makefile.local
 
 # List C source files here.
-SRC = main.c serial.c cc1100.c isp.asm
+SRC = main.c serial.c cc1100.c datastore.c isp.asm
 
                 
 # Define all object files.
 
 # Object files needed when boot loader is included.
-OBJ_BOOT = main.rel  serial.rel cc1100.rel isp.rel
+OBJ_BOOT = main.rel  serial.rel cc1100.rel datastore.rel isp.rel
 
 # Object files needed without the boot loader.
-OBJ = main.rel  serial.rel cc1100.rel 
+OBJ = main.rel  serial.rel cc1100.rel datastore.rel
 
 # necessary binary tools which we create ourself
 BIN = flashtool bin2c makebin 
@@ -104,6 +104,9 @@ serial.rel: serial.c serial.h
 
 cc1100.rel: cc1100.c cc1100.h smartrf_CC1100.h
 	$(CC) $(FLAGS) -c cc1100.c
+	
+datastore.rel: datastore.c 
+	$(CC) $(FLAGS) -c datastore.c
 
 isp.rel: isp.asm
 	asx8051 -losg isp.asm
