@@ -111,7 +111,7 @@
 
 
 /* Our own device address */
-#define DEV_ADDR	0x66
+#define DEV_ADDR	0x01
 
 void cc1100_init(void);
 unsigned char cc1100_write(unsigned char addr, unsigned char* dat, unsigned char length);
