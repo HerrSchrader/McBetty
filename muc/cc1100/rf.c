@@ -289,10 +289,11 @@ rfRcvPacket() {
 	
 	signal_clr(SIG_RX_PACKET);
 
-	// We read the address byte. No need to check this, should have been done in hardware 
+	// We read the address byte.
 	cc1100_read_fifo(&addr, 1);
 	
-	// Check for some obvious erros 
+	// Check for some obvious errors
+	// NOTE we allow address 0 as broadcast, but discard it here
 	if ( (cc1100_rx_len == 0) || (cc1100_rx_len > MAX_PKTLEN) || (addr != DEVICE_ADDRESS))	{ 
 		// Something went wrong. Discard complete RX FIFO
 		debug_out("rcvd invalid packet", 0);

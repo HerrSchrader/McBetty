@@ -62,7 +62,7 @@ const unsigned char conf[0x2F] = {
 	SMARTRF_SETTING_PKTLEN,		//Adr. 06 PKTLEN    Packet length.
 	SMARTRF_SETTING_PKTCTRL1,	//Adr. 07 PKTCTRL1  Packet automation control.
 	SMARTRF_SETTING_PKTCTRL0,	//Adr. 08 PKTCTRL0  Packet automation control.
-	SMARTRF_SETTING_ADDR,		//Adr. 09 ADDR      Device address.
+	DEV_ADDR			,		//Adr. 09 ADDR      Device address.
 	SMARTRF_SETTING_CHANNR,		//Adr. 0A CHANNR    Channel number.
 	SMARTRF_SETTING_FSCTRL1,	//Adr. 0B FSCTRL1   Frequency synthesizer control.
 	SMARTRF_SETTING_FSCTRL0,	//Adr. 0C FSCTRL0   Frequency synthesizer control.

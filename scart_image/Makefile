@@ -136,7 +136,7 @@ resident_S0: flashtool
 # -------------------------------------------------------------------------
 
 # Change this to the network name of your remote host where the scart adapter is connected
-REMOTE_HOST = s101
+REMOTE_HOST = s100
 
 # This target is used when we have the scart adapter connected to a remote host.
 # Copies this complete directory over to REMOTE_HOST://root and flashes the adapter

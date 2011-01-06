@@ -36,7 +36,6 @@
 	PKTCTRL1: 0x1A: Address check and 0 broadcast, no status append, autoflush of RX FIFO
 	PKTCTRL0: 0x45: variable packet length (first byte after sync), CRC enabled, whitening on
 	PKTLEN: 0x3D: maximum packet length is 61 (allows room for 2 STATUS APPEND bytes)
-	ADDR: 0x01 = Device address
 	CHANNR: 0x01 = Channel 1
 	MCSM2: 0x04: Time-Out for sync word: 
 	WORCTRL: 0x78:  RC enabled, tEvent1 = 1.3 ms, enable RC calibration, WOR_RES = 0 => max timeout after 1.9 secs.

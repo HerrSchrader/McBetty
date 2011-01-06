@@ -23,7 +23,7 @@
 /* This device address is used for radio communication.
 	Betty and SCART-Adapter must have equal addresses  !
 */
-#define DEVICE_ADDRESS	0x01
+#define DEVICE_ADDRESS	0x66
 
 // Used by "pt.h"
 // selects which kind of pt implementation we use
