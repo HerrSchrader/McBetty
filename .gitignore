@@ -32,4 +32,8 @@ scart_image/serial.asm
 #intermediate files generated in muc
 muc/boop.map
 muc/muc_rom.hex
+muc/muc_rom.elf
+
+#binaries
+muc/muc_rom.bin
 
