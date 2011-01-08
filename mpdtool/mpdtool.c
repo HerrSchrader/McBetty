@@ -905,7 +905,7 @@ open_mpd_connection(int serial_fd){
 #define SEARCH_CMD (1<<4)
 #define RESULT_CMD (1<<5)
 #define FINDADD_CMD (1<<6)
-
+#define PLAYLISTINFO_CMD (1<<7)
 
 /* A bit set to 1 means this command is available.
 	No need to emulate it.
@@ -1167,6 +1167,14 @@ translate_to_mpd(char *buf){
 		strcpy(buf, "ping\n");
 	} else
 		mpd_emu &= ~RESULT_CMD;
+		
+	/* The command "playlistinfo" returns too much information.
+		We filter only the necessary lines.
+	*/
+	if (0 == strncmp(buf, "playlistinfo ", strlen("playlistinfo ")) ){
+		mpd_emu |= PLAYLISTINFO_CMD;
+	} else 
+		mpd_emu &= ~PLAYLISTINFO_CMD;
 
 	/* The command "playlistname x" is our own invention.
 		It returns the name of playlist number x (x starts with 0).
@@ -1259,6 +1267,17 @@ translate_to_serial(){
 	if (mpd_emu & LISTPLAYLISTS_CMD){
 		if (! (
 			(0 == strncmp(mpd_resp_buf, "playlist:", 9)) ||
+			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
+			(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )
+		return;
+	}
+	
+	// If the PLAYLISTINFO emulation is on, we let only 5 types of output lines go through
+	if (mpd_emu & PLAYLISTINFO_CMD){
+		if (! (
+			(0 == strncmp(mpd_resp_buf, "Title: ", 7)) ||
+			(0 == strncmp(mpd_resp_buf, "Artist: ", 8)) ||
+			(0 == strncmp(mpd_resp_buf, "Pos: ", 5)) ||
 			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
 			(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )
 		return;
