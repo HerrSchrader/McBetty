@@ -19,6 +19,7 @@
 #ifndef MPD_H
 #define MPD_H
 
+
 // the possible actions / commands
 // This enum plays two roles:
 // It serves as a data type to record the user input which wants to affect the model in some way.
@@ -26,6 +27,7 @@
 // kind of interaction with MPD it has to start 
 // TODO maybe eliminate the first role.
 // We already have a user model where we can reflect all changes that the user wants!
+// NOTE This enum is used in mpd.c to access an array, so don't change the order
 enum USER_CMD {
 	NO_CMD,
 	SEL_SONG,
@@ -57,9 +59,23 @@ enum USER_CMD {
  	SCRIPT_CMD
 };
 
+
+/* A structure to hold a command and its arguments 
+	This is used by model functions to tell mpd.c which action it wants
+	and with what parameters.
+	TODO Is also used by the screen functions which is probably a bad idea.
+*/
+typedef struct {
+	enum USER_CMD cmd;
+	int arg;
+	int arg2;
+	char *str;
+} UserReq;
+
+
 extern int playlist_changed;
 
-/* this should be a real function. just for testing */
+/* TODO this should be a real function. just for testing */
 #define pl_changed (model_changed_flags & (1<<5))
 
 void tx_init();
@@ -67,10 +83,9 @@ void do_tx();
 	
 PT_THREAD (controller(struct pt *pt));
 
-/* See rf.c */
-#define CMDSTR_LEN 254
 
 int mpd_get_song();
 void model_init();
+int slprintf(char *dst, const char *src, UserReq *f, int size);
 
 #endif

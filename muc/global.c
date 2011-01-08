@@ -63,22 +63,49 @@ strchr(const char *s, int c){
 	return NULL;
 };
 
-/* Standard C string copy EXCEPT that the destination string is always 0 terminated ! 
+/* BSD string length copy. The destination string is always 0 terminated ! 
 	The resulting string uses at most n bytes (incl. trailing 0) 
+	Returns strlen(src).
 */
-char *
-strn_cpy(char *dest, const char *src, int n){
+int
+strlcpy(char *dst, const char *src, int size){
 	int i;
-	char *dst = dest;
-	for (i=0; i<n; i++){
-		*dst = *src;
-		if (*src) src++;
-		else break;
-		dst++;
+
+	for (i=0; i < (size -1); i++){
+		if (0 == (*(dst++) = *(src++)) )		// we have just copied the NUL byte.
+			return i;			// this is the length of src
 	};
-	*dst = 0;
-	return dest;
+	if (size != 0)
+		*dst = 0;				// i == max(0, size-1), last byte of destination string, must be terminated.
+	while (* (src++) ) i++;		// add remaining bytes of src
+	return i;
 };
+
+/* BSD string length concatenation.
+	The resulting string uses at most n bytes (incl. terminating 0) and is always 0 terminated
+	Returns strlen(dst) + strlen(src) 
+*/
+int
+strlcat(char *dst, const char *src, int size){
+	int i = 0;
+	
+	/* Find the current end of dst */
+	for (i=0; i< (size - 1); i++, dst++){
+		if (0 == *dst)
+			break;
+	};
+								// now i is len(dst)
+	for (; i < (size - 1); i++){
+		if (0 == (*(dst++) = *(src++)) )		// we have just copied the NUL byte.
+			return i;			// this is the length of src + length of dst
+	};
+	if (size != 0)
+		*dst = 0;
+	
+	while (* (src++) ) i++;		// add remaining bytes of src
+	return i;
+};
+
 
 /* Delete the character at position pos in the string 
 	Deletes in place, original string is changed
@@ -92,46 +119,6 @@ str_del(char *s, int pos){
 	for (; s[i]; i++)
 		s[i] = s[i+1];
 	return i;
-};
-
-// Not needed
-#if 0
-/* Standard C string concatenation  */
-char *strncat(char *dest, const char *src, int n){
-	int i;
-	char *dst = dest;
-	
-	while (*(dst)) dst++;
-	
-	for (i=0; i<n; i++){
-		if (*src) *(dst++) = *(src++);
-		else break;
-	};
-	*dst = 0;
-	return dest;
-};
-#endif
-
-
-/* Non-Standard C string concatenation: The resulting string uses at most n bytes (incl. terminating 0) */
-char *
-str_cat_max(char *dest, const char *src, int n){
-	int i = 0;
-	char *dst = dest;
-	
-	/* Find the current end of *dst */
-	for (i=0; i< n-1; i++, dst++){
-		if (*dst == '\0')
-			break;
-	};
-	
-	for (; i < n-1; i++){
-		if (*src) 
-			*(dst++) = *(src++);
-		else break;
-	};
-	*dst = '\0';
-	return dest;
 };
 
 /* String copy and compare.
@@ -180,6 +167,108 @@ int atoi(const char *s){
 	};
 	return n;
 };
+
+
+static const char hval[16] = "0123456789ABCDEF";
+
+/* Stores the ASCII representation of the hex digits of val into character array s.
+	Returns pointer to s.
+	Generates exactly 2 digits
+*/
+char *
+get_hex_digits(unsigned long v, char *s){
+	s[0] = hval[ (v & 0xf0) >>4];
+	s[1] = hval[ (v & 0x0f) ];
+	return s;
+};
+
+/* Division by repeated subtraction
+	Computes (*pu_longval % tval)
+	and leaves remainder in *pu_longval
+*/
+static int 
+div(unsigned int tval, unsigned int *pu_longval){
+	int count = 0;
+	while(*pu_longval >= tval){
+		count++;
+		*pu_longval -= tval;
+	}
+	return count;
+};
+
+/* Divide val by powers of 10 and store digits in *s 
+	Gives exactly 10 digits.
+	s will be null terminated
+	returns a pointer to the first printable character in s
+	if z is 1, all characters are printable.
+	if z is 0, leading zeroes are suppressed
+*/
+char *
+get_digits(unsigned int val, char *s, int z){
+	unsigned int u_longval = val;
+	char *s1 = s;
+	int pos;
+	
+	*s++ = '0' + div(1000000000, &u_longval);
+	*s++ = '0' + div(100000000, &u_longval);
+	*s++ = '0' + div(10000000, &u_longval);
+	*s++ = '0' + div(1000000, &u_longval);
+	*s++ = '0' + div(100000, &u_longval);
+	*s++ = '0' + div(10000, &u_longval);
+	*s++ = '0' + div(1000, &u_longval);
+	*s++ = '0' + div(100, &u_longval);
+	*s++ = '0' + div(10, &u_longval);
+	*s++ = '0' + u_longval;
+	*s = 0;
+	
+	pos = 0;
+	/* shall we omit leading zeroes? */
+	if (z==0){
+		for (pos=0; pos < 9; pos++)
+			if (s1[pos] != '0')
+				break; 
+	};
+	return &(s1[pos]);
+}
+
+
+/* Store a time value given in seconds in a string with exactly 5 characters.
+	Leading 0's in the hour will be replaced by spaces.
+	max. 99 hours
+	s will be 0 terminated
+*/
+void
+sec2hms(char *s, int sec){
+	unsigned int rest = sec;
+	
+	if (sec < 0){
+		strlcpy(s, "--:--", 20);
+		return;
+	};
+	
+	if (sec >= 3600){		// an hour or more ? 
+		*s = '0' + div(36000, &rest);
+		if (*s == '0') 
+			*s = ' ';
+		s++;
+	 
+		*s++ = '0' + div(3600, &rest); 
+		*s++ = 'h';
+	};
+
+	/* rest is between 0 and 60 minutes */
+	*s++ = '0' + div(600, &rest);
+	*s++ = '0' + div(60, &rest);
+
+	if (sec < 3600){		// less than an hour? show the seconds
+		/* rest is between 0 and 59 seconds */
+		*s++ = ':';
+		*s++ = '0' + div(10, &rest);
+		*s++ = '0' + rest;
+	}
+	*s = '\0';
+};
+
 
 /* Random number generator. Returns random number between 0 and 65535.
 	 extracted from mother-of-all */
@@ -239,7 +328,7 @@ cache_store(STR_CACHE *pc, int pos, char *content){
 	if (NULL == content)
 		pc->str[idx] = NULL;
 	else {
-		strn_cpy(pc->cache_entry[idx], content, CACHE_ENTRY_LEN); 
+		strlcpy(pc->cache_entry[idx], content, CACHE_ENTRY_SIZE); 
 		pc->str[idx] = pc->cache_entry[idx];
 	};	
 };

@@ -9,14 +9,6 @@
 #include "mpd.h"
 
 
-/* A structure to hold a command and its arguments */
-typedef struct {
-	enum USER_CMD cmd;
-	int arg;
-	int arg2;
-} UserReq;
-
-
 /* Screens are enumerated so that we do not have to use their addresses */
 enum SCREEN {PLAYLIST_SCREEN, TRACKLIST_SCREEN, PLAYING_SCREEN, INFO_SCREEN, SEARCH_SCREEN };
 

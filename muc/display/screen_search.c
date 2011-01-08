@@ -172,13 +172,13 @@ view_results_changed(int num){
 	char number[20];
 	char *numstr;
 	
-	strn_cpy (newstr, "Results:  ", 50);
+	strlcpy (newstr, "Results:  ", sizeof(newstr));
 	if (num > 30)
-		str_cat_max(newstr, "> 50\n", 50);
+		strlcat(newstr, "> 50\n", sizeof(newstr));
 	else {
 		numstr = get_digits(num, number, 0); 
-		str_cat_max(newstr, numstr, 50);
-		str_cat_max(newstr, "\n", 50);
+		strlcat(newstr, numstr, sizeof(newstr));
+		strlcat(newstr, "\n", sizeof(newstr));
 	};
 	if (num_results_win.bg_color == DARK_GREY)
 		num_results_win.bg_color = LIGHT_GREY;	

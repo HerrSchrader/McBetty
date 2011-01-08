@@ -180,7 +180,7 @@ view_time_changed(int te, int tt){
 	int newval;
 	
 	sec2hms(newstr, te);
-	str_cat_max(newstr, " / ", TIMESTR_LEN);	
+	strlcat(newstr, " / ", sizeof(newstr));	
 	sec2hms(newstr+8, tt);
 	win_new_text(&time_win, newstr);
 		
@@ -243,11 +243,11 @@ view_version_changed(){
 	}; 	
 };
 
-#define VOLSTR_LEN 20
+#define VOLSTR_SIZE 20
 /* The volume has changed. Show new value. */
 void
 view_volume_changed(int vol){
-	char newstr[VOLSTR_LEN];
+	char newstr[VOLSTR_SIZE];
 	char number[20];
 	char *numstr;
 		
@@ -256,13 +256,13 @@ view_volume_changed(int vol){
 	else
 		win_new_text(&speaker_win, "\xB9");	//speaker off	
 	
-	strn_cpy (newstr, "", 1);
+	strlcpy (newstr, "", sizeof(newstr));
 	if (vol < 0)
-		str_cat_max(newstr, "?? \n", VOLSTR_LEN);
+		strlcat(newstr, "?? \n", sizeof(newstr));
 	else {
 		numstr = get_digits(vol, number, 0); 
-		str_cat_max(newstr, numstr, VOLSTR_LEN);
-		str_cat_max(newstr, " %\n", VOLSTR_LEN);
+		strlcat(newstr, numstr, sizeof(newstr));
+		strlcat(newstr, " %\n", sizeof(newstr));
 	};
 	win_new_text(&volume_win, newstr);	
 

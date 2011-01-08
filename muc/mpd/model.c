@@ -173,8 +173,7 @@ model_needs_action(UserReq *req){
 		return PLAYLISTCOUNT_CMD;
 	
 	if (user_model.cur_playlist != -1){
-		/* It would be more logical to return a char* here, but easier to return the index to it because UserReq has no char * field. */
-		req->arg = user_model.cur_playlist;
+		req->str = mpd_get_playlistname(user_model.cur_playlist);
 		return LOAD_CMD;
 	};
 	
@@ -278,14 +277,15 @@ model_needs_action(UserReq *req){
 	
 	/* Something to add to the playlist ? */
 	if (user_model.add != -1){
-		req->arg = user_model.add;
+		req->str = mpd_get_resultlistname(user_model.add);
 		return FINDADD_CMD;
 	};
 	
 	/* Something to search ? */
-	if (user_model.search_string != NULL)
+	if (user_model.search_string != NULL){
+		req->str = mpd_get_search_string();
 		return SEARCH_CMD;
-	
+	};
 	/* TODO the available playlists may change by an outside action (another client created/deleted one etc.)
 			So we should regularily (every 5 minutes or so) reread this information
 	*/ 
@@ -376,9 +376,9 @@ void
 model_store_track(char *title, char *artist, int track_pos){
 	char tmp[64];
 	
-	strn_cpy(tmp, title, 64); 
-	str_cat_max(tmp, " - ", 64);
-	str_cat_max(tmp, artist, 64);
+	strlcpy(tmp, title, sizeof(tmp)); 
+	strlcat(tmp, " - ", sizeof(tmp));
+	strlcat(tmp, artist, sizeof(tmp));
 	cache_store(&tracklist, track_pos, tmp);
 	model_changed(TRACKLIST_CHANGED);
 };
@@ -914,6 +914,8 @@ mpd_single_ok(){
 	user_model.single = -1;
 };
 
+// NOTE this routine does nothing, if mpd_model.single is == -1
+//		this happens when MPD does not support the single command
 void
 user_toggle_single(){
 	if (mpd_model.single == 0)

@@ -59,6 +59,16 @@ typedef unsigned long uint32;
 
 typedef signed char int8_t;
 
+/* Structure used to give format values to snprintf()
+	Very specialized, just 2 integers and 1 string
+	convenient for exec_action
+*/
+typedef struct format_values {
+	int arg1;
+	int arg2;
+	char *str; 
+} FORMAT_VALUES;
+
 #define false	0
 #define FALSE	0
 #define true	1
@@ -93,8 +103,9 @@ typedef signed char int8_t;
 #define CACHE_LIM	25
 #define CACHE_MAX	(CACHE_LIM -1)
 
+#define CACHE_ENTRY_SIZE 64
 /* Max length of a string stored in our cache (final 0 is not counted) */
-#define CACHE_ENTRY_LEN 63
+#define CACHE_ENTRY_LEN (CACHE_ENTRY_SIZE - 1)
 
 /* 
 	This structure is an indexed cache of string values.
@@ -133,14 +144,16 @@ int min(int a, int b);
 int abs(int a);
 int strlen( char *s);
 int strstart( char *s1, char *s2);
-char *strn_cpy(char *dest, const char *src, int n);
-char *strncat(char *dest, const char *src, int n);
-char *str_cat_max(char *dest, const char *src, int n);
+int strlcpy(char *dst, const char *src, int size);
+int strlcat(char *dst, const char *src, int size);
 int strn_cpy_cmp(char *str1, char *str2, int n, int *length);
 int atoi(const char *s);
 int str_del(char *s, int pos);
-
 char *strchr(const char *s, int c);
+char *get_hex_digits(unsigned long v, char *s);
+char *get_digits(unsigned int val, char *s, int z);
+
+void sec2hms(char *s, int sec);
 void rand_seed(int s);
 int rand(void);
 

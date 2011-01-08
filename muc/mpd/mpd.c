@@ -63,6 +63,51 @@ static UserReq request;
 /* We gather some information from the responses in this variable: */
 static struct MODEL ans_model;
 
+/* Somewhat similar to the C function. 
+	We don't want to include the whole snprintf function,
+	so we include a very reduced version.
+	Not very fast.
+	Returns 0 iff created string did not fit completely into given size.
+*/
+int
+slprintf(char *dst, const char *src, UserReq *f, int size){
+	/* We can fill this array with a number representation */
+	char num_string[12];
+	int cur_len;			// current length of destination string
+	int cur_arg = 1;
+	
+	if (0 == size)	return 0;
+	
+	*dst = 0;				// empty destination string
+	cur_len = 0;
+	
+	while (cur_len < size) {
+		if (0 == *src) {
+			dst[cur_len] = 0;
+			return 1;						// finished sucessfully
+		};
+		
+		if ( (*src == '%') && ( *(src + 1) == 'd') ){
+			dst[cur_len] = 0;
+			if (cur_arg == 1){
+				cur_len = strlcat(dst, get_digits(f->arg, num_string, 0), size);
+				cur_arg++;
+			} else{
+				cur_len = strlcat(dst, get_digits(f->arg2, num_string, 0), size);
+			};
+			src += 2;
+		} else if ( (*src == '%') && ( *(src + 1) == 's') ){
+			dst[cur_len] = 0;
+			cur_len = strlcat(dst, f->str, size);
+			src += 2;
+		} else {
+			dst[cur_len++] = *src++;
+		};
+	};
+	return 0;				// too big
+}
+
+
 /* ------------------------------ The Communicator ----------------------------------------- */
 
 /* Variable which is set by the response collecting routines.
@@ -240,13 +285,13 @@ ans_playlistinfo_line(char *s){
 
 	/* Compare with "Artist: " */
 	if (strstart(response, "Artist: ")){
-		strn_cpy(ans_model.artist_buf, response+8, TITLE_LEN);
+		strlcpy(ans_model.artist_buf, response+8, TITLE_LEN);
 		return;
 	};
 			
 	/* Compare with "Title: " */
 	if (strstart(response, "Title: ")){
-		strn_cpy(ans_model.title_buf, response+7, TITLE_LEN);
+		strlcpy(ans_model.title_buf, response+7, TITLE_LEN);
 		return;
 	};
 
@@ -270,8 +315,8 @@ ans_playlistinfo_ok(char *s){
 */
 static void
 ans_playlistinfo_ack(char *s){
-		strn_cpy(ans_model.artist_buf, "- not", TITLE_LEN);
-		strn_cpy(ans_model.title_buf, "found -", TITLE_LEN);
+		strlcpy(ans_model.artist_buf, "- not", TITLE_LEN);
+		strlcpy(ans_model.title_buf, "found -", TITLE_LEN);
 		if (ans_model.pos == request.arg)
 			model_store_track(ans_model.title_buf, ans_model.artist_buf, ans_model.pos);
 }
@@ -613,6 +658,48 @@ inform_view(int model_changed){
 
 /* ------------------------------ The Controller ----------------------------------------- */
 
+/* This structure has info about how to process a command */
+struct cmd_proc_info {
+	char *format_string;				// string sent to mpd with %d and %s parameters substituted
+ 	void (*process_line) (char *s);		// function to be called for each answer line from MPD
+	void (*process_ok) (char *s);		// function to be called when MPD has answered with "OK"
+	void (*process_ack) (char *s);		// function to be called when MPD has answered with "ACK"
+};
+
+/* For each possible CMD the necessary cmd_proc_info
+	NOTE The order has to be the same as in enum USER_CMD
+*/
+static const struct cmd_proc_info cmd_info[] = {
+	{"", NULL, NULL, NULL},										// NO_CMD,
+	{"play %d\n", NULL, ans_play_ok, ans_play_ack},				// SEL_SONG,
+	{"", NULL, NULL, NULL},										// VOLUME_UP,
+	{"", NULL, NULL, NULL},										// VOLUME_DOWN,
+	{"", NULL, NULL, NULL},										// MUTE_CMD,
+	{"setvol %d\n", NULL, ans_volume_ok, NULL},					// VOLUME_NEW,
+	{"currentsong\n", ans_currentsong_line, NULL, NULL},		// CUR_SONG_CMD,
+	{"previous\n", NULL, ans_song_ok, NULL}, 				// PREV_CMD,
+	{"next\n", NULL, ans_song_ok, NULL},					// NEXT_CMD,
+	{"pause 1\n", NULL, ans_state_ok, ans_state_ack},		// PAUSE_ON,
+	{"pause 0\n", NULL, ans_state_ok, ans_state_ack},			// PAUSE_OFF,
+	{"play\n", NULL, ans_state_ok, ans_state_ack},					// PLAY_CMD,
+	{"stop\n", NULL, ans_state_ok, ans_state_ack},					// STOP_CMD,
+	{"command_list_begin\nseek %d %d\nstatus\ncommand_list_end\n", ans_status_line, ans_status_ok, NULL}, 	//FORWARD_CMD,
+	{"command_list_begin\nseek %d %d\nstatus\ncommand_list_end\n", ans_status_line, ans_status_ok, NULL},	//REWIND_CMD,
+	{"status\n", ans_status_line, ans_status_ok, NULL},					// STATUS_CMD,
+	{"playlistinfo %d\n",ans_playlistinfo_line, ans_playlistinfo_ok, ans_playlistinfo_ack},		//PLINFO_CMD,
+	{"command_list_begin\nclear\nload \"%s\"\ncommand_list_end\n", NULL, ans_load_ok, NULL},	// LOAD_CMD,
+	{"random %d\n", NULL, ans_rnd_ok, NULL},				// RANDOM_CMD,
+	{"repeat %d\n", NULL, ans_rpt_ok, NULL},				// REPEAT_CMD,
+	{"single %d\n", NULL, ans_sgl_ok, NULL},				// SINGLE_CMD,
+	{"playlistcount\n",	 ans_plcount_line, NULL, NULL},		// PLAYLISTCOUNT_CMD,
+	{"playlistname %d\n", ans_plname_line, NULL, NULL},		// PLAYLISTNAME_CMD,
+	{"clear\n", NULL, ans_clear_ok, NULL},					// CLEAR_CMD,
+	{"search artist \"%s\"\n", ans_search_line, ans_search_ok, ans_search_ack},		// SEARCH_CMD,
+	{"result %d\n", ans_result_line, NULL, ans_result_ack}, 				// RESULT_CMD,
+	{"findadd artist \"%s\"\n", NULL, mpd_findadd_ok, mpd_findadd_ok},	// FINDADD_CMD,
+	{"script %d\n", NULL, ans_script_ok, NULL}				// SCRIPT_CMD
+};	
+
 
 /* Some action (Communication with MPD) is needed. Start this action.
 	Here we construct the string which must be sent to MPD and then
@@ -620,174 +707,40 @@ inform_view(int model_changed){
 	and processes the received answer. 
 */
 static
-PT_THREAD (exec_action(struct pt *pt, UserReq *preq) ){
+PT_THREAD (exec_action(struct pt *pt, UserReq *r) ){
 	static struct pt child_pt;
-	static char cmd_str[CMDSTR_LEN+1];
-	static int arg;
-	static int arg2;
-	static enum USER_CMD cmd;
+	static char cmd_str[255];			// maximum that rf.c can handle
 	
 	PT_BEGIN(pt);
 	
-	// We copy the request to a static variable, so that the line processing functions can access the arguments
+	// We copy the request to a static variable outisde of this routine, 
+	// so that the line processing functions can access the arguments.
 	// The controller makes sure that only one request can be issued at a time, so no race condition
-	request = *preq;
-	
-	// NOTE Just to make the argument names shorter
-	arg = preq->arg;
-	arg2 = preq->arg2;
-	cmd = preq->cmd;
+	request = *r;
 
+	slprintf(cmd_str, cmd_info[r->cmd].format_string, r, sizeof(cmd_str));
+	model_reset(&ans_model);
+	
 	// NOTE We avoid using a switch statement because of certain restrictions for protothreads
 	
-	/* Volume changing command */
-	if ( cmd == VOLUME_NEW ) {
-		compose_string (cmd_str, "setvol ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_volume_ok, NULL));
-		PT_EXIT(pt);
-	};
-
-	if (cmd == NEXT_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "next\n", NULL, ans_song_ok, NULL));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == PREV_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "previous\n", NULL, ans_song_ok, NULL));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == SEL_SONG){
-		compose_string (cmd_str, "play ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_play_ok, ans_play_ack));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == PLAY_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "play\n", NULL, ans_state_ok, ans_state_ack));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == STOP_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "stop\n", NULL, ans_state_ok, ans_state_ack));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == PAUSE_ON){		
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 1\n", NULL, ans_state_ok, ans_state_ack));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == PAUSE_OFF){		
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "pause 0\n", NULL, ans_state_ok, ans_state_ack));
-		PT_EXIT(pt);
-	};
-		
 	/* 
 		We process the seek command with the status response handler, because all relevant 
 		information (time, current song, state) is returned by the status command
 	*/		
-	if ( (cmd == FORWARD_CMD) || (cmd == REWIND_CMD) ) {
-		model_reset(&ans_model);
-		compose_string2 (cmd_str, "command_list_begin\nseek ", arg, arg2, CMDSTR_LEN);	
-		str_cat_max(cmd_str, "\nstatus\ncommand_list_end\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_status_line, ans_status_ok, NULL));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == STATUS_CMD){
-		model_reset(&ans_model);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "status\n", ans_status_line, ans_status_ok, NULL));	
-		PT_EXIT(pt);
-	};	
-	
-	if (cmd == CUR_SONG_CMD){
+
+	if (r->cmd == CUR_SONG_CMD){
 		/* We set these values just in case that the current track has no title or artist */
+		// TODO not here !
 		mpd_set_artist("???");
 		mpd_set_title("???");
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "currentsong\n", ans_currentsong_line, NULL, NULL));
+		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_currentsong_line, NULL, NULL));
 		PT_EXIT(pt);
 	};
 
-	if (cmd == PLINFO_CMD){
-		model_reset(&ans_model);
-		compose_string (cmd_str, "playlistinfo ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_playlistinfo_line, ans_playlistinfo_ok, ans_playlistinfo_ack));	
-		PT_EXIT(pt);
-	};	
-	
-	if (cmd == CLEAR_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "clear\n", NULL, ans_clear_ok, NULL));	
-		PT_EXIT(pt);
-	};	
-
-	if (cmd == LOAD_CMD){
-		strn_cpy (cmd_str, "command_list_begin\nclear\nload \"", CMDSTR_LEN);
-		str_cat_max (cmd_str, mpd_get_playlistname(arg), CMDSTR_LEN);
-		str_cat_max (cmd_str, "\"\ncommand_list_end\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_load_ok, NULL));	
-		PT_EXIT(pt);
-	};	
-	
-	if (cmd == RANDOM_CMD){
-		compose_string (cmd_str, "random ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_rnd_ok, NULL));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == REPEAT_CMD){
-		compose_string (cmd_str, "repeat ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_rpt_ok, NULL));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == SINGLE_CMD){
-		compose_string (cmd_str, "single ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_sgl_ok, NULL));
-		PT_EXIT(pt);
-	};
-		
-	if (cmd == PLAYLISTCOUNT_CMD){
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, "playlistcount\n", ans_plcount_line, NULL, NULL));
-		PT_EXIT(pt);
-	};
-		
-	if (cmd == PLAYLISTNAME_CMD){
-		compose_string (cmd_str, "playlistname ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_plname_line, NULL, NULL));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == SEARCH_CMD){
-		strn_cpy (cmd_str, "search artist \"", CMDSTR_LEN);
-		str_cat_max (cmd_str, mpd_get_search_string(), CMDSTR_LEN);
-		str_cat_max (cmd_str, "\"\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_search_line, ans_search_ok, ans_search_ack));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == RESULT_CMD){
-		compose_string (cmd_str, "result ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_result_line, NULL, ans_result_ack));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == FINDADD_CMD){
-		strn_cpy (cmd_str, "findadd artist \"", CMDSTR_LEN);
-		str_cat_max (cmd_str, mpd_get_resultlistname(arg), CMDSTR_LEN);
-		str_cat_max (cmd_str, "\"\n", CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, mpd_findadd_ok, mpd_findadd_ok));
-		PT_EXIT(pt);
-	};
-	
-	if (cmd == SCRIPT_CMD){
-		compose_string (cmd_str, "script ", arg, CMDSTR_LEN);
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, NULL, ans_script_ok, NULL));
-		PT_EXIT(pt);
-	};
-
-	/* We do not know this command. */
-	debug_out("Unknow Request ",cmd);
+	PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, 
+				cmd_info[r->cmd].process_line,
+	 			cmd_info[r->cmd].process_ok,
+	 	 		cmd_info[r->cmd].process_ack ));
 
 	PT_END(pt);
 };
