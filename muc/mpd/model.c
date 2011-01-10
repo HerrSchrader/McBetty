@@ -377,7 +377,7 @@ model_store_track(char *title, char *artist, int track_pos){
 	char tmp[64];
 	
 	strlcpy(tmp, title, sizeof(tmp)); 
-	strlcat(tmp, " - ", sizeof(tmp));
+	strlcat(tmp, " \xB7 ", sizeof(tmp));	// dot icon == b7
 	strlcat(tmp, artist, sizeof(tmp));
 	cache_store(&tracklist, track_pos, tmp);
 	model_changed(TRACKLIST_CHANGED);
@@ -993,6 +993,18 @@ mpd_newpos_ok(){
 	user_song_unknown();				// wish fulfilled
 };
 
+// TODO not fully implemented
+/* We have got (maybe new) information about the current song id */ 
+void
+mpd_set_id(int newid){
+	if (mpd_model.songid == user_model.songid)		// wish fulfilled
+		user_model.songid = -1;
+	if (mpd_model.songid == newid) return;		// nothing new
+
+	mpd_model.songid = newid;
+
+};
+
 /* Returns a string with the current title or "" if unknown. */
 char *
 mpd_get_title(){
@@ -1043,18 +1055,6 @@ mpd_set_artist(char *s){
 			model_changed(ARTIST_CHANGED);
 		mpd_model.artist = mpd_model.artist_buf;
 	}; 
-};
-
-// TODO not fully implemented
-/* We have got (maybe new) information about the current song id */ 
-void
-mpd_set_id(int newid){
-	if (mpd_model.songid == user_model.songid)		// wish fulfilled
-		user_model.songid = -1;
-	if (mpd_model.songid == newid) return;		// nothing new
-
-	mpd_model.songid = newid;
-
 };
 
 #if 0

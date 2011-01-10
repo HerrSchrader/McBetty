@@ -253,27 +253,59 @@ ans_currentsong_line(char *s){
 
 	/* Compare with "Artist: " */
 	if (strstart(response, "Artist: ")){
-		mpd_set_artist(response+8);
+		strlcpy(ans_model.artist_buf, response+8, sizeof(ans_model.artist_buf) );
+		ans_model.artist = ans_model.artist_buf;
 		return;
 	};
 	
 	/* Compare with "Title: " */
 	if (strstart(response, "Title: ")){
-		mpd_set_title(response+7);
+		strlcpy(ans_model.title_buf, response+7, sizeof(ans_model.title_buf) );
+		ans_model.title = ans_model.title_buf;
 		return;
 	};
 	
 	/* Compare with "Pos: " */
 	if (strstart(response, "Pos: ")){
-		mpd_set_pos (atoi (response+5));
+		ans_model.pos = atoi (response+5);
 		return;
 	};
 	
 	/* Compare with "Id: " */
 	if (strstart(response, "Id: ")){
-		mpd_set_id (atoi (response+4));
+		ans_model.songid = atoi (response+4);
 	};
 };
+
+/* We got an "OK" for "current song" command */
+static void
+ans_currentsong_ok(char *s){
+	
+	/* Sometimes songs don't have a tag for title and/or artist.
+		We then show a "?" to the user, so he knows that and can maybe correct the tags.
+		TODO we will enhance mpdtool so that in case of no title the filename is substituted.
+		We want to avoid showing a "?" if soemhow the radio reception was corrupted and some
+		lines were lost. So first we check if we got any information at all.
+		If not, we conclude that the command failed.
+	*/
+	
+	// We should have the following infos, else something went wrong
+	if ( (ans_model.pos == SONG_UNKNOWN) || (ans_model.songid == SONG_UNKNOWN) )
+		return;
+	
+	mpd_set_pos(ans_model.pos);
+	mpd_set_id(ans_model.songid);
+	
+	if (ans_model.title == NULL)
+			mpd_set_title("?");
+	else
+		mpd_set_title(ans_model.title);
+	
+	if (ans_model.artist == NULL)
+			mpd_set_artist("?");
+	else
+		mpd_set_artist(ans_model.artist);
+}
 
 
 /*
@@ -676,7 +708,7 @@ static const struct cmd_proc_info cmd_info[] = {
 	{"", NULL, NULL, NULL},										// VOLUME_DOWN,
 	{"", NULL, NULL, NULL},										// MUTE_CMD,
 	{"setvol %d\n", NULL, ans_volume_ok, NULL},					// VOLUME_NEW,
-	{"currentsong\n", ans_currentsong_line, NULL, NULL},		// CUR_SONG_CMD,
+	{"currentsong\n", ans_currentsong_line, ans_currentsong_ok, NULL},		// CUR_SONG_CMD,
 	{"previous\n", NULL, ans_song_ok, NULL}, 				// PREV_CMD,
 	{"next\n", NULL, ans_song_ok, NULL},					// NEXT_CMD,
 	{"pause 1\n", NULL, ans_state_ok, ans_state_ack},		// PAUSE_ON,
@@ -720,22 +752,6 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *r) ){
 
 	slprintf(cmd_str, cmd_info[r->cmd].format_string, r, sizeof(cmd_str));
 	model_reset(&ans_model);
-	
-	// NOTE We avoid using a switch statement because of certain restrictions for protothreads
-	
-	/* 
-		We process the seek command with the status response handler, because all relevant 
-		information (time, current song, state) is returned by the status command
-	*/		
-
-	if (r->cmd == CUR_SONG_CMD){
-		/* We set these values just in case that the current track has no title or artist */
-		// TODO not here !
-		mpd_set_artist("???");
-		mpd_set_title("???");
-		PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, ans_currentsong_line, NULL, NULL));
-		PT_EXIT(pt);
-	};
 
 	PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, 
 				cmd_info[r->cmd].process_line,
