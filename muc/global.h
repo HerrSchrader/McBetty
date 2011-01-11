@@ -18,7 +18,7 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
-#define VERSION "0.9.5"
+#define VERSION "0.9.6"
 
 /* This device address is used for radio communication.
 	Betty and SCART-Adapter must have equal addresses  !
