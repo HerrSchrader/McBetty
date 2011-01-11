@@ -45,7 +45,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <termios.h>
 #include <unistd.h>
@@ -59,11 +58,14 @@
 #include <sys/time.h>
 #include <time.h>
 
+// NOTE we need the GNU version of basename() !
+#define __USE_GNU
+#include <string.h>
+
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include <string.h>
 
 // All our buffers can hold 1024 characters (+ trailing 0)
 #define BUFFER_SIZE 1024
@@ -906,6 +908,7 @@ open_mpd_connection(int serial_fd){
 #define RESULT_CMD (1<<5)
 #define FINDADD_CMD (1<<6)
 #define PLAYLISTINFO_CMD (1<<7)
+#define CURSONG_CMD (1<<8)
 
 /* A bit set to 1 means this command is available.
 	No need to emulate it.
@@ -1055,9 +1058,6 @@ and read all available playlists
 */
 void
 check_mpd(){
-
-	char cmd[400];
-	int i;	
 	
 	mpd_cmd_avail = 0;
 
@@ -1074,19 +1074,6 @@ check_mpd(){
 		mpd_cmd("lsinfo\n", cnt_playlists);
 	
 	fprintf(stderr,"MPD: Available Playlists = %d\n\n", mpd_emu_cnt);
-	
-// TODO debug only !
-#if 0
-	mpd_cmd("count artist \"Neil Young\"\n", prt_ans);	
-	
-	fname_cnt = 0;
-	mpd_cmd("find artist \"Neil Young\"\n", save_file);	
-	
-	for (i=0; i<fname_cnt; i++){
-		sprintf(cmd,"add \"%s\"\n",fname[i]);
-		mpd_cmd(cmd, NULL);
-	};
-#endif
 	
 	mpd_emu = 0;
 };
@@ -1217,6 +1204,12 @@ translate_to_mpd(char *buf){
 		mpd_emu &= ~SEARCH_CMD;
 //		mpd_emu &= ~SEND_SEARCH_OK;
 	};
+	
+	/* We want to substitute basename(filename) for missing title tag */
+	if (0 == strncmp(buf, "currentsong\n", 12)) {
+		mpd_emu |= CURSONG_CMD;
+	} else 
+		mpd_emu &= ~CURSONG_CMD;
 	
 	/* The findadd command is not available in older versions of mpd */
 	if ( (!(mpd_cmd_avail & FINDADD_CMD)) && (0 == strncmp(buf, "findadd ", 8)) ){
@@ -1363,6 +1356,18 @@ translate_to_serial(){
 		return;
 	};
 	
+	
+	if (mpd_emu & CURSONG_CMD) {
+		// We make 2 assumptions for this to work:
+		//	1 - The filename is given before the real title (hope MPD does never change that)
+		//	2 - Betty can handle 2 lines with "title: " correctly (she can) 
+		if (0 == strncmp(mpd_resp_buf,"file: ", 6)){ 
+			sprintf(mpd_resp_buf, "Title: %s\n", basename(mpd_resp_buf+6));
+			serial_output(mpd_resp_buf);
+			return;
+		};
+	};
+		
 	// put the line in serial output buffer	
 	serial_output(mpd_resp_buf);	
 };
