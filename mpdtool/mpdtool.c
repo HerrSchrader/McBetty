@@ -41,7 +41,7 @@
 */
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 3
+#define VERSION_MINOR 4
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -102,6 +102,24 @@ int max(int x, int y){
 	if (x >= y)
 		return x;
 	return y;
+};
+
+/* BSD string length copy. The destination string is always 0 terminated ! 
+	The resulting string uses at most n bytes (incl. trailing 0) 
+	Returns strlen(src).
+*/
+int
+strlcpy(char *dst, const char *src, int size){
+	int i;
+
+	for (i=0; i < (size -1); i++){
+		if (0 == (*(dst++) = *(src++)) )		// we have just copied the NUL byte.
+			return i;			// this is the length of src
+	};
+	if (size != 0)
+		*dst = 0;				// i == max(0, size-1), last byte of destination string, must be terminated.
+	while (* (src++) ) i++;		// add remaining bytes of src
+	return i;
 };
 
 /* Initialize a timer variable with the current time */
@@ -931,6 +949,9 @@ int mpd_emu_arg;
 */
 int mpd_emu_cnt;
 
+/* Some emulated commands need to store a fake title. */
+char mpd_emu_title[64];
+
 /* Send a command to MPD and prepare for the answers.
 	Starts response_tmr and resets (clears) mpd_response_line
 */ 
@@ -1160,6 +1181,7 @@ translate_to_mpd(char *buf){
 	*/
 	if (0 == strncmp(buf, "playlistinfo ", strlen("playlistinfo ")) ){
 		mpd_emu |= PLAYLISTINFO_CMD;
+		mpd_emu_cnt = 0;
 	} else 
 		mpd_emu &= ~PLAYLISTINFO_CMD;
 
@@ -1207,7 +1229,8 @@ translate_to_mpd(char *buf){
 	
 	/* We want to substitute basename(filename) for missing title tag */
 	if (0 == strncmp(buf, "currentsong\n", 12)) {
-		mpd_emu |= CURSONG_CMD;
+		mpd_emu |= CURSONG_CMD;		
+		mpd_emu_cnt = 0;				// counts how often we have seen "Title: "
 	} else 
 		mpd_emu &= ~CURSONG_CMD;
 	
@@ -1265,8 +1288,18 @@ translate_to_serial(){
 		return;
 	}
 	
-	// If the PLAYLISTINFO emulation is on, we let only 5 types of output lines go through
+
 	if (mpd_emu & PLAYLISTINFO_CMD){
+		if (0 == strncmp(mpd_resp_buf,"file: ", 6)){
+			// copy the filename to our fake title buffer. 
+			int len = strlcpy(mpd_emu_title, basename(mpd_resp_buf+6), sizeof(mpd_emu_title));
+			if (len < sizeof(mpd_emu_title))
+				// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
+				mpd_emu_title[len - 1] = '\0';
+			return;
+		};
+		
+		// If the PLAYLISTINFO emulation is on, we let only 5 types of output lines go through		
 		if (! (
 			(0 == strncmp(mpd_resp_buf, "Title: ", 7)) ||
 			(0 == strncmp(mpd_resp_buf, "Artist: ", 8)) ||
@@ -1274,6 +1307,18 @@ translate_to_serial(){
 			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
 			(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )
 		return;
+
+		if (0 == strncmp(mpd_resp_buf, "Title: ", 7))
+			mpd_emu_cnt++;
+		
+		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+			// before we send the "OK" message, we check if there has been a title.
+			if (0 == mpd_emu_cnt) {							// no title
+				sprintf(mpd_resp_buf, "Title: %s\n", mpd_emu_title);
+				serial_output(mpd_resp_buf);
+				strcpy(mpd_resp_buf, "OK\n");
+			};
+		};
 	}
 
 	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through
@@ -1356,15 +1401,27 @@ translate_to_serial(){
 		return;
 	};
 	
-	
+	// Now done right. We send our fake title only if no other title was given. 
 	if (mpd_emu & CURSONG_CMD) {
-		// We make 2 assumptions for this to work:
-		//	1 - The filename is given before the real title (hope MPD does never change that)
-		//	2 - Betty can handle 2 lines with "title: " correctly (she can) 
-		if (0 == strncmp(mpd_resp_buf,"file: ", 6)){ 
-			sprintf(mpd_resp_buf, "Title: %s\n", basename(mpd_resp_buf+6));
-			serial_output(mpd_resp_buf);
+		if (0 == strncmp(mpd_resp_buf,"file: ", 6)){
+			// copy the filename to our fake title buffer. 
+			int len = strlcpy(mpd_emu_title, basename(mpd_resp_buf+6), sizeof(mpd_emu_title));
+			if (len < sizeof(mpd_emu_title))
+				// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
+				mpd_emu_title[len - 1] = '\0';
 			return;
+		};
+					
+		if (0 == strncmp(mpd_resp_buf, "Title: ", 7))
+			mpd_emu_cnt++;
+		
+		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+			// before we send the "OK" message, we check if there has been a title.
+			if (0 == mpd_emu_cnt) {							// no title
+				sprintf(mpd_resp_buf, "Title: %s\n", mpd_emu_title);
+				serial_output(mpd_resp_buf);
+				strcpy(mpd_resp_buf, "OK\n");
+			};
 		};
 	};
 		
@@ -1393,6 +1450,7 @@ int main(int argc, char *argv[])
 	double total_tmr;
 	char mpd_input_buf[BUFFER_SIZE+1];
 	
+	fprintf(stderr, "%s Version %d.%d\n", argv[0], VERSION_MAJOR, VERSION_MINOR);
 	
 	if (4 != argc)
  	{
