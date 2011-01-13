@@ -41,6 +41,11 @@ static struct MODEL mpd_model;
 /* The world of MPD as the user wants it to be */
 static struct MODEL user_model;
 
+static void mpd_set_state(enum PLAYSTATE newstate);
+static void mpd_set_title(char *s);
+static void mpd_set_artist(char *s);
+static void mpd_set_pos(int newpos);
+static void user_song_unknown();
 
 /* ===================== Info about changes ====================================== */
 
@@ -247,7 +252,7 @@ model_needs_action(UserReq *req){
 	if (need_status())
 		return STATUS_CMD;
 
-	if ((mpd_model.artist == NULL) || (mpd_model.title == NULL)) {
+	if  ( (mpd_model.playlistlength > 0) && ((mpd_model.artist == NULL) || (mpd_model.title == NULL)) ){
 		return CUR_SONG_CMD;
 	};
 	
@@ -329,7 +334,7 @@ action_needed(UserReq *request){
 
 	request->cmd = model_needs_action(request);
 
-	return (request->cmd != NO_CMD);	
+	return (request->cmd != NO_CMD);
 }
 
 /* ------------------------------------ Scripts --------------------------------------- */
@@ -339,7 +344,7 @@ user_wants_script(int script_no){
 }
 
 void
-mpd_script_ok(){
+mpd_script_ok(struct MODEL *a){
 	user_model.script = -1;
 };
 
@@ -372,7 +377,7 @@ track_info(int track_pos){
 /* 
 	Given title, artist and track number, store this info in our tracklist cache (if it fits) 
 */
-void
+static void
 model_store_track(char *title, char *artist, int track_pos){
 	char tmp[64];
 	
@@ -382,6 +387,23 @@ model_store_track(char *title, char *artist, int track_pos){
 	cache_store(&tracklist, track_pos, tmp);
 	model_changed(TRACKLIST_CHANGED);
 };
+
+void
+mpd_playlistinfo_ok(struct MODEL *a){
+	if (a->pos == a->request.arg)
+		model_store_track(a->title_buf, a->artist_buf, a->pos);
+}
+
+/*
+ NOTE It happens not too infrequently, that mpd cannot find a song in the tracklist (database changed).
+		We could issue a delete command or inform the user if this is the case.
+		For now we just set the info to a value of "- not - found -" so that we do not repeatedly ask mpd about it.
+*/
+void
+mpd_playlistinfo_ack(struct MODEL *a){
+	if (a->pos == a->request.arg)
+		model_store_track( "- not", "found -", a->pos);
+}
 
 /* 
 	Returns pos of the last track in the current playlist
@@ -393,10 +415,11 @@ mpd_tracklist_last(){
 	return mpd_model.playlistlength - 1;
 };
 
+
 /* 
 	The length of our playlist has changed.
 */
-void
+static void
 set_playlistlength(int n){
 	n = max(-1 ,n);	
 	if (mpd_model.playlistlength == n)
@@ -421,7 +444,7 @@ set_playlistlength(int n){
 	But we assume the user wants to play the first song of the playlist.
 */
 void
-mpd_load_ok(){
+mpd_load_ok(struct MODEL *a){
 	user_model.cur_playlist = -1;			// wish fulfilled
 	user_model.playlistlength = -1;
 	
@@ -451,7 +474,7 @@ user_tracklist_clr(){
 
 /* We got an "OK" for our CLEAR command */
 void
-mpd_clear_ok(){
+mpd_clear_ok(struct MODEL *a){
 	user_model.playlistlength = -1;	
 	user_model.cur_playlist = -1;			// wish fulfilled
 	set_playlistlength(0);	
@@ -479,7 +502,6 @@ user_wants_song(int pos){
 			return;
 		}
 	} else {				// pos < 0
-			
 		if (pos == -1) return;	// invalid, do nothing
 		user_model.pos = pos;	// either NEXT_SONG or PREV_SONG
 	}
@@ -517,7 +539,7 @@ mpd_set_playlistcount(int n){
 };
 
 void
-model_store_playlistname(char *name, int playlist_pos){
+mpd_store_playlistname(char *name, int playlist_pos){
 	cache_store(&playlists, playlist_pos, name);
 	model_changed(PL_NAMES_CHANGED);
 };
@@ -578,13 +600,9 @@ resultlist_range_set(int start_pos, int end_pos){
 	return cache_range_set(&resultlist, start_pos, end_pos, mpd_model.num_results);
 };
 
-void
-mpd_set_resultlistcount(int n){
-	mpd_model.num_results = n;
-};
 
 void
-model_store_resultname(char *name, int result_pos){
+mpd_store_resultname(char *name, int result_pos){
 	cache_store(&resultlist, result_pos, name);
 	model_changed(RESULT_NAMES_CHANGED);
 };
@@ -599,11 +617,17 @@ mpd_resultlist_last(){
 	return mpd_model.num_results - 1;
 };
 
+void
+mpd_result_ack(struct MODEL *a){
+		mpd_store_resultname("", a->request.arg);	
+};
+
+
 /* -------------------------------------- Searching ----------------------------------------------------------- */
 
 /* Our search command returned the number of results */
 void
-model_store_num_results(int n){
+mpd_store_num_results(int n){
 	mpd_model.num_results = n;
 	cache_empty(&resultlist, 0);			// all result names in cache are unknown
 	model_changed(RESULTS_CHANGED);
@@ -611,7 +635,7 @@ model_store_num_results(int n){
 };
 
 int
-model_get_num_results(){
+mpd_get_num_results(){
 	return	(mpd_model.num_results);
 }
 char *
@@ -621,15 +645,15 @@ mpd_get_search_string(){
 
 /* A search command has been successfully executed. */
 void
-mpd_search_ok(){
+mpd_search_ok(struct MODEL *a){
 	user_model.search_string = NULL;	// wish fulfilled
 };
 
 /* A search command returned an error. */
 void
-mpd_search_ack(){
+mpd_search_ack(struct MODEL *a){
 	user_model.search_string = NULL;	// abort this search
-	model_store_num_results(0);
+	mpd_store_num_results(0);
 };
 
 /* Maybe the user has changed his search string 
@@ -671,7 +695,7 @@ mpd_get_time_elapsed(){
 };
 
 /* We have (new) timing information from mpd */
-void
+static void
 mpd_set_time(int elapsed, int total){
 	if ( (mpd_model.time_elapsed != elapsed) || (mpd_model.time_total != total) )
 		model_changed(TIME_CHANGED);
@@ -703,7 +727,7 @@ user_wants_time_add(int offs){
 	This is done because we expect mpd to behave nicely.
 	When we issue the next status command, time is synchronized with MPD
 */
-void
+static void
 mpd_inc_time(){
 	/* Only increase time if we are playing something */
 	if (mpd_model.state == PLAY){
@@ -760,7 +784,7 @@ mpd_get_state(){
 	We reflect that here in our model.
 	Called after a successful state changing command 
 */
-void
+static void
 mpd_set_state(enum PLAYSTATE newstate){
 	if (newstate == mpd_model.state) return;	/* Not new */
 	
@@ -790,13 +814,13 @@ mpd_set_state(enum PLAYSTATE newstate){
 
 /* We got an OK answer after a state changing command */
 void
-mpd_state_ok(){
+mpd_state_ok(struct MODEL *a){
 	mpd_set_state(user_model.state);
 };
 
 /* We got an ACK answer after a state changing command */
 void
-mpd_state_ack(){
+mpd_state_ack(struct MODEL *a){
 		user_wants_state(-1);	// don't try to issue the same command again and again
 		// TODO here some error handling, maybe message to the user
 };
@@ -829,7 +853,7 @@ mpd_get_random(){
 
 /* This function is called when we know about the random status by a "status" command or similar.
 */
-void
+static void
 mpd_set_random(int rnd){
 	if (mpd_model.random != rnd){
 		mpd_model.random = rnd;
@@ -841,7 +865,7 @@ mpd_set_random(int rnd){
 	We can then safely assume that random is set the same as the user_model wanted it.
 */
 void
-mpd_random_ok(){
+mpd_random_ok(struct MODEL *a){
 	mpd_set_random(user_model.random);
 	user_model.random = -1;
 };
@@ -861,7 +885,7 @@ mpd_get_repeat(){
 	return mpd_model.repeat;
 };
 
-void
+static void
 mpd_set_repeat(int rpt){
 	if (mpd_model.repeat != rpt){
 		mpd_model.repeat = rpt;
@@ -870,7 +894,7 @@ mpd_set_repeat(int rpt){
 };
 
 void
-mpd_repeat_ok(){
+mpd_repeat_ok(struct MODEL *a){
 	mpd_set_repeat (user_model.repeat);
 	user_model.repeat = -1;
 };
@@ -885,22 +909,13 @@ user_toggle_repeat(){
 
 
 /* ------------------------------------- Single mode -------------------------------------------- */
-/*
-	NOTE
-	We see a pattern here. For each variable of the model we need at least 4 functions.
-	- Get the current value of that variable
-	- Set the current value of that variable to a certain value (incl. UNKNOWN and NOTAVAIL )
-	- A function which is called after a successful command has been sent to mpd which changed that 
-	  variable.
-	- A function which can be called if the user wants to change the variable in a certain way.
-	Check if we can organize the other functions similarily.
-*/	
+
 int
 mpd_get_single(){
 	return mpd_model.single;
 };
 
-void
+static void
 mpd_set_single(int sgl){
 	if (mpd_model.single != sgl){
 		mpd_model.single = sgl;
@@ -909,7 +924,7 @@ mpd_set_single(int sgl){
 };
 
 void
-mpd_single_ok(){
+mpd_single_ok(struct MODEL *a){
 	mpd_set_single (user_model.single);
 	user_model.single = -1;
 };
@@ -937,7 +952,7 @@ mpd_get_pos(){
 };
 
 /* We have got (maybe new) information about the current song pos */ 
-void
+static void
 mpd_set_pos(int newpos){
 	if (mpd_model.pos == user_model.pos)		// wish fulfilled
 		user_model.pos = -1;
@@ -965,10 +980,10 @@ mpd_set_pos(int newpos){
 													// TODO check where POS_CHANGED is used
 };
 
-/* Our play xxx command did succeed */
+/* We sent a "PLAY xxx" command and got "OK". */
 void 
-mpd_pos_ok(int newpos){
-	mpd_set_pos(newpos);
+mpd_select_ok(struct MODEL *a){
+	mpd_set_pos(a->request.arg);
 	user_song_unknown();				// wish fulfilled
 	mpd_set_state(PLAY);				// MPD starts playing
 };
@@ -978,14 +993,14 @@ mpd_pos_ok(int newpos){
 	TODO we should inform the user about that
 */
 void 
-mpd_pos_nack(){
+mpd_select_ack(struct MODEL *a){
 	user_wants_state(-1);
 	user_model.pos = SONG_UNKNOWN;			// ignore user wish
 };
 
 /* Called after a succesful NEXT or PREVIOUS command. */
 void
-mpd_newpos_ok(){
+mpd_newpos_ok(struct MODEL *a){
 	/* We do not really know which song is the current one. There may not even be one or it is random.
 		Mark mpd.pos as UNKNOWN to read the info soon.
 	*/
@@ -993,9 +1008,9 @@ mpd_newpos_ok(){
 	user_song_unknown();				// wish fulfilled
 };
 
-// TODO not fully implemented
+// TODO not fully implemented, we should change most references of pos to id
 /* We have got (maybe new) information about the current song id */ 
-void
+static void
 mpd_set_id(int newid){
 	if (mpd_model.songid == user_model.songid)		// wish fulfilled
 		user_model.songid = -1;
@@ -1014,7 +1029,7 @@ mpd_get_title(){
 };
 
 /* We are given either NULL or a string with the title tag, NULL meaning title unknown */
-void
+static void
 mpd_set_title(char *s){
 	int length;
 	
@@ -1025,6 +1040,8 @@ mpd_set_title(char *s){
 		};
 	} else {
 		if (strn_cpy_cmp(mpd_model.title_buf, s, TITLE_LEN, &length) == 0)	
+			model_changed(TITLE_CHANGED);
+		if (mpd_model.title == NULL)
 			model_changed(TITLE_CHANGED);
 		mpd_model.title = mpd_model.title_buf;
 	}; 
@@ -1041,7 +1058,7 @@ mpd_get_artist(){
 /* We are given either NULL or a string with the artist tag, NULL meaning artist unknown 
 	Copies artist information to mpd_model
 */
-void
+static void
 mpd_set_artist(char *s){
 	int length;
 	
@@ -1053,22 +1070,43 @@ mpd_set_artist(char *s){
 	} else {
 		if (strn_cpy_cmp(mpd_model.artist_buf, s, TITLE_LEN, &length) == 0)	
 			model_changed(ARTIST_CHANGED);
+		if (mpd_model.artist == NULL)
+			model_changed(ARTIST_CHANGED);
 		mpd_model.artist = mpd_model.artist_buf;
 	}; 
 };
 
-#if 0
-/* We got an OK answer from "currentsong" command 
-	We can update our model
-*/
+/* We got an "OK" for "current song" command */
 void
-mpd_currentsong_ok(struct MODEL *pans_model){
+mpd_currentsong_ok(struct MODEL *a){
 	
-		
-};
-#endif
+	/* Sometimes songs don't have a tag for title and/or artist.
+		We then show a "?" to the user, so he knows that and can maybe correct the tags.
+		For empty titles mpdtool substitutes the last part of the filename so that should not happen
+		Empty artist can make sense, if you really can not figure out who the hell sings that song.
+		We want to avoid showing a "?" if soemhow the radio reception was corrupted and some
+		lines were lost. So first we check if we got any information at all.
+		If not, we conclude that the command failed and avoid updating the info.
+	*/
+	if ( (a->pos == SONG_UNKNOWN) || (a->songid == -1) )
+		return;
+	
+	mpd_set_pos(a->pos);
+	mpd_set_id(a->songid);
+	
+	if (a->title == NULL)
+		mpd_set_title("?");		// should not occur
+	else
+		mpd_set_title(a->title);
+	
+	if (a->artist == NULL)
+		mpd_set_artist("?");
+	else
+		mpd_set_artist(a->artist);
+}
 
-void
+
+static void
 user_song_unknown(){
 	user_model.pos = SONG_UNKNOWN;
 	user_model.state = UNKNOWN;
@@ -1089,7 +1127,7 @@ mpd_get_volume(){
 /* We have some information about the current mpd volume.
 	Update mpd_model and if necessary user_model
 */
-void
+static void
 mpd_set_volume(int vol){
 	if (vol != mpd_model.volume){
 		mpd_model.volume = vol;
@@ -1097,6 +1135,12 @@ mpd_set_volume(int vol){
 			user_model.volume = -1;					// wish fulfilled
 		model_changed(VOLUME_CHANGED);
 	}
+};
+
+/* We sent a "setvol" command and got "OK" */
+void 
+mpd_volume_ok(struct MODEL *a){
+	mpd_set_volume(a->request.arg);	
 };
 
 /* Changes the internal user volume by adding a value to mpd_model.volume 
@@ -1124,9 +1168,7 @@ user_toggle_mute(){
 };
 
 
-/* -------------------------------------- Timing information -------------------------------------------------- */
-
-
+/* -------------------------------------- Other information -------------------------------------------------- */
 
 /* Set the time that mpd last communicated with us */
 void
@@ -1134,13 +1176,37 @@ model_set_last_response(unsigned int t){
 	mpd_model.last_response = t;
 };
 
-/* We got a valid response to a "status" command.
-	Remember the time so we can regularily do status commands.
-*/
+/* -------------------------------------- Status -------------------------------------------------- */
+
+/* We got a valid response to a "status" command. */
 void
-mpd_status_ok() {
-	mpd_model.last_status = system_time();
+mpd_status_ok(struct MODEL *a){
+	mpd_set_volume (a->volume);
+	mpd_set_repeat (a->repeat);
+	mpd_set_random (a->random);
+	mpd_set_single (a->single);
+	set_playlistlength(a->playlistlength);
+	mpd_set_state(a->state);
+	
+	// We got "OK" but no pos info. So there definately is no current song.
+	if (a->pos == SONG_UNKNOWN)
+			mpd_set_pos (NO_SONG);
+	else 
+		mpd_set_pos (a->pos);
+	mpd_set_id (a->songid);
+
+	/* If the state is stopped and there is a current song, MPD does not give us any timing information.
+		But the internal elapsed time of MPD is reset to 00:00 
+	*/
+	if ((mpd_model.state == STOP) && (mpd_model.songid >= 0))
+		mpd_set_time (0, mpd_model.time_total);
+	else
+		mpd_set_time (a->time_elapsed, a->time_total);
+	
+	/*	Remember the time so we can wait with out next status command.*/	
+	mpd_model.last_status = system_time();	
 };
+
 
 /* ----------------------------------------------- Initialization -------------------------------------------------- */
 /* sets all values in st to UNKNOWN */
@@ -1167,6 +1233,9 @@ model_reset(struct MODEL *m){
 	m->add = -1;
 	m->num_results = -1;
 	m->script = -1;
+	m->errmsg = NULL;
+	m->errmsg_buf[0] = '\0';
+
 };
 
 /* Initialize our model

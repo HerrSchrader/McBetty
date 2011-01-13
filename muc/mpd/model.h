@@ -24,7 +24,14 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define RESULT_NAMES_CHANGED	(1<<13)
 
 // Length of artist and title strings each, some songs and some albums really have long titles
-#define TITLE_LEN 150
+#define TITLE_LEN 149
+// Size of the character array needed to store artist and title strings each
+#define TITLE_SIZE	(TITLE_LEN + 1)
+
+// Maximum length of MPD error message that we store
+#define ERRMSG_LEN 	63
+// Size of the character array needed to store MPD error message
+#define ERRMSG_SIZE	(ERRMSG_LEN + 1)
 
 /* MPD gives a 0-based answer on song pos. 
  * We need 4 extra values here:
@@ -51,8 +58,8 @@ struct MODEL {
 	int8_t repeat;				// 1 if repeat mode is on
 	int8_t single;				// 1 if single mode is on
 	int songid;					// MPD's internal id of the current song
-	char artist_buf[TITLE_LEN];	// If cur_artist points here, this is the artist tag, else irrelevant 
-	char title_buf[TITLE_LEN];	// If cur_title points here, this is the title tag, else irrelevant 
+	char artist_buf[TITLE_SIZE];	// If cur_artist points here, this is the artist tag, else irrelevant 
+	char title_buf[TITLE_SIZE];	// If cur_title points here, this is the title tag, else irrelevant 
 	char *artist;				// NULL if not known, else points to info in artist_buf;
 	char *title;				// NULL if not known, else points to info in title_buf;
 	int time_elapsed;			// in seconds
@@ -63,117 +70,112 @@ struct MODEL {
 	int add;					// is <> -1 iff the user wants to add something to the playlist
 	int num_results;			// number of results after a search command
 	unsigned int script;		// if the user wants a script to be executed this is >= 0
+	char errmsg_buf[ERRMSG_SIZE];
+	char *errmsg;				// error message from MPD, NULL if no error
+	UserReq request;			// only used by ans_model, request that this answer is for
 };
 
 
 int model_get_changed(void);
 void model_reset_changed();
 
-void mpd_script_ok();
+int action_needed(UserReq *request);
+
+/* ------------------------------------ Scripts --------------------------------------- */
 void user_wants_script(int script_no);
-	
-void start_reading_playlists(void);
-void user_toggle_pause(void);
-void user_set_state(enum PLAYSTATE s);
+void mpd_script_ok(struct MODEL *a);
+
+/* ------------------------------------- Tracklist = current playlist -------------------------------------- */
+int tracklist_range_set(int start, int end);
+char *track_info(int no);
+void mpd_playlistinfo_ok(struct MODEL *a);
+void mpd_playlistinfo_ack(struct MODEL *a);
+int mpd_tracklist_last();
+void user_tracklist_clr();
+void mpd_clear_ok(struct MODEL *a);
+void mpd_load_ok(struct MODEL *a);
+
+/* ------------------------------------- Playlists -------------------------------------- */
+void mpd_set_playlistname(char *s);
+char *mpd_get_playlistname(int idx);
+int mpd_playlists_last();
+void user_wants_playlist(int idx);
+int playlists_range_set(int start_pos, int end_pos);
+void mpd_set_playlistcount(int n);
+void mpd_store_playlistname(char *name, int playlist_pos);
+
+/* --------------------------------------- Search results ------------------------------- */
+char *mpd_get_resultlistname(int pos);
+int resultlist_range_set(int start_pos, int end_pos);
+int  mpd_resultlist_last();
+void mpd_result_ack(struct MODEL *a);
+void mpd_store_resultname(char *name, int result_pos);
+
+/* -------------------------------------- Searching ----------------------------------------------------------- */
+void mpd_store_num_results(int n);
+int mpd_get_num_results();
+char *mpd_get_search_string();
+void mpd_search_ok(struct MODEL *a);
+void mpd_search_ack(struct MODEL *a);
+void user_set_search_string(char * str);
+void mpd_findadd_ok();
+void user_wants_add(int idx);
+
+/* ------------------ Elapsed and total time ------------------------------- */
 
 int mpd_get_time_total();
 int mpd_get_time_elapsed();
 void user_wants_time_add(int offs);
-void mpd_set_time(int elapsed, int total);
-void mpd_inc_time();
 
-void user_toggle_mute(void);
-void mpd_want_volume_add(int chg);
-int	mpd_get_volume();
-void mpd_set_volume(int vol);
-void user_wants_volume_add(int chg);
-
-
-void error_inc(int amount);
-void error_dec(int amount);
-int get_comm_error();
-
-
-
-char *track_info(int no);
-void model_store_track(char *title, char *artist, int track_no);
-int tracklist_range_set(int start, int end);
-int mpd_playlist_last();
-void user_tracklist_clr();
-void mpd_clear_ok();
-
+/* ------------------------------ Playing state (play, pause, stop) -------------------------- */
+void user_toggle_pause(void);
+void user_set_state(enum PLAYSTATE s);
 int mpd_get_state();
-void mpd_set_state(enum PLAYSTATE newstate);
-void mpd_state_ok();
-void mpd_state_ack();
-
-void mpd_status_ok();
-
-void mpd_set_newplaylist();
-void mpd_set_title(char *s);
-void mpd_set_artist(char *s);
-void mpd_set_seek();
-
-void mpd_set_playlistname(char *s);
-char *mpd_get_playlistname(int idx);
-int mpd_playlists_last();
-
-void user_set_playlistlength(int n);
-int mpd_tracklist_last();
-void mpd_load_ok();
-void user_wants_playlist(int idx);
-void set_playlistlength(int n);
-int playlists_range_set(int start_pos, int end_pos);
-void mpd_set_playlistcount(int n);
-void model_store_playlistname(char *name, int playlist_pos);
-
-void mpd_set_last_response(unsigned int time);
-void mpd_check_mpd_dead();
-void model_reset(struct MODEL *m);
-int action_needed(UserReq *request);
+void mpd_state_ok(struct MODEL *a);
+void mpd_state_ack(struct MODEL *a);
 void user_wants_state(enum PLAYSTATE s);
 
-int mpd_get_single();
-void mpd_set_single(int sgl);
-void mpd_single_ok();
-void user_toggle_single();
+/* ---------------------------- Random mode ------------------------------- */
+int mpd_get_random();
+void mpd_random_ok(struct MODEL *a);
+void user_toggle_random();
+void user_toggle_mute(void);
 
+/* ---------------------------- Repeat mode ------------------------------------------ */
 int mpd_get_repeat();
-void mpd_set_repeat(int rpt);
-void mpd_repeat_ok();
+void mpd_repeat_ok(struct MODEL *a);
 void user_toggle_repeat();
 
-int mpd_get_random();
-void mpd_set_random(int rnd);
-void mpd_random_ok();
-void user_toggle_random();
+/* ------------------------------------- Single mode -------------------------------------------- */
+int mpd_get_single();
+void mpd_single_ok(struct MODEL *a);
+void user_toggle_single();
 
+/* ------------------------------------------ Current song information ------------------------------- */
 int mpd_get_pos();
-void mpd_set_pos(int newpos);
-void mpd_pos_ok(int newpos);
-void mpd_pos_nack();
-void mpd_newpos_ok();
-
-void mpd_set_id(int newid);
-
+void mpd_select_ok(struct MODEL *a);
+void mpd_select_ack(struct MODEL *a);
+void mpd_newpos_ok(struct MODEL *a);
 char *mpd_get_title();
 char *mpd_get_artist();
-void user_song_unknown();
 void user_wants_song(int pos);
+void mpd_currentsong_ok(struct MODEL *a);
 
-void user_set_search_string(char * str);
-void mpd_search_ok();
-char *mpd_get_search_string();
-void mpd_findadd_ok();
-char *mpd_get_resultlistname(int pos);
-void model_store_num_results(int n);
-int model_get_num_results();
-void model_set_last_response(unsigned int t);
-void mpd_search_ack();
-void model_store_resultname(char *name, int result_pos);
-void user_wants_add(int idx);
-int resultlist_range_set(int start_pos, int end_pos);
-int  mpd_resultlist_last();
+/* -------------------------------------- Volume and Mute ---------------------------------------- */
+int	mpd_get_volume();
+void user_wants_volume_add(int chg);
+void mpd_volume_ok(struct MODEL *a);
+
+/* -------------------------------------- Status -------------------------------------------------- */
+void mpd_status_ok(struct MODEL *a);
+
+/* -------------------------------------- Other information -------------------------------------------------- */
+
+void model_set_last_response(unsigned int time);
+void mpd_check_mpd_dead();
+void model_reset(struct MODEL *m);
+
+int get_comm_error();
 
 #endif
 

@@ -55,14 +55,6 @@
 static char response[RESPLEN];
 
 
-/* This is the request that the model wanted.
-	The line processing functions can see which parameters were given.
-*/
-static UserReq request;
-
-/* We gather some information from the responses in this variable: */
-static struct MODEL ans_model;
-
 /* Somewhat similar to the C function. 
 	We don't want to include the whole snprintf function,
 	so we include a very reduced version.
@@ -110,56 +102,12 @@ slprintf(char *dst, const char *src, UserReq *f, int size){
 
 /* ------------------------------ The Communicator ----------------------------------------- */
 
-/* Variable which is set by the response collecting routines.
-	When we got a response with "OK" or "ACK" within time limits we set this to 1.
-	If no response then it will stay at 0.
-	TODO where is this needed? Only for error checking ?
-*/
-static int response_finished;
 
 /* ---------------------------- Response collecting handlers ------------------------------------- */
 /* Each request from Betty choses one of the following handlers.
 	The handler then reads the response line(s) from mpd and tells the model about the results.
 */
  
-/* We sent a "setvol" command and got "OK" */
-static void 
-ans_volume_ok(char *s){
-	mpd_set_volume(request.arg);	
-};
-
-/*
-	"OK" answer to a song changing command (next, previous)
-*/
-static void
-ans_song_ok(char *s){
-	mpd_newpos_ok();
-};
-
-
-/* We sent a "PLAY xxx" command and got "OK". */
-static void 
-ans_play_ok(char *s){
-	mpd_pos_ok(request.arg);
-};
-
-/* We sent a "PLAY xxx" command and got "ACK". */
-static void
-ans_play_ack(char *s){
-	mpd_pos_nack();	
-};
-
-/* We sent a state changing command (PLAY, PAUSE, STOP) and got "OK" */
-static void 
-ans_state_ok(char *s){
-	mpd_state_ok();
-};
-
-/* We sent a state changing command (PLAY, PAUSE, STOP) and got "ACK" */
-static void 
-ans_state_ack(char *s){
-	mpd_state_ack();	
-};	
 
 /* We got a line from mpd after a status command.
 	Some information can be handled directly by the model.
@@ -170,17 +118,32 @@ ans_state_ack(char *s){
 	TODO get more information, namely if some info is not given
 */ 
 void 
-ans_status_line(char *s){
+ans_status_line(char *s, struct MODEL *a){
 	int tmp;
 	char *s2;
 	
-	if (strstart(response, "playlistlength: ")){ 
-		set_playlistlength(atoi(response+16));
+	if (strstart(response, "volume: ")){
+		a->volume = atoi(response+8);
+		return;
+	};	
+	
+	if (strstart(response, "repeat: ")){
+		a->repeat = atoi (response+8);
+		return;
+	};	
+			
+	if (strstart(response, "random: ")){
+		a->random = atoi (response+8);
 		return;
 	};
 	
-	if (strstart(response, "volume: ")){
-		mpd_set_volume (atoi(response+8));
+	if (strstart(response, "single: ")){
+		a->single = atoi (response+8);
+		return;
+	};
+
+	if (strstart(response, "playlistlength: ")){ 
+		a->playlistlength = atoi(response+16);
 		return;
 	};
 	
@@ -194,196 +157,93 @@ ans_status_line(char *s){
 			else
 				if (strstart(response+7, "stop"))
 					tmp = STOP;
-		mpd_set_state(tmp);
+		a->state = tmp;
 		return;
 	};
 	
 	/* Compare with "song: " */
 	if (strstart(response, "song: ")){ 
-		mpd_set_pos (atoi(response+6));
-		ans_model.pos = atoi(response+6);
+		a->pos = atoi(response+6);
 		return;
 	};
 	
 	/* Compare with "Id: " */
 	if (strstart(response, "songid: ")){
-		mpd_set_id (atoi (response+4));
-		return;
-	};
-		
-	if (strstart(response, "random: ")){
-		mpd_set_random (atoi (response+8));
+		a->songid = atoi(response+4);
 		return;
 	};
 	
-	if (strstart(response, "repeat: ")){
-		mpd_set_repeat (atoi (response+8));
-		return;
-	};	
-	
-	if (strstart(response, "single: ")){
-		mpd_set_single (atoi (response+8));
-		return;
-	};
-		
 	if (strstart(response, "time: ")) {
 		s2 = strchr(response+6, ':');
-		if (s2)
-			mpd_set_time( atoi(response+6), atoi(s2+1) );
+		if (s2) {
+			a->time_elapsed = atoi(response+6);
+			a->time_total = atoi(s2+1);
+		};
 		return;
 	};
 };
 
-/* status command finished successfully.
-	 Any variables still unknown were not part of the answer.
-*/
-static void
-ans_status_ok(char *s){
-	if (ans_model.pos == SONG_UNKNOWN)
-		mpd_set_pos (NO_SONG);
-		
-	mpd_status_ok();
-};
-	
+
 /* We got a line from mpd after a "current_song" command.
 	Gather the information in the variable mpd_status.
 */ 
 static void 
-ans_currentsong_line(char *s){
+ans_currentsong_line(char *s, struct MODEL *a){
 
 	/* Compare with "Artist: " */
 	if (strstart(response, "Artist: ")){
-		strlcpy(ans_model.artist_buf, response+8, sizeof(ans_model.artist_buf) );
-		ans_model.artist = ans_model.artist_buf;
+		strlcpy(a->artist_buf, response+8, sizeof(a->artist_buf) );
+		a->artist = a->artist_buf;
 		return;
 	};
 	
 	/* Compare with "Title: " */
 	if (strstart(response, "Title: ")){
-		strlcpy(ans_model.title_buf, response+7, sizeof(ans_model.title_buf) );
-		ans_model.title = ans_model.title_buf;
+		strlcpy(a->title_buf, response+7, sizeof(a->title_buf) );
+		a->title = a->title_buf;
 		return;
 	};
 	
 	/* Compare with "Pos: " */
 	if (strstart(response, "Pos: ")){
-		ans_model.pos = atoi (response+5);
+		a->pos = atoi (response+5);
 		return;
 	};
 	
 	/* Compare with "Id: " */
 	if (strstart(response, "Id: ")){
-		ans_model.songid = atoi (response+4);
+		a->songid = atoi (response+4);
 	};
 };
-
-/* We got an "OK" for "current song" command */
-static void
-ans_currentsong_ok(char *s){
-	
-	/* Sometimes songs don't have a tag for title and/or artist.
-		We then show a "?" to the user, so he knows that and can maybe correct the tags.
-		TODO we will enhance mpdtool so that in case of no title the filename is substituted.
-		We want to avoid showing a "?" if soemhow the radio reception was corrupted and some
-		lines were lost. So first we check if we got any information at all.
-		If not, we conclude that the command failed.
-	*/
-	
-	// We should have the following infos, else something went wrong
-	if ( (ans_model.pos == SONG_UNKNOWN) || (ans_model.songid == SONG_UNKNOWN) )
-		return;
-	
-	mpd_set_pos(ans_model.pos);
-	mpd_set_id(ans_model.songid);
-	
-	if (ans_model.title == NULL)
-			mpd_set_title("?");
-	else
-		mpd_set_title(ans_model.title);
-	
-	if (ans_model.artist == NULL)
-			mpd_set_artist("?");
-	else
-		mpd_set_artist(ans_model.artist);
-}
-
 
 /*
 	The information gathered from playlistinfo response is stored in the variable ans_model.
 	It must have been reset to the correct values beforehand.
 */
 void 
-ans_playlistinfo_line(char *s){
+ans_playlistinfo_line(char *s, struct MODEL *a){
 
 	/* Compare with "Artist: " */
 	if (strstart(response, "Artist: ")){
-		strlcpy(ans_model.artist_buf, response+8, TITLE_LEN);
+		strlcpy(a->artist_buf, response+8, TITLE_LEN);
 		return;
 	};
 			
 	/* Compare with "Title: " */
 	if (strstart(response, "Title: ")){
-		strlcpy(ans_model.title_buf, response+7, TITLE_LEN);
+		strlcpy(a->title_buf, response+7, TITLE_LEN);
 		return;
 	};
 
 	/* Compare with "Pos: " */
 	if (strstart(response, "Pos: ")) {
-		ans_model.pos = atoi(response+5);
+		a->pos = atoi(response+5);
 		return;
 	};
 };
 
-static void
-ans_playlistinfo_ok(char *s){
-	if (ans_model.pos == request.arg)
-		model_store_track(ans_model.title_buf, ans_model.artist_buf, ans_model.pos);
-}
-
-/*
- NOTE It happens not too infrequently, that mpd cannot find a song in the tracklist (database changed).
-		We could issue a delete command or inform the user if this is the case.
-		For now we just set the info to a value of "- not - found -" so that we do not repeatedly ask mpd about it.
-*/
-static void
-ans_playlistinfo_ack(char *s){
-		strlcpy(ans_model.artist_buf, "- not", TITLE_LEN);
-		strlcpy(ans_model.title_buf, "found -", TITLE_LEN);
-		if (ans_model.pos == request.arg)
-			model_store_track(ans_model.title_buf, ans_model.artist_buf, ans_model.pos);
-}
-
-
 static void 
-ans_clear_ok(char *s){
-	mpd_clear_ok();
-};
-
-/* We sent a "LOAD" command
-	Inform mpd that the new playlist was loaded and set response_valid to 1 if we received an "OK" string.
-*/ 
-static void 
-ans_load_ok(char *s){
-	mpd_load_ok();
-};
-
-static void 
-ans_rnd_ok(char *s){
-	mpd_random_ok();
-};
-
-static void 
-ans_rpt_ok(char *s){
-	mpd_repeat_ok();
-};
-
-static void 
-ans_sgl_ok(char *s){
-	mpd_single_ok();
-};
-
-static void 
-ans_plcount_line(char *s){
+ans_plcount_line(char *s, struct MODEL *a){
 	/* Compare with "playlistcount: " */
 	if (strstart(response, "playlistcount: "))
 		mpd_set_playlistcount(atoi(response+15));
@@ -391,47 +251,26 @@ ans_plcount_line(char *s){
 
 
 static void
-ans_plname_line(char *s){
+ans_plname_line(char *s, struct MODEL *a){
 	/* Compare with "playlist: " */
 	if (strstart(response, "playlist: "))
-		model_store_playlistname(response+10, request.arg);
+		mpd_store_playlistname(response+10, a->request.arg);
 };
 
 /* We sent a "SEARCH xxx xxx" command */
 static void
-ans_search_line(char *s){
-	/* Compare with "playlist: " */
+ans_search_line(char *s, struct MODEL *a){
+	/* Compare with "results: " */
 	if (strstart(response, "results: "))
-		model_store_num_results(atoi(response+9));
+		mpd_store_num_results(atoi(response+9));
 };
 
-/* We sent a "SEARCH xxx xxx" command and got "OK". */
-static void
-ans_search_ok(char *s){
-	mpd_search_ok();	
-};
-
-/* We sent a search command and got "ACK" */
-static void 
-ans_search_ack(char *s){
-	mpd_search_ack();	
-};	
 
 static void
-ans_result_line(char *s){
-	/* Compare with "playlist: " */
+ans_result_line(char *s, struct MODEL *a){
+	/* Compare with "name: " */
 	if (strstart(response, "name: "))
-		model_store_resultname(response+6, request.arg);	
-};
-
-static void
-ans_result_ack(char *s){
-		model_store_resultname("", request.arg);	
-};
-
-static void 
-ans_script_ok(char *s){
-	mpd_script_ok();
+		mpd_store_resultname(response+6, a->request.arg);	
 };
 
  /* ----------------------------------------- End of response gathering functions ------------------------- */ 
@@ -469,6 +308,8 @@ static struct pt_sem line_ready;
 	is not overflowing.
 */
 
+// ### Line Producing Task ###
+//	Started once. Never returns.	
 PT_THREAD (assemble_line(struct pt *pt)) {
 	static uint8_t c;
 	static int response_ptr = 0;
@@ -516,11 +357,15 @@ PT_THREAD (assemble_line(struct pt *pt)) {
 };
 
 
-/* We have at least one line of response to our command from mpd.
-	Collect this and the following lines until "OK" or "ACK" or time out.
-	Each line collected is processed with the function process_line.
-	Ends with valid_response set to 1 iff we finally received an OK.
-	If ACK or no answer within some time delay exit with response_valid set to 0.
+/* We wait for an answer from MPD.
+	Process all lines received via radio.
+	Detects end of transmission by checking for "OK" and "ACK" lines.
+	"OK" lines are processed with function process_ok().
+	"ACK" lines are processed with function process_ack().
+	All other lines are processed with the function process_line().
+	
+	Ends with response_finished set to 1 iff we finally received an OK or ACK.
+	If ACK or no answer within some time delay exit with response_finished set to 0.
 	
 	First parameter is the pt structure.
 	Second parameter is a function which processes one line of the answer at a time.
@@ -530,19 +375,22 @@ PT_THREAD (assemble_line(struct pt *pt)) {
 	Fourth parameter is a function which is called when MPD sends an "ACK" answer.
 		Some error happened. Interpret the error, inform the user or ignore it.
 	Any of these function parameters can be NULL.
+
 */
 PT_THREAD (collect_lines(struct pt *pt,
-			void (*process_line) (char *s),
-			void (*process_ok) (char *s),
-			void (*process_ack) (char *s)
+			void (*process_line) (char *s, struct MODEL *a),
+			void (*process_ok) (struct MODEL *a),
+			void (*process_ack) (struct MODEL *a),
+			struct MODEL *ans_model,
+			int *response_finished
 			)) {
 	static struct timer tmr;
 			
 	PT_BEGIN(pt);
-	response_finished = 0;
+	*response_finished = 0;
 	
 	/* We should receive all the answers in a relatively short time frame, else something went wrong anyway 
-		Searching takes somewaht longer, wo we are waiting around 2 seconds.
+		Searching takes somewhat longer, so we are waiting around 2 seconds.
 	*/
 	timer_add(&tmr, 22 * TICKS_PER_TENTH_SEC, 0);
 	
@@ -553,21 +401,24 @@ PT_THREAD (collect_lines(struct pt *pt,
 		if (PT_SEM_CHECK(&line_ready) ){
 			if (strstart(response, "OK")) {
 				if (process_ok) 
-					process_ok(response);
-				response_finished = 1;
+					process_ok(ans_model);
+				*response_finished = 1;
 				break;
 			};
 		
 			if (strstart(response, "ACK")){
+				strlcpy(ans_model->errmsg_buf, response + 3, ERRMSG_SIZE);
+				ans_model->errmsg=ans_model->errmsg_buf;
 				if (process_ack) 
-					process_ack(response);
-				response_finished = 1;
+					process_ack(ans_model);
+				*response_finished = 1;
 				break;
 			};
 		
 			/* gather information from response line by the given function */
 			if (process_line) 
-				process_line(response);
+				process_line(response, ans_model);
+			
 			PT_SEM_INIT(&line_ready, 0);	// Tell producer that we consumed the line
 		
 		} else {							// Time Out	
@@ -583,57 +434,6 @@ PT_THREAD (collect_lines(struct pt *pt,
 	PT_END(pt);
 };
 
-
-
-/* Thread to send a command, collect replies from mpd and do error handling 
-	The command string sent to mpd is given as second argument.
-	The other arguments are the same as for collect_lines()
-*/
-PT_THREAD (handle_cmd(struct pt *pt, char *cmd, 
-			void (*process_line) (char *s),
-			void (*process_ok) (char *s),
-			void (*process_ack) (char *s)
-			) ) {
-
-	static int tries;
-	static struct pt child_pt;
-	static int max_tries = 2;		// NOTE is this value good, should we retry at all?
-	
-	PT_BEGIN(pt);
-	
-	for (tries = 0; tries < max_tries; tries++){	
-		
-		/* NOTE after acquiring exclusive access to mpd we should initialize line_ready, 
-				because we don't want old answers to fool this routine 
-			This is not so easy. We need a kind of flush_rx_buffer() routine.
-			And even then there could come some belated answers from MPD after the flushing.
-			This problem rarely happens, because we always wait some time after sending commands to 
-			MPD. So we simply ignore it here.
-		*/
-
-		send_cmd(cmd);
-		dbg(cmd);
-
-		/* This thread collects all information from mpd and sets response_valid. */
-		PT_SPAWN(pt, &child_pt, collect_lines(&child_pt, process_line, process_ok, process_ack));
-	
-		if (response_finished){							// Our cmd got an OK or ACK
-			model_set_last_response (system_time());
-			clr_error(MPD_DEAD);
-			break;
-	
-		} else {
-			// MPD did not give a valid response, try sending again
-				debug_out("Retry ",tries);
-		};
-	};
-	
-	if (tries >= max_tries) {
-		debug_out("No answer ", 1);
-		model_check_mpd_dead();
-	};
-	PT_END(pt);
-};
 /* ---------------------------- End of functions which handle communication with mpd ------------------- */
  	
 	
@@ -677,7 +477,7 @@ inform_view(int model_changed){
 	};
 
 	if (model_changed & RESULTS_CHANGED){
-		view_results_changed(model_get_num_results());
+		view_results_changed(mpd_get_num_results());
 	};
 	
 	if (model_changed & RESULT_NAMES_CHANGED){
@@ -692,10 +492,10 @@ inform_view(int model_changed){
 
 /* This structure has info about how to process a command */
 struct cmd_proc_info {
-	char *format_string;				// string sent to mpd with %d and %s parameters substituted
- 	void (*process_line) (char *s);		// function to be called for each answer line from MPD
-	void (*process_ok) (char *s);		// function to be called when MPD has answered with "OK"
-	void (*process_ack) (char *s);		// function to be called when MPD has answered with "ACK"
+	char *format_string;								// string sent to mpd with %d and %s parameters substituted
+ 	void (*process_line) (char *s, struct MODEL *a);	// function to be called for each answer line from MPD
+	void (*process_ok) (struct MODEL *a);				// function to be called when MPD has answered with "OK"
+	void (*process_ack) (struct MODEL *a);				// function to be called when MPD has answered with "ACK"
 };
 
 /* For each possible CMD the necessary cmd_proc_info
@@ -703,33 +503,33 @@ struct cmd_proc_info {
 */
 static const struct cmd_proc_info cmd_info[] = {
 	{"", NULL, NULL, NULL},										// NO_CMD,
-	{"play %d\n", NULL, ans_play_ok, ans_play_ack},				// SEL_SONG,
+	{"play %d\n", NULL, mpd_select_ok, mpd_select_ack},			// SEL_SONG,
 	{"", NULL, NULL, NULL},										// VOLUME_UP,
 	{"", NULL, NULL, NULL},										// VOLUME_DOWN,
 	{"", NULL, NULL, NULL},										// MUTE_CMD,
-	{"setvol %d\n", NULL, ans_volume_ok, NULL},					// VOLUME_NEW,
-	{"currentsong\n", ans_currentsong_line, ans_currentsong_ok, NULL},		// CUR_SONG_CMD,
-	{"previous\n", NULL, ans_song_ok, NULL}, 				// PREV_CMD,
-	{"next\n", NULL, ans_song_ok, NULL},					// NEXT_CMD,
-	{"pause 1\n", NULL, ans_state_ok, ans_state_ack},		// PAUSE_ON,
-	{"pause 0\n", NULL, ans_state_ok, ans_state_ack},			// PAUSE_OFF,
-	{"play\n", NULL, ans_state_ok, ans_state_ack},					// PLAY_CMD,
-	{"stop\n", NULL, ans_state_ok, ans_state_ack},					// STOP_CMD,
-	{"command_list_begin\nseek %d %d\nstatus\ncommand_list_end\n", ans_status_line, ans_status_ok, NULL}, 	//FORWARD_CMD,
-	{"command_list_begin\nseek %d %d\nstatus\ncommand_list_end\n", ans_status_line, ans_status_ok, NULL},	//REWIND_CMD,
-	{"status\n", ans_status_line, ans_status_ok, NULL},					// STATUS_CMD,
-	{"playlistinfo %d\n",ans_playlistinfo_line, ans_playlistinfo_ok, ans_playlistinfo_ack},		//PLINFO_CMD,
-	{"command_list_begin\nclear\nload \"%s\"\ncommand_list_end\n", NULL, ans_load_ok, NULL},	// LOAD_CMD,
-	{"random %d\n", NULL, ans_rnd_ok, NULL},				// RANDOM_CMD,
-	{"repeat %d\n", NULL, ans_rpt_ok, NULL},				// REPEAT_CMD,
-	{"single %d\n", NULL, ans_sgl_ok, NULL},				// SINGLE_CMD,
+	{"setvol %d\n", NULL, mpd_volume_ok, NULL},					// VOLUME_NEW,
+	{"currentsong\n", ans_currentsong_line, mpd_currentsong_ok, NULL},		// CUR_SONG_CMD,
+	{"previous\n", NULL, mpd_newpos_ok, NULL}, 				// PREV_CMD,
+	{"next\n", NULL, mpd_newpos_ok, NULL},					// NEXT_CMD,
+	{"pause 1\n", NULL, mpd_state_ok, mpd_state_ack},		// PAUSE_ON,
+	{"pause 0\n", NULL, mpd_state_ok, mpd_state_ack},			// PAUSE_OFF,
+	{"play\n", NULL, mpd_state_ok, mpd_state_ack},					// PLAY_CMD,
+	{"stop\n", NULL, mpd_state_ok, mpd_state_ack},					// STOP_CMD,
+	{"command_list_begin\nseek %d %d\nstatus\ncommand_list_end\n", ans_status_line, mpd_status_ok, NULL}, 	//FORWARD_CMD,
+	{"command_list_begin\nseek %d %d\nstatus\ncommand_list_end\n", ans_status_line, mpd_status_ok, NULL},	//REWIND_CMD,
+	{"status\n", ans_status_line, mpd_status_ok, NULL},					// STATUS_CMD,
+	{"playlistinfo %d\n",ans_playlistinfo_line, mpd_playlistinfo_ok, mpd_playlistinfo_ack},		//PLINFO_CMD,
+	{"command_list_begin\nclear\nload \"%s\"\ncommand_list_end\n", NULL, mpd_load_ok, NULL},	// LOAD_CMD,
+	{"random %d\n", NULL, mpd_random_ok, NULL},				// RANDOM_CMD,
+	{"repeat %d\n", NULL, mpd_repeat_ok, NULL},				// REPEAT_CMD,
+	{"single %d\n", NULL, mpd_single_ok, NULL},				// SINGLE_CMD,
 	{"playlistcount\n",	 ans_plcount_line, NULL, NULL},		// PLAYLISTCOUNT_CMD,
 	{"playlistname %d\n", ans_plname_line, NULL, NULL},		// PLAYLISTNAME_CMD,
-	{"clear\n", NULL, ans_clear_ok, NULL},					// CLEAR_CMD,
-	{"search artist \"%s\"\n", ans_search_line, ans_search_ok, ans_search_ack},		// SEARCH_CMD,
-	{"result %d\n", ans_result_line, NULL, ans_result_ack}, 				// RESULT_CMD,
+	{"clear\n", NULL, mpd_clear_ok, NULL},					// CLEAR_CMD,
+	{"search artist \"%s\"\n", ans_search_line, mpd_search_ok, mpd_search_ack},		// SEARCH_CMD,
+	{"result %d\n", ans_result_line, NULL, mpd_result_ack}, 				// RESULT_CMD,
 	{"findadd artist \"%s\"\n", NULL, mpd_findadd_ok, mpd_findadd_ok},	// FINDADD_CMD,
-	{"script %d\n", NULL, ans_script_ok, NULL}				// SCRIPT_CMD
+	{"script %d\n", NULL, mpd_script_ok, NULL}				// SCRIPT_CMD
 };	
 
 
@@ -739,25 +539,56 @@ static const struct cmd_proc_info cmd_info[] = {
 	and processes the received answer. 
 */
 static
-PT_THREAD (exec_action(struct pt *pt, UserReq *r) ){
+PT_THREAD (exec_action(struct pt *pt, struct MODEL *ans_model) ){
 	static struct pt child_pt;
 	static char cmd_str[255];			// maximum that rf.c can handle
+	static int tries;
+	const int max_tries = 2;		// NOTE is this value good, should we retry at all?
+	static int response_finished;	// is set by collect_lines if MPD response terminated correctly (OK or ACK)
 	
 	PT_BEGIN(pt);
+
+	slprintf(cmd_str, cmd_info[ans_model->request.cmd].format_string, &(ans_model->request), sizeof(cmd_str));
+
+	for (tries = 0; tries < max_tries; tries++){	
+		
+		/* NOTE after acquiring exclusive access to mpd we should initialize line_ready, 
+				because we don't want old answers to fool this routine 
+			This is not so easy. We need a kind of flush_rx_buffer() routine.
+			And even then there could come some belated answers from MPD after the flushing.
+			This problem rarely happens, because we always wait some time after sending commands to 
+			MPD. So we simply ignore it here.
+		*/
+		model_reset(ans_model);
+		send_cmd(cmd_str);
+		dbg(cmd_str);
+
+		/* This thread collects all information from mpd and sets response_finished. 
+			It will time out after a short period.
+		*/
+		PT_SPAWN(pt, &child_pt, collect_lines(&child_pt, 
+				cmd_info[ans_model->request.cmd].process_line,
+				cmd_info[ans_model->request.cmd].process_ok,
+				cmd_info[ans_model->request.cmd].process_ack,
+				ans_model,
+				&response_finished));
 	
-	// We copy the request to a static variable outisde of this routine, 
-	// so that the line processing functions can access the arguments.
-	// The controller makes sure that only one request can be issued at a time, so no race condition
-	request = *r;
-
-	slprintf(cmd_str, cmd_info[r->cmd].format_string, r, sizeof(cmd_str));
-	model_reset(&ans_model);
-
-	PT_SPAWN(pt, &child_pt, handle_cmd(&child_pt, cmd_str, 
-				cmd_info[r->cmd].process_line,
-	 			cmd_info[r->cmd].process_ok,
-	 	 		cmd_info[r->cmd].process_ack ));
-
+		if (response_finished){							// Our cmd got an OK or ACK
+			model_set_last_response (system_time());
+			clr_error(MPD_DEAD);
+			break;
+	
+		} else {
+			// MPD did not give a valid response, try sending again
+				debug_out("Retry ",tries);
+		};
+	};
+	
+	if (tries >= max_tries) {
+		debug_out("No answer ", 1);
+		model_check_mpd_dead();
+	};
+	
 	PT_END(pt);
 };
 
@@ -816,8 +647,10 @@ PT_THREAD (exec_action(struct pt *pt, UserReq *r) ){
 	
 */
 PT_THREAD (controller(struct pt *pt)){
-	static struct pt action_pt;
-	static UserReq request;
+	static struct pt child_pt;
+
+	/* We gather the request and some information from the responses in this variable: */
+	static struct MODEL ans_model;
 	
 	PT_BEGIN(pt);
 
@@ -843,11 +676,11 @@ PT_THREAD (controller(struct pt *pt)){
 			TODO maybe it's more logical to have two threads, one for communication and the other to change the view
 				Maybe that could lead to race conditions ?
 		*/
-		PT_WAIT_UNTIL(pt, ( action_needed(&request) || model_get_changed()) );
+		PT_WAIT_UNTIL(pt, ( action_needed(&ans_model.request) || model_get_changed()) );
 
 	
-		if ( request.cmd != NO_CMD ){
-			PT_SPAWN( pt, &action_pt, exec_action(&action_pt, &request) );
+		if ( ans_model.request.cmd != NO_CMD ){
+			PT_SPAWN( pt, &child_pt, exec_action(&child_pt, &ans_model) );
 			PT_YIELD(pt);
 		};
 		
