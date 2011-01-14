@@ -63,7 +63,7 @@ static struct task *auto_search_task;
 /* This task is started when the search screen is entered and stopped on exit.
 	It will check the value of the current search input window for any changes.
 	If we have a stable change (i.e. search string is new and unchanged for 2 second,
-	we start a serach with this string.
+	we start a search with this string.
 */
 PT_THREAD (auto_search(struct pt *pt)){
 	static struct timer tmr;

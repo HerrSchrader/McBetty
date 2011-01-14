@@ -35,6 +35,11 @@
 #define LCD_SIZE_X	128
 #define LCD_SIZE_Y	160
 
+// Number of pages that our popup buffer can store
+#define POPUP_PAGES	14
+
+// Start page of our popup buffer
+#define POPUP_STARTPAGE 2
 
 void lcd_init(unsigned char s);
 void lcd_enable(unsigned char e);
@@ -50,6 +55,9 @@ extern void (*write_buf) (uint8 row, uint8 col, uint8 w, uint8 h);
 void lcd_scroll(uint8 row, uint8 col, uint8 width, int height, int offset);
 
 void store_buf (uint8 pos, uint16 pattern, uint8 fg_col, uint8 bg_col);
+
+void read_popup();
+void write_popup();
 
 #endif
 

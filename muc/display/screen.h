@@ -25,7 +25,9 @@ typedef struct Screen {
 	void (*screen_enter)(void);		// function called when screen is entered
 	void (*screen_exit)(void);		// function called when screen is exited
 	void (*keypress) (struct Screen *, int, UserReq *);		// function called for screen specific key handler
-	enum USER_CMD user_req_cmd;
+	enum USER_CMD user_req_cmd;		// ?
+	uint8_t popup_active;			// is TRUE iff this screen is overlayed with a popup
+									// other windows must not draw into screen
 } Screen;
 
 void screen_visible(enum SCREEN screen, int v);

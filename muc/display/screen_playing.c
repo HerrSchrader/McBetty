@@ -79,7 +79,7 @@ static void
 screen_enter(){
 	lcd_fill(0x00);
 	screen_visible(PLAYING_SCREEN, 1);
-	version_win.flags &= ~WINFLG_VISIBLE;
+	version_win.flags &= ~WINFLG_VISIBLE;	// hidden window
 	screen_redraw(PLAYING_SCREEN);
 };
 
@@ -287,10 +287,34 @@ view_state_changed(enum PLAYSTATE state){
 	
 };
 
+static void popup(Screen *this_screen){
+	this_screen->popup_active = 1;
+	screen_visible(PLAYING_SCREEN, 0);
+	read_popup();
+	draw_block(POPUP_STARTPAGE * 8, 8, 112, POPUP_PAGES * 8, LIGHT_GREY);
+};
+
+static void popup_end(Screen *this_screen){
+	write_popup();
+	this_screen->popup_active = 0;
+	screen_visible(PLAYING_SCREEN, 1);
+	version_win.flags &= ~WINFLG_VISIBLE;	// hidden window
+	screen_redraw(PLAYING_SCREEN);
+};
+
+
 void 
 keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
+		case KEY_C:
+			popup(this_screen);
+			break;
+			
+		case KEY_D:
+			popup_end(this_screen);
+			break;
+			
 		case KEY_Yellow:
 			user_toggle_pause();
 			break;

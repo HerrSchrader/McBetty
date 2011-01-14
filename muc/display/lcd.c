@@ -59,7 +59,7 @@ static void (*write_pattern) (uint8 row, uint8 col, uint8 l, uint8 mask, uint8 p
 
 /* Set column address where to begin the drawing or reading.
 	Valid are values from 0 ... 127.
-	TODO does not check for a valid column
+	NOTE does not check for a valid column
 */
 #define lcd_set_coladr(col) {LCD_CMD = 0x10 + ((col) >> 4);LCD_CMD = (col) & 0x0F;}
 
@@ -75,6 +75,15 @@ static uint8 rcubuf[2][128];
 
 /* For up to 16 bit high operations */
 static uint16 drawbuf16[2][128];
+
+/* 
+	This buffer is used for pop-up windows.
+	It saves a rectangular region in the middle of the screen
+	with a size of 144 rows ( = 14 pages ) and 128 columns.
+	That are 18 432 color bits = 36 864 real bits = 4608 bytes
+	Indexed by page and column
+*/
+static uint8 popup_buf[POPUP_PAGES][2 * 128];
 
 
 /* Read w columns into rcu_buf */
@@ -95,6 +104,43 @@ _read_lcd(uint8 row, uint8 col, uint8 w){
 	d = LCD_DATA;		// Another read, why that ? Maybe bug in chip, does not work correctly without
 }
 
+
+/* Read LCD contents into popup_buf 
+	Need not be in fastcode section
+*/
+void
+read_popup(){
+	uint8 page, col, d, i;
+	
+	for (page=0; page < POPUP_PAGES; page++){
+		lcd_set_page(POPUP_STARTPAGE + page);
+		lcd_set_coladr(0);
+		d = LCD_DATA;		// Dummy Data Read; LCD chip needs this
+		for (i=0, col=0; col<128; col++){
+			popup_buf[page][i++] = LCD_DATA;
+			popup_buf[page][i++] = LCD_DATA;
+		};
+		d = LCD_DATA;		// Another read, why that ? Maybe bug in chip, does not work correctly without
+	};
+
+}
+
+/*
+	Write popup_buf contents back into LCD
+*/
+void
+write_popup(){
+	uint8 page, col, d, i;
+			
+	for (page=0; page < POPUP_PAGES; page++){
+		lcd_set_page(POPUP_STARTPAGE + page);
+		lcd_set_coladr(0);
+		for (i=0, col=0; col<128; col++){
+			LCD_DATA = popup_buf[page][i++];
+			LCD_DATA = popup_buf[page][i++];
+		};
+	};
+}
 
 /* 
 	Write a fixed pattern into LCD.
@@ -191,13 +237,10 @@ static uint16 col_bits16_0[4]={0x0000, 0x0000, 0xffff, 0xffff};
 static uint16 col_bits16_1[4]={0x0000, 0xffff, 0x0000, 0xffff};
 
 
-/* We want to store a pattern with a height of 16 bits into drawbuf16[0..1][pos] with the given color 
+/* 
+	We want to store a pattern with a height of 16 bits into drawbuf16[0..1][pos] with the given color 
 	The pattern has bits set to 1 where we want to use the foreground color and bits set to 0 where to use the
 	background color.
-	NOTE this routine can handle patterns with a height of 0 to 16, but for performance reasons the function
-		storebuf is used for heights from 0 to 8.
-	TODO 
-	This routine does not need to know the height. This is done later by _write_buf().
 */
 void 
 store_buf (uint8 pos, uint16 pattern, uint8 fg_col, uint8 bg_col){
