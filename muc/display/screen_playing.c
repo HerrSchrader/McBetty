@@ -72,6 +72,9 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 
 #define version_win (win[11])
 
+/* The popup window does not really belong to the screen */
+static struct Window popup_win;
+static char popup_txt[WIN_TXT_SIZE];
 
 /* Window to show the current album TODO maybe later */
 
@@ -170,6 +173,12 @@ playing_screen_init(Screen *this_screen) {
 	version_win.fg_color = WHITE;
 	version_win.bg_color = BLACK;
 	win_new_text(&version_win, "Version " VERSION);
+	
+	// popup window
+	win_init(&popup_win, POPUP_STARTPAGE * 8, 8, 112, POPUP_PAGES * 8, 1, popup_txt);
+	popup_win.font = SMALLFONT;	
+	popup_win.flags |= WINFLG_CENTER | WINFLG_LFTADJ;
+	win_new_text(&popup_win, "A Append to\n   playlist\n\nB\n\nC Create new\n   playlist\n\nD\n" );
 
 }
 
@@ -291,7 +300,9 @@ static void popup(Screen *this_screen){
 	this_screen->popup_active = 1;
 	screen_visible(PLAYING_SCREEN, 0);
 	read_popup();
-	draw_block(POPUP_STARTPAGE * 8, 8, 112, POPUP_PAGES * 8, LIGHT_GREY);
+	popup_win.flags |= WINFLG_VISIBLE;
+	win_redraw(&popup_win);
+//		draw_block(POPUP_STARTPAGE * 8, 8, 112, POPUP_PAGES * 8, LIGHT_GREY);
 };
 
 static void popup_end(Screen *this_screen){

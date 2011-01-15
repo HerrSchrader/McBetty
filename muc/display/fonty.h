@@ -33,7 +33,7 @@ enum FONT {
 void init_font();
 void set_font(enum FONT f);
 uint8 draw_char(uint8 start_row, uint8 start_col, unsigned char ch, uint8 fg_col, uint8 bg_col, uint8 width);
-int draw_text_space (char *s, int start_row, int start_col, int width, int height, int fg_col, int bg_col, int cnt);
+int draw_text_space (char *s, int start_row, int start_col, int width, int height, int fg_col, int bg_col, int cnt, int lftadj);
 void scroll(int start_col, int start_row, int width, int offset);
 
 #endif

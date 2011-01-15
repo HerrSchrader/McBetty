@@ -146,12 +146,17 @@ draw_cursor(struct Window *win, uint8_t reversed){
 */
 static void
 win_center_text(struct Window *win){
-	int txt_height, txt_offs, cur_row;
+	int txt_height, txt_offs, cur_row, col_offs;
 		
+	if (win->flags & WINFLG_LFTADJ) 
+		col_offs = 2;
+	else
+		col_offs = 0;
 
 	/* center vertically */
-	txt_height = draw_text_space(win->txt, win_txt_row(win), win->start_col + win->border, 
-								 win->width - 2*win->border, win->height - 2*win->border, win->fg_color, win->bg_color, 1);
+	txt_height = draw_text_space(win->txt, win_txt_row(win), win->start_col + win->border + col_offs, 
+								 win->width - 2*win->border - 2*col_offs, win->height - 2*win->border,
+		  						win->fg_color, win->bg_color, 1, (win->flags & WINFLG_LFTADJ) );
 
 	txt_offs = ( win_txt_height(win) - txt_height) / 2;
 	
@@ -160,8 +165,9 @@ win_center_text(struct Window *win){
 	else 
 		cur_row  = win_txt_row(win);
 	
-	 draw_text_space(win->txt, cur_row, win->start_col + win->border, 
-					 win->width - 2*win->border, win->height - 2*win->border, win->fg_color, win->bg_color, 0);
+	 draw_text_space(win->txt, cur_row, win->start_col + win->border + col_offs, 
+					 win->width - 2*win->border - 2*col_offs, win->height - 2*win->border,
+	   				win->fg_color, win->bg_color, 0, (win->flags & WINFLG_LFTADJ) );
 
 };
 

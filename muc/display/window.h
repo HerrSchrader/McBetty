@@ -44,7 +44,7 @@ struct Window {
 	enum FONT font;					// which font to use for text
 	uint8 fits;						// is <>0 iff text fits completely in window
 	uint8 scroll;					// is <>0 iff ??? TODO
-	uint8 flags;					// see defines below
+	uint16_t flags;					// see defines below
 	uint8 buffer_lim;
 	char *txt;						// Pointer to the window text buffer
 };
@@ -66,6 +66,8 @@ struct Window {
 #define WINFLG_FRAME	(1<<6)
 /* Don't show any text in the window (only border) */
 #define WINFLG_HIDE		(1<<7)
+/* Left adjust text in window */
+#define WINFLG_LFTADJ	(1<<8)
 
 /* Start of text 
 	TODO think about including border here

@@ -198,7 +198,7 @@ draw_text (char *s, int start_row, int start_col, int width, int height, uint8 f
 
 static int
 is_whitespace(char c){
-	return (' ' == c);
+	return ( (' ' == c) || ('\n' == c) );
 };
 
 /*
@@ -260,6 +260,9 @@ draw_text_line(char *s, int start_row, int start_col, int width, int fg_col, int
 	int n;
 	
 	while ( *s ){
+		if ('\n' == *s) 		// newline character
+			break;
+		
 		/* count how many pixels we will draw with the current word and remember start of next word */
 		n = draw_text_word(s, start_row, start_col + c, width - c, fg_col, bg_col, &cnt_wid);
 				
@@ -288,9 +291,10 @@ draw_text_line(char *s, int start_row, int start_col, int width, int fg_col, int
 	We wrap the text at white space boundaries	
 	If the variable cnt is TRUE, we do NOT draw the text, but simply count the height in pixels
 	that we would draw.
+	If lftadj is <>0, the text is not centered horizontally, but left adjusted
 */
 int
-draw_text_space (char *s, int start_row, int start_col, int width, int height, int fg_col, int bg_col, int cnt){
+draw_text_space (char *s, int start_row, int start_col, int width, int height, int fg_col, int bg_col, int cnt, int lftadj){
 	int r=0;
 	int cnt_wid = 0;
 	char *s2;
@@ -306,12 +310,12 @@ draw_text_space (char *s, int start_row, int start_col, int width, int height, i
 		/* Shall we really draw ? */
 		if (0 == cnt){
 			/* If this is less than the line width, center the text horizontally */
-			if (cnt_wid <= width)
+			if ( (cnt_wid <= width) && !lftadj)
 				offset = (width - cnt_wid) / 2;
 			else
 				offset = 0;
 		
-			/* And now draw for real (and centered) */
+			/* And now draw for real (and maybe centered) */
 			draw_text_line(s, start_row + r, start_col + offset, width - offset, fg_col, bg_col, NULL);
 		};
 		
