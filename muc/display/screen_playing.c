@@ -336,16 +336,11 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			view_version_changed();
 			break;
 			
-		// TODO debug only
-		case KEY_VTX3:
-			switch_screen(PLAYING_SCREEN, INFO_SCREEN);	
-			break;
-
-		case KEY_A:
+		case KEY_VTX1:
 			user_wants_script(1);
 			break;
 			
-		case KEY_B:
+		case KEY_VTX3:
 			user_wants_script(2);
 			break;
 				
