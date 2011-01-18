@@ -502,6 +502,17 @@ static int key_cnt = -1;
 
 static struct timer char_tmr;
 
+void
+win_cursor_clr(){
+	pcursor_win->txt[0] = '\0';
+	pcursor_win->text_len = 0;
+	cursor_pos = 0;
+	cursor_new_pos = 0;
+	key_cnt = -1;
+	last_key = -1;
+	timer_stop(&char_tmr);
+}
+
 /* Redraws window and remembers cursor_col, win->cur_char and win->cur_col 
 	The variable cursor_pos tells us at which position the cursor currently is.
 	cursor_pos >= 0 and <= win->text_len.

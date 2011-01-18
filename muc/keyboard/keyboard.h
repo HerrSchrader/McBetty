@@ -19,6 +19,8 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+#define NO_KEY		-1
+
 /* First row: */
 #define KEY_5		0	
 #define KEY_6		1

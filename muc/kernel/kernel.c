@@ -193,7 +193,7 @@ startTimerIRQ(){
 #define TASK_LIM 50
 static struct task task_list[TASK_LIM];
 static int num_tasks;
-	
+static int task_next;	// next free slot in task_list	
 	
 /* To be called once at startup */
 void 
@@ -201,7 +201,8 @@ kernel_init(){
 	int i;
 	signals = 0;
 	sys_time = 0;	
-	num_tasks = 0;	
+	num_tasks = 0;
+	task_next = 0;	
 	for (i=0; i<TASK_LIM; i++)
 		task_list[i].state = FINISHED;
 
@@ -217,31 +218,37 @@ kernel_init(){
 	else returns a pointer to the initialized task structure which can later be used to delete the task
 	Initializes the given thread.
 */
-// TODO we should not return a task structure but an opaque task_id (maybe of type void *.
-struct task *
+task_id
 task_add(char (*func) (struct pt *pt)){
-	int i;
 	struct task *t;
+	
+	if (task_next == TASK_LIM){
+		debug_out("All Tasks Used", 0);
+		return -1;
+	};
 
-	for (i=0; i<TASK_LIM; i++)
-		if (task_list[i].state == FINISHED){
-			num_tasks++;
-			t = &(task_list[i]);
-			t->thread = func;
-			t->state = RUN;
-			PT_INIT(&(t->thread_pt));
-			return (t);
-		}
-	return NULL;
+	t = &(task_list[task_next++]);
+	t->thread = func;
+	t->state = RUN;
+	PT_INIT(&(t->thread_pt));
+	num_tasks++;
+
+	return (task_next - 1);
 }
 
-
-
-// TODO add a function to delete a task if we already know where it is.
+/* 
+	Delete a task from our task list.
+	It is safe to delete a running task.
+*/
 void 
-task_del(struct task *t){
-	t->state = FINISHED;
-	num_tasks--;
+task_del(task_id id){
+	if (task_next > 0){
+		task_next--;	
+		task_list[id].thread_pt = task_list[task_next].thread_pt;
+		task_list[id].thread = task_list[task_next].thread;
+		task_list[id].state = task_list[task_next].state;
+		num_tasks--;
+	};
 };
 
 
@@ -338,7 +345,7 @@ void schedule(){
 	feed_wdt();
 #endif
 		
-	for (i=0; i<num_tasks; i++){
+	for (i=0; i<num_tasks;){
 
 #ifdef TRACE
 		cur_task = 99;
@@ -354,8 +361,10 @@ void schedule(){
 		/* Run the next thread with its own thread structure as argument */
 		if (t->state == RUN) {
 			running = PT_SCHEDULE( t->thread(&(t->thread_pt)) );
-			if (!running)
-				task_del(t);
+			i++;
+		} else {
+			task_del(i);
+			// do not increment i, we probably have a new task at this index
 		}
   	};
 };

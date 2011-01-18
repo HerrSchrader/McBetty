@@ -124,6 +124,8 @@ void init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int wi
 void win_cursor_set(struct Window *pwin, int size);
 void win_cursor_input(int new_key);
 void win_cursor_init();
+void win_cursor_clr();
+
 
 #endif
 

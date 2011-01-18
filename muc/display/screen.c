@@ -27,7 +27,8 @@
 	After handling of the error we should resume the previous screen or switch to a completely different screen depending
 	on the kind of error. So this could be handled here. 
 */	
-
+#include "kernel.h"
+#include "timerirq.h"
 #include "screen.h"
 #include "window.h"
 #include "keyboard.h"
@@ -42,18 +43,33 @@
 /* We have a global variable cur_screen which tells us which screen is currently running. 
 	We decide which screen will be shown and how we react to key presses depending on this variable.
 */
-static enum SCREEN cur_screen;
+static enum SCREEN cur_screen, next_screen;
 
 /* This is an array of all our screens
 	We can index them with enum SCREEN
 	See screen.h for more documentation
 */
-static Screen screen_list[5];
+static Screen screen_list[6];
+
+
+#define POPUP_TXT_SIZE	128
+/* The popup window does not belong to any one screen 
+	It is handled here.
+*/
+static struct Window popup_win;
+static char popup_txt[POPUP_TXT_SIZE];
 
 /* Here we store the action wanted by a user keypress */
 static UserReq user_request;
 
-void mainscreen_keypress(int cur_key);
+static void mainscreen_keypress(int cur_key);
+static void popup_keypress(int cur_key);
+
+static task_id close_popup_task;
+static struct timer popup_tmr;
+static uint8_t timed_popup;	
+static uint8_t popup_active;			// is TRUE iff screen is overlayed with a popup
+
 /* ------------------------------------------------------------------------------------------------- */
 
 /* Functions which are the same for all screens */
@@ -82,22 +98,46 @@ screen_redraw(enum SCREEN screen){
 };
 
 
-/* The current screen has been exited.
+/* 
+	The current screen has exited.
+	- call the screen specific exit function to end tasks and timers etc.
+	- avoid updating the screens windows
+	- prevent keystrokes to be sent to the screen 
 */
 static void
 screen_exit(enum SCREEN screen){
 	screen_list[screen].screen_exit();
+	screen_visible(screen, 0);
+	cur_screen = NO_SCREEN;
 };
 
+/*
+	Enter a new screen
+	- completely clear the display
+	- allow updating the screens windows
+	- call the screen specific enter function to start tasks and timers etc.
+	- draw contents of screens windows
+	- allow keystrokes to be sent to the screen 
+*/
 void
 screen_enter(enum SCREEN screen){
+	if (popup_active){
+		// We do not want to enter a new screen while a popup is showing 
+		// remember the next screen when popup is closed
+		next_screen = screen;
+		return;
+	};
+	lcd_fill(0x00);
+	screen_visible(screen, 1);
 	screen_list[screen].screen_enter();
+	screen_redraw(screen);
 	cur_screen = screen;
 };
 	
 void 
 switch_screen(enum SCREEN oldscreen, enum SCREEN newscreen){
 	screen_exit(oldscreen);
+	next_screen = newscreen;
 	screen_enter(newscreen);
 };
 
@@ -122,19 +162,96 @@ mainscreen_init(void) {
 	
 	win_cursor_init();
 	
+	// popup window
+	win_init(&popup_win, POPUP_STARTPAGE * 8, 8, 112, POPUP_PAGES * 8, 1, popup_txt);
+	popup_win.font = SMALLFONT;	
+	popup_win.flags |= WINFLG_CENTER | WINFLG_LFTADJ;
+	
+	popup_active = 0;
+	
 	playing_screen_init( &(screen_list[PLAYING_SCREEN]) );
 	playlist_screen_init( &(screen_list[PLAYLIST_SCREEN]) );
 	tracklist_screen_init( &(screen_list[TRACKLIST_SCREEN]) );
 	info_screen_init( &(screen_list[INFO_SCREEN]) );
 	search_screen_init( &(screen_list[SEARCH_SCREEN]) );
 	
-	screen_enter(PLAYING_SCREEN);
-	
 	user_request.cmd = NO_CMD;
 
 	set_keypress_handler(mainscreen_keypress);
+	screen_enter(PLAYING_SCREEN);
+
 };
+
+/* ### Automatic popup ending task ###  */
+/* This task is started when the popup function is called with a time argument.
+	It will wait until time out and then close the popup window
+*/
+PT_THREAD (close_popup(struct pt *pt)){
+
+	PT_BEGIN(pt);
+	PT_WAIT_UNTIL(pt, ( timer_expired(&popup_tmr) ));
 	
+	popup_end();		// deletes this task
+	
+	PT_WAIT_WHILE(pt, 1);
+	PT_END(pt);
+};
+
+void 
+popup(char *text, int time_out){
+	if 	( ! popup_active ){
+		popup_active = 1;
+		screen_visible(cur_screen, 0);
+		popup_save();
+		popup_win.flags |= WINFLG_VISIBLE;
+		set_keypress_handler(popup_keypress);
+		if (time_out > 0){
+			timer_add(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
+			close_popup_task = task_add(&close_popup);
+			timed_popup = 1;
+		} else
+			timed_popup = 0;
+		win_new_text(&popup_win, text);
+		win_redraw(&popup_win);	
+		return;
+	};
+	if (time_out > 0){
+		if (timed_popup)
+			timer_set(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
+		else {
+			timer_add(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
+			close_popup_task = task_add(close_popup);
+			timed_popup = 1;
+		};
+	} else {
+		if (timed_popup) {
+			task_del(close_popup_task);
+			timer_del(&popup_tmr);
+			timed_popup = 0;
+		};
+	};
+	win_new_text(&popup_win, text);
+	win_redraw(&popup_win);
+};
+
+void 
+popup_end(){
+	if (timed_popup) {
+		task_del(close_popup_task);
+		timer_del(&popup_tmr);	
+		popup_restore();
+	};
+	popup_active = 0;
+	if (next_screen != cur_screen)
+		screen_enter(next_screen);
+	else {
+		screen_visible(cur_screen, 1);
+		screen_redraw(cur_screen);
+		set_keypress_handler(mainscreen_keypress);
+	};
+};
+
+
 /* This is called when the current task does not know which screen is shown, 
 	so that switch_screen() can not be used.
 	We simply exit the current screen and enter the new one.
@@ -145,17 +262,42 @@ show_new_screen(enum SCREEN screen){
 	screen_enter(screen);
 };
 
+/* This is the popup window press handler.
+	After a key press has been detected by the keyboard driver,
+	the kernel calls this routine when a popup is open.
+*/
+static void	
+popup_keypress(int cur_key){
+	/* First we call the screen specific popup keypress handler */
+	if (NULL != screen_list[cur_screen].keypress_popup)
+		cur_key = screen_list[cur_screen].keypress_popup( &(screen_list[cur_screen]), cur_key, &user_request);
+	
+	/* It returns NO_KEY, if it has completely handled the key */
+	if (NO_KEY == cur_key)
+		return;
+	
+	/* If there is still a key to be handled, we try the main keypress routine */
+	mainscreen_keypress(cur_key);
+};
 
 /* This is the main key press handler.
 	After a key press has been detected by the keyboard driver,
 	the kernel calls this routine.
 */
-void
+static void
 mainscreen_keypress(int cur_key){
 	
 	user_request.cmd = NO_CMD;
 	
-	/* Some keys are handled independently of the current screen */	
+	/* First we call the screen specific key handler if there is one */
+	if (cur_screen != NO_SCREEN)
+		cur_key = screen_list[cur_screen].keypress( &(screen_list[cur_screen]), cur_key, &user_request);
+	
+	/* If the current screen has completely handled the key, it returns NO_KEY and we are finished */
+	if (NO_KEY == cur_key)
+		return;
+		
+	/* We can handle some keys on our own */	
 	switch (cur_key){
 		
 	/* BETTY always shows the playlist screen */
@@ -208,7 +350,5 @@ mainscreen_keypress(int cur_key){
 			user_toggle_mute();
 			return;
 	};
-	
-	screen_list[cur_screen].keypress( &(screen_list[cur_screen]), cur_key, &user_request);
-
+	return;
 };

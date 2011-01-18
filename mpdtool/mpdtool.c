@@ -620,9 +620,20 @@ int response_finished;			// TODO here ?
 
 // Reset the line buffer for input from mpd
 void
-reset_mpd_line(){	
+reset_mpd_buf(){	
 	mpd_resp_len = 0;
 	response_line_complete = 0;
+};
+
+// only for debugging
+void
+prt_mpd_buf(){
+	int i;
+	
+	fprintf(stderr,"(BUF): ");
+	for (i=0; i<mpd_resp_len; i++)
+		fprintf(stderr,"%c", mpd_resp_buf[i]);
+	fprintf(stderr,"%s",(response_line_complete ? " complete\n" : "\n"));
 };
 
 /* 
@@ -881,7 +892,7 @@ open_mpd_connection(int serial_fd){
 	};	
 	
 	// The mpd server responds to a new connection with a version line beginning with "OK"
-	reset_mpd_line();
+	reset_mpd_buf();
 
 	while (! response_line_complete){
 		// Wait 1 second for next MPD response character(s) or maybe another command from serial
@@ -906,7 +917,7 @@ open_mpd_connection(int serial_fd){
 		close_mpd_socket();
 		return 0;
 	};	
-	fprintf(stderr," MPD: %s\n", mpd_resp_buf);
+	fprintf(stderr,"<MPD>: %s\n", mpd_resp_buf);
 	return 1;
 };
 
@@ -960,10 +971,11 @@ mpd_start_cmd(char *cmd_str){
 	if ( 0 == open_mpd_connection(-1) ){
 		return 0;
 	};
-	reset_mpd_line();
+	reset_mpd_buf();
 	
 	init_timer(&response_tmr);	
-//	fprintf(stderr,"start_cmd: %s\n", cmd_str);
+//	fprintf(stderr,"start_cmd: %s", cmd_str);
+//	prt_mpd_buf();
 	return write_mpd(cmd_str);	
 };
 
@@ -979,7 +991,9 @@ mpd_start_cmd(char *cmd_str){
 int
 mpd_cmd(char *cmd_str, void (*ans_func)(char *) ){
 	int response_finished = 0;
-		
+	
+//	fprintf(stderr,"CMD: %s", cmd_str);
+	
 	if (0 == mpd_start_cmd(cmd_str))
 		return 0;
 
@@ -991,13 +1005,12 @@ mpd_cmd(char *cmd_str, void (*ans_func)(char *) ){
 			// check for "OK" or "ACK"
 			if ( mpd_eot(mpd_resp_buf) ) {
 				response_finished = 1;
-				fprintf(stderr, "(MPD): %s", mpd_resp_buf);
 
 			} else {
 				if (ans_func) 
 					ans_func(mpd_resp_buf) ;
 			};
-			reset_mpd_line();
+			reset_mpd_buf();
 		};
 		
 		if (timer_diff(response_tmr) > 5.0){
@@ -1044,7 +1057,9 @@ line_copy(char *new, char *line){
 	*new = 0;
 };
 	
-/* We save the filenames without terminating newline!
+/* 
+	We save the filenames without terminating newline!
+	The global variable fname_cnt is incremented.
 */
 void
 save_file(char *s){
@@ -1141,6 +1156,28 @@ cmp_and_store(char *s){
 	return 1;
 };
 
+/* 
+	This timer counts the answer time of MPD.
+	It is used to send fake responses, if MPD takes too long.
+	Currently used by "search" command.
+*/
+double mpd_ans_tmr;
+
+
+	/* Sometimes we want to get the status of MPD immediately after we have sent a command,
+		for instance the "LOAD" command does not give us the new playlist length, which is vital to Betty.
+		So we create a command list with the original command and an appended status command.
+		
+		Another advantage: If we do it here, Betty can send a much smaller command, which is faster
+		over radio.
+	*/
+void
+append_status(char *buf){	
+	char bufold[BUFFER_SIZE];
+	
+	strcpy(bufold, buf);
+	sprintf(buf, "command_list_begin\n%sstatus\ncommand_list_end\n", bufold);
+};
 
 
 /* Copy the serial input buffer to the given mpd_input_buffer buf.
@@ -1150,6 +1187,8 @@ cmp_and_store(char *s){
 void
 translate_to_mpd(char *buf){
 
+	init_timer(&mpd_ans_tmr);
+	
 	/* NOTE the order of the ifs is important */
 	
 	/* Just to make sure we have a valid C-string */
@@ -1167,6 +1206,18 @@ translate_to_mpd(char *buf){
 		strcpy(buf, "ping\n");
 		system("./script_2.sh");
 	};		
+	
+	if (0 == strncmp(buf, "seek ", strlen("seek ")) ){
+		append_status(buf);
+	};	
+			
+	/* A command invented by us: "LOADNEW xx", clears the current playlist and then loads xx */
+	if (0 == strncmp(buf, "loadnew ", strlen("loadnew ")) ){
+		char bufarg[BUFFER_SIZE];
+		strcpy(bufarg, buf+strlen("loadnew "));
+		bufarg[strlen(bufarg) - 1] = 0;		// purge newline
+		sprintf(buf, "command_list_begin\nclear\nload %s\nstatus\ncommand_list_end\n", bufarg);
+	} 
 	
 	/* We have the command "result n" which will return the nth result of our search result cache. */
 	if (0 == strncmp(buf, "result ", strlen("result ")) ){
@@ -1224,7 +1275,6 @@ translate_to_mpd(char *buf){
 		num_results = 0;
 	} else {
 		mpd_emu &= ~SEARCH_CMD;
-//		mpd_emu &= ~SEND_SEARCH_OK;
 	};
 	
 	/* We want to substitute basename(filename) for missing title tag */
@@ -1235,32 +1285,35 @@ translate_to_mpd(char *buf){
 		mpd_emu &= ~CURSONG_CMD;
 	
 	/* The findadd command is not available in older versions of mpd */
-	if ( (!(mpd_cmd_avail & FINDADD_CMD)) && (0 == strncmp(buf, "findadd ", 8)) ){
+	if ( 0 == strncmp(buf, "findadd ", 8) ){
+		if (! (mpd_cmd_avail & FINDADD_CMD)){
+			/* We already do the main work of the emulation here.
+				Later on we only send status to mpd.
+				Betty may have to wait quite long for this answer !
+			*/
+			char newbuf[400];
+			int i;
 		
-		/* We already do the main work of the emulation here.
-			Later on we only send ping to mpd.
-			Betty may have to wait quite long for this answer !
-		*/
-		char newbuf[400];
-		int i;
-		
-		newbuf[399] = 0;
-		iso8859_15_to_utf8(newbuf, buf+8, 399);
-		mpd_emu |= FINDADD_CMD;
-		sprintf(buf, "find %s\n", newbuf);
+			newbuf[399] = 0;
+			iso8859_15_to_utf8(newbuf, buf+8, 399);
+			mpd_emu |= FINDADD_CMD;
+			sprintf(buf, "find %s", newbuf);
 
-		fname_cnt = 0;
-		mpd_cmd(buf, save_file);	
-	
-		for (i=0; i<fname_cnt; i++){
-			sprintf(newbuf,"add \"%s\"\n",fname[i]);
-			if (!mpd_cmd(newbuf, NULL))
-				break;;
-		};
-		mpd_emu &= ~FINDADD_CMD;
-		strcpy(buf, "ping\n");
-	} else
-		mpd_emu &= ~FINDADD_CMD;
+			fname_cnt = 0;
+			mpd_cmd(buf, save_file);		// sets fname_cnt and stores the filenames
+		
+			for (i=0; i<fname_cnt; i++){
+				sprintf(newbuf,"add \"%s\"\n",fname[i]);
+				if (!mpd_cmd(newbuf, NULL))
+					break;;
+			};
+			mpd_emu &= ~FINDADD_CMD;
+			strcpy(buf, "status\n");
+		} else {
+			append_status(buf);
+			mpd_emu &= ~FINDADD_CMD;
+		}
+	}
 };
 
 /* We have an answer from mpd in mpd_resp_buf.
@@ -1369,10 +1422,10 @@ translate_to_serial(){
 				cmp_and_store(mpd_resp_buf + 8);
 				
 			/* MPD sends every single matching file, which can take very long.
-				So after MAX_NUM_RESULTS or 1000 lines we cancel the connection to stop mpd.
+				So after MAX_NUM_RESULTS or after our timer reaches 2 seconds we cancel the connection to stop mpd.
 				We must fake the OK answer.
 			*/				
-			if ( (num_results == MAX_NUM_RESULTS) || (mpd_emu_cnt > 1000) ){
+			if ( (num_results == MAX_NUM_RESULTS) || (timer_diff(mpd_ans_tmr) > 2.0) ){
 				if (num_results == MAX_NUM_RESULTS)
 					sprintf(mpd_resp_buf, "results: 99\n");
 				else 
@@ -1425,6 +1478,7 @@ translate_to_serial(){
 		};
 	};
 		
+
 	// put the line in serial output buffer	
 	serial_output(mpd_resp_buf);	
 };
@@ -1540,7 +1594,7 @@ int main(int argc, char *argv[])
 		};
 		// if we got input from MPD here, something must be wrong.
 		if (response_line_complete)
-			reset_mpd_line();
+			reset_mpd_buf();
 		
 		// read more bytes until command is complete
 		if (!cmd_complete) continue;
@@ -1552,7 +1606,7 @@ int main(int argc, char *argv[])
 		
 		translate_to_mpd (mpd_input_buf);
 		
-		prt_timer(total_tmr); fprintf(stderr, "Betty: %s", mpd_input_buf);
+		fprintf(stderr, "(Betty): %s", mpd_input_buf);
 		
 		// got a complete input via serial line
 		// send it to MPD, start response_tmr
@@ -1606,7 +1660,7 @@ int main(int argc, char *argv[])
 					fprintf(stderr,"\n");
 				};
 				
-				reset_mpd_line();
+				reset_mpd_buf();
 			};
 		};
 	

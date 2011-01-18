@@ -72,28 +72,21 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 
 #define version_win (win[11])
 
-/* The popup window does not really belong to the screen */
-static struct Window popup_win;
-static char popup_txt[WIN_TXT_SIZE];
 
 /* Window to show the current album TODO maybe later */
 
 static void 
 screen_enter(){
-	lcd_fill(0x00);
-	screen_visible(PLAYING_SCREEN, 1);
 	version_win.flags &= ~WINFLG_VISIBLE;	// hidden window
-	screen_redraw(PLAYING_SCREEN);
 };
 
 
 static void 
 screen_exit(){
-	screen_visible(PLAYING_SCREEN, 0);
 };
 
 // Forward declaration
-static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
 
 /* Initialize the playing screen 
 	We clear the whole screen.
@@ -174,11 +167,6 @@ playing_screen_init(Screen *this_screen) {
 	version_win.bg_color = BLACK;
 	win_new_text(&version_win, "Version " VERSION);
 	
-	// popup window
-	win_init(&popup_win, POPUP_STARTPAGE * 8, 8, 112, POPUP_PAGES * 8, 1, popup_txt);
-	popup_win.font = SMALLFONT;	
-	popup_win.flags |= WINFLG_CENTER | WINFLG_LFTADJ;
-	win_new_text(&popup_win, "A Append to\n   playlist\n\nB\n\nC Create new\n   playlist\n\nD\n" );
 
 }
 
@@ -296,36 +284,10 @@ view_state_changed(enum PLAYSTATE state){
 	
 };
 
-static void popup(Screen *this_screen){
-	this_screen->popup_active = 1;
-	screen_visible(PLAYING_SCREEN, 0);
-	read_popup();
-	popup_win.flags |= WINFLG_VISIBLE;
-	win_redraw(&popup_win);
-//		draw_block(POPUP_STARTPAGE * 8, 8, 112, POPUP_PAGES * 8, LIGHT_GREY);
-};
-
-static void popup_end(Screen *this_screen){
-	write_popup();
-	this_screen->popup_active = 0;
-	screen_visible(PLAYING_SCREEN, 1);
-	version_win.flags &= ~WINFLG_VISIBLE;	// hidden window
-	screen_redraw(PLAYING_SCREEN);
-};
-
-
-void 
+static int 
 keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
-		case KEY_C:
-			popup(this_screen);
-			break;
-			
-		case KEY_D:
-			popup_end(this_screen);
-			break;
-			
 		case KEY_Yellow:
 			user_toggle_pause();
 			break;
@@ -358,8 +320,6 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			user_toggle_single();	
 			break;
 
-			/* Inform the controller that the user wants the next song */
-
 		case KEY_Down:
 		case KEY_Pplus:
 			user_wants_song(NEXT_SONG);
@@ -390,8 +350,9 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			break;
 				
 		default:
-			break;
+			return cur_key;				// we could not handle key
 	};
+	return NO_KEY;
 };	
 
 

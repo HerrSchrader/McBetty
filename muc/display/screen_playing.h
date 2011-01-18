@@ -11,7 +11,6 @@
 
 void playing_screen_init(Screen *this_screen);
 void playing_screen_enter();
-void playing_keypress(Screen *this_screen, int cur_key, UserReq *req);
 enum USER_CMD playing_user_request();
 void playing_screen_exit();
 int playing_arg(void);

@@ -45,12 +45,17 @@ inline void signal_set_irq(int taskid);
 /* Possible states a task can be in: */
 enum task_state {RUN, WAIT, FINISHED};
 
+/* 
+	A task is a protothread which is regularily called
+	by the kernel
+*/
 struct task {
   struct pt thread_pt;
   char (*thread) (struct pt *pt);
   enum task_state state;
 };
 
+typedef int task_id; 
 
 /* Here we define the used signals */
 #define SIG_DEBUG	0
@@ -85,8 +90,8 @@ unsigned int system_time();
 void  timerIRQ (void);
 void kernel_init();
 
-struct task *task_add(char (*func) (struct pt *pt));
-void task_del(struct task *t);
+task_id task_add(char (*func) (struct pt *pt));
+void task_del(task_id id);
 
 //void check_events();
 void schedule();

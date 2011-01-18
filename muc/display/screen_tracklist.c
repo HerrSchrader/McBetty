@@ -109,8 +109,6 @@ screen_enter(){
 	int cur_song;
 	int start_sel;
 	
-	lcd_fill(0x00);	
-			
 	/* We try to get the index of the current song, if there is any 
 		because we want to adjust our track list range screen with the current song in the selected window.
 	*/
@@ -143,21 +141,15 @@ screen_enter(){
 	
 	/* Redraw the scroll list */
 	scroll_list_changed(&track_list);
-	
-	screen_visible(TRACKLIST_SCREEN, 1);
-	// NOTE this is potentially time consuming. Could be done piecewise (in a thread).
-	screen_redraw(TRACKLIST_SCREEN);		
-
 };
 
 
 static void 
 screen_exit(){
-	screen_visible(TRACKLIST_SCREEN, 0);
 };
 
 // Forward declaration
-static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
 
 void
 tracklist_screen_init(Screen *this_screen){
@@ -196,7 +188,7 @@ tracklist_screen_init(Screen *this_screen){
 	- Generate user_cmd and user_arg to change something in mpd
 	- pass the key through to PLAYING screen
 */
-void
+static int
 keypress(Screen *track_screen, int cur_key, UserReq *req){
 		
 	switch (cur_key) {
@@ -249,8 +241,9 @@ keypress(Screen *track_screen, int cur_key, UserReq *req){
 			break;
 			
 		default:
-			break;
+			return cur_key;
 	};
+	return NO_KEY;
 };
 
 

@@ -83,6 +83,7 @@ timer_add(struct timer *t, int start_time, int period){
 
 /* Remove a timer from the system timer list. 
 	It is safe to remove a running timer.
+	It is safe to remove a timer which is not in timer_list.
 */
 void 
 timer_del(struct timer *t){

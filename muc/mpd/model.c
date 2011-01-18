@@ -415,7 +415,16 @@ mpd_tracklist_last(){
 	return mpd_model.playlistlength - 1;
 };
 
+int 
+mpd_get_pl_length(){
+	return mpd_model.playlistlength;
+};
 
+int
+mpd_get_pl_added(){
+	return mpd_model.pl_added;
+};
+	
 /* 
 	The length of our playlist has changed.
 */
@@ -425,8 +434,19 @@ set_playlistlength(int n){
 	if (mpd_model.playlistlength == n)
 		return;								// no change
 
+	/* Do we know the old size of the playlist ? */
+	if (mpd_model.playlistlength >= 0){
+		
+		mpd_model.pl_added = max(0, n - mpd_model.playlistlength);
+		model_changed(PL_LENGTH_CHANGED);
+	} else mpd_model.pl_added = 0;
+	
 	mpd_model.playlistlength = n;	
 	
+	// We do not know in which way the playlist was changed (songs added/deleted)
+	// so to be safe we invalidate our whole cache
+	cache_empty(&tracklist, 0);				// cache no longer valid
+	tracklist_range_set(0, CACHE_MAX);	
 	/* If the playlist is empty, there can be no current song.*/
 	if (n == 0)
 		mpd_set_pos(NO_SONG);
@@ -442,23 +462,20 @@ set_playlistlength(int n){
 	We assume the user wish has been fulfilled 
 	We do not care what playlist was loaded.
 	But we assume the user wants to play the first song of the playlist.
+	mpdtool automatically added a status command for us, so that we get
+	the new status of MPD
 */
 void
 mpd_load_ok(struct MODEL *a){
 	user_model.cur_playlist = -1;			// wish fulfilled
-	user_model.playlistlength = -1;
-	
-	set_playlistlength(-1);				// the new playlistlength is unknown
-	cache_empty(&tracklist, 0);
-	tracklist_range_set(0, CACHE_MAX);
-	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR_AND_LOAD command!
-	mpd_set_pos(SONG_UNKNOWN);			// the previous current song is no longer valid
+	user_model.playlistlength = -1;	
+
 	model_changed(TRACKLIST_CHANGED);
+	mpd_status_ok(a);	
 	
-		/* User wants first song ... */
-	user_wants_song(0);
-	/* ... to be played */
-	user_model.state = PLAY;	
+	// now we should know the playlistlength and we can begin to play
+	user_wants_song(0);						// user wants first song ... 
+	user_model.state = PLAY;				// ... to be played
 };
 
 /* 
@@ -492,7 +509,7 @@ mpd_clear_ok(struct MODEL *a){
 */
 void
 user_wants_song(int pos){
-		if (pos >= 0) {			// a specific song, we make sure that the wish makes sense.
+	if (pos >= 0) {			// a specific song, we make sure that the wish makes sense.
 		if ((mpd_model.playlistlength >= 0) && (pos > mpd_model.playlistlength - 1)){
 			set_error(END_OF_PLAYLIST);
 			return;
@@ -659,7 +676,7 @@ mpd_search_ack(struct MODEL *a){
 /* Maybe the user has changed his search string 
 	We do not copy the string, but keep a pointer to it.
 	It may again change before we are really doing the search command.
-	But that is ok, because so our search string is always up to date.
+	But that is ok, because that way our search string is always up to date.
 */
 void
 user_set_search_string(char * s){
@@ -667,13 +684,11 @@ user_set_search_string(char * s){
 };
 
 void
-mpd_findadd_ok(){
+mpd_findadd_ok(struct MODEL *a){
 	user_model.add = -1;				// wish fulfilled
 	user_model.playlistlength = -1;
-	set_playlistlength(-1);				// the new playlistlength is unknown
-	cache_range_set(&tracklist, 0, CACHE_MAX, -1);
-	cache_empty(&tracklist, 0);			// all tracks in cache are unknown
 	model_changed(TRACKLIST_CHANGED);
+	mpd_status_ok(a);	
 };
 
 
@@ -1233,6 +1248,7 @@ model_reset(struct MODEL *m){
 	m->add = -1;
 	m->num_results = -1;
 	m->script = -1;
+	m->pl_added = 0;
 	m->errmsg = NULL;
 	m->errmsg_buf[0] = '\0';
 

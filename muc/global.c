@@ -420,6 +420,12 @@ cache_find_empty(STR_CACHE *pc){
 	and num_playlists if cache is playlist cache
 	
 	Returns the start_pos that we actually used.
+	
+	This routine is important. We ask the cache which positions are empty and 
+	send commands to MPD to ask for that information.
+	So the cache has to know which positions really make sense to fill,
+	i.e. which positions actually exist and may be shown on screen.
+	
 */
 int
 cache_range_set(STR_CACHE *pc, int start_pos, int end_pos, int total_infos){

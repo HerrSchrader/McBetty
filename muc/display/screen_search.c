@@ -57,7 +57,7 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 
 static scroll_list result_list;
 
-static struct task *auto_search_task;
+static task_id auto_search_task;
 
 /* ### Automatic search task ###  */
 /* This task is started when the search screen is entered and stopped on exit.
@@ -98,8 +98,6 @@ PT_THREAD (auto_search(struct pt *pt)){
 
 static void 
 screen_enter(){
-	lcd_fill(0x00);
-	screen_visible(SEARCH_SCREEN, 1);
 	screen_redraw(SEARCH_SCREEN);	
 	win_cursor_set(&input_win, WIN_TXT_SIZE-1);
 	auto_search_task = task_add(&auto_search);
@@ -109,7 +107,6 @@ static void
 screen_exit(){
 	task_del(auto_search_task);
 	win_cursor_set(NULL, WIN_TXT_SIZE-1);
-	screen_visible(SEARCH_SCREEN, 0);
 };
 
 /* The height of a small window */
@@ -121,13 +118,15 @@ screen_exit(){
 /* The height of a selected window in the scroll list */
 #define WL_HIGH_HEIGHT 18
 
+
 static char * 
 get_result(int i){
 	return mpd_get_resultlistname(i);
 };
 
 // Forward declaration
-static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress_popup(Screen *this_screen, int cur_key, UserReq *req)	;
 	
 /* Initialize the search screen 
 */
@@ -140,6 +139,7 @@ search_screen_init(Screen *this_screen) {
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
 	this_screen->keypress = keypress;
+	this_screen->keypress_popup = keypress_popup;
 	
 	win_init(&title_win, cur_start_row, 0, WL_SMALL_HEIGHT, 128, 1, win_txt[0]);
 	title_win.font = SMALLFONT;	
@@ -157,7 +157,7 @@ search_screen_init(Screen *this_screen) {
 	
 	win_init(&num_results_win, cur_start_row, 0, WL_SMALL_HEIGHT, 128, 0, win_txt[2]);
 	num_results_win.font = SMALLFONT;	
-	num_results_win.fg_color = BLACK;
+	num_results_win.fg_color = WHITE;
 	num_results_win.bg_color = DARK_GREY;	
 	win_new_text(&num_results_win, "");
 	cur_start_row += WL_SMALL_HEIGHT;
@@ -173,18 +173,15 @@ view_results_changed(int num){
 	char *numstr;
 	
 	strlcpy (newstr, "Results:  ", sizeof(newstr));
-	if (num > 30)
+	if (num > 50){
 		strlcat(newstr, "> 50\n", sizeof(newstr));
-	else {
+		num_results_win.bg_color = LIGHT_GREY;	
+	} else {
 		numstr = get_digits(num, number, 0); 
 		strlcat(newstr, numstr, sizeof(newstr));
 		strlcat(newstr, "\n", sizeof(newstr));
+		num_results_win.bg_color = DARK_GREY;
 	};
-	if (num_results_win.bg_color == DARK_GREY)
-		num_results_win.bg_color = LIGHT_GREY;	
-	else
-		num_results_win.bg_color = DARK_GREY;	
-
 	win_new_text(&num_results_win, newstr);	
 };
 
@@ -194,13 +191,48 @@ view_resultnames_changed(){
 	scroll_list_changed(&result_list);
 };
 
+static int
+keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
+	switch (cur_key) {
+		case KEY_Exit:
+			popup_end(this_screen);
+			return NO_KEY;
+			
+		case KEY_A:
+		case KEY_B:
+		case KEY_C:
+			popup_end(this_screen);
+			break;						// give this key to normal screen handler
+			
+		default:
+			return NO_KEY;
+			break;
+	};
+	return cur_key;
+};
 
-static void 
+
+static int 
 keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
+		
 		case KEY_OK:
+			popup("A Append to\n   playlist\n\nB Begin new\n   playlist\n\nC Clear search\n   mask\n\nD\n", 0);
+			break;
+			
+		case KEY_A:
 			user_wants_add(info_idx(&result_list, result_list.sel_win) );
-			switch_screen(SEARCH_SCREEN, TRACKLIST_SCREEN);
+//			switch_screen(SEARCH_SCREEN, TRACKLIST_SCREEN);
+			break;
+			
+		case KEY_B:
+			user_tracklist_clr();	
+			user_wants_add(info_idx(&result_list, result_list.sel_win) );
+//			switch_screen(SEARCH_SCREEN, TRACKLIST_SCREEN);
+			break;	
+								
+		case KEY_C:	
+			win_cursor_clr();
 			break;
 			
 		case KEY_Pplus:	
@@ -282,6 +314,7 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			break;
 				
 		default:
-			break;
+			return cur_key;
 	};
+	return NO_KEY;
 };	

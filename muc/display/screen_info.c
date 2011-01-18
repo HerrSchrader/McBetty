@@ -50,19 +50,15 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 
 static void 
 screen_enter(){
-	lcd_fill(0x00);
-	screen_visible(INFO_SCREEN, 1);
-	screen_redraw(INFO_SCREEN);	
 };
 
 
 static void 
 screen_exit(){
-	screen_visible(INFO_SCREEN, 0);
 };
 
 // Forward declaration
-static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
 
 /* Initialize the playing screen 
 	We clear the whole screen.
@@ -156,9 +152,10 @@ info_mpd_dead(){
 void detect_errors(){
 	if ( (error & END_OF_PLAYLIST) && !(error_last & END_OF_PLAYLIST) ) {
 		info_end_of_playlist();
-	} 
-	else if ( (error & PLAYLIST_EMPTY) && !(error_last & PLAYLIST_EMPTY) ) {
-		info_playlist_empty();
+	 
+	//} else if ( (error & PLAYLIST_EMPTY) && !(error_last & PLAYLIST_EMPTY) ) {
+	//	info_playlist_empty();
+	
 	} else if ( (error & MPD_DEAD) && !(error_last & MPD_DEAD) ) {
 		
 		/*We try to solve the communication error by resetting our
@@ -173,7 +170,7 @@ void detect_errors(){
 	error_last=error;
 };
 
-void 
+static int 
 keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 		case KEY_OK:
@@ -192,8 +189,9 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			break;
 			
 		default:
-			break;
+			return cur_key;
 	};
+	return NO_KEY;
 };	
 
 

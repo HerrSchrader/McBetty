@@ -109,7 +109,7 @@ _read_lcd(uint8 row, uint8 col, uint8 w){
 	Need not be in fastcode section
 */
 void
-read_popup(){
+popup_save(){
 	uint8 page, col, d, i;
 	
 	for (page=0; page < POPUP_PAGES; page++){
@@ -129,7 +129,7 @@ read_popup(){
 	Write popup_buf contents back into LCD
 */
 void
-write_popup(){
+popup_restore(){
 	uint8 page, col, d, i;
 			
 	for (page=0; page < POPUP_PAGES; page++){

@@ -133,8 +133,8 @@ void key_init (){
 	
 	rpt_delay_cnt = 0; 
 	rpt_rate_cnt = 0;
-	cur_key = -1;
-	last_key = -1;
+	cur_key = NO_KEY;
+	last_key = NO_KEY;
 	
 	task_add(&key_scan);
 };
@@ -170,7 +170,7 @@ PT_THREAD (key_scan(struct pt *pt)) {
 	
 		row_offset = 0;
 		cnt = 0;		/* how many keys are pressed */
-		key = -1;
+		key = NO_KEY;
 		
 		for(row=0;row<7;row++) {
 		

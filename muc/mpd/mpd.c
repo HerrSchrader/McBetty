@@ -436,7 +436,28 @@ PT_THREAD (collect_lines(struct pt *pt,
 
 /* ---------------------------- End of functions which handle communication with mpd ------------------- */
  	
+static void
+view_pl_length_changed(int len, int added){
+	char str[100];
+	char num_string[12];
 	
+	strlcpy(str, "",100);
+	
+	if (added != 0){
+		strlcat(str, get_digits(added, num_string, 0), 100);
+		strlcat(str, " songs added.\n\n", 100);	
+	}
+	if (len >= 0){
+		if (0 == len)
+			strlcat(str, " Playlist is\n now empty.\n", 100); 
+		else {
+			strlcat(str, get_digits(len, num_string, 0), 100);
+			strlcat(str, " songs\n in playlist\n", 100);
+		};
+	};
+	if ( (added != 0) || (len >= 0))
+		popup(str, 40);
+}
 
 /* This routine is called when our model has changed in some way. 
 	We inform the view about the changed items.
@@ -472,6 +493,9 @@ inform_view(int model_changed){
 	if (model_changed & TRACKLIST_CHANGED)
 		view_tracklist_changed();
 
+	if (model_changed & PL_LENGTH_CHANGED)
+		view_pl_length_changed(mpd_get_pl_length(), mpd_get_pl_added());
+	
 	if (model_changed & PL_NAMES_CHANGED){
 		view_playlists_changed();
 	};
@@ -515,11 +539,11 @@ static const struct cmd_proc_info cmd_info[] = {
 	{"pause 0\n", NULL, mpd_state_ok, mpd_state_ack},			// PAUSE_OFF,
 	{"play\n", NULL, mpd_state_ok, mpd_state_ack},					// PLAY_CMD,
 	{"stop\n", NULL, mpd_state_ok, mpd_state_ack},					// STOP_CMD,
-	{"command_list_begin\nseek %d %d\nstatus\ncommand_list_end\n", ans_status_line, mpd_status_ok, NULL}, 	//FORWARD_CMD,
-	{"command_list_begin\nseek %d %d\nstatus\ncommand_list_end\n", ans_status_line, mpd_status_ok, NULL},	//REWIND_CMD,
+	{"seek %d %d\n", ans_status_line, mpd_status_ok, NULL}, 	//FORWARD_CMD,
+	{"seek %d %d\n", ans_status_line, mpd_status_ok, NULL},		//REWIND_CMD,
 	{"status\n", ans_status_line, mpd_status_ok, NULL},					// STATUS_CMD,
 	{"playlistinfo %d\n",ans_playlistinfo_line, mpd_playlistinfo_ok, mpd_playlistinfo_ack},		//PLINFO_CMD,
-	{"command_list_begin\nclear\nload \"%s\"\ncommand_list_end\n", NULL, mpd_load_ok, NULL},	// LOAD_CMD,
+	{"loadnew \"%s\"\n", ans_status_line, mpd_load_ok, NULL},			// LOAD_CMD,
 	{"random %d\n", NULL, mpd_random_ok, NULL},				// RANDOM_CMD,
 	{"repeat %d\n", NULL, mpd_repeat_ok, NULL},				// REPEAT_CMD,
 	{"single %d\n", NULL, mpd_single_ok, NULL},				// SINGLE_CMD,
@@ -528,7 +552,7 @@ static const struct cmd_proc_info cmd_info[] = {
 	{"clear\n", NULL, mpd_clear_ok, NULL},					// CLEAR_CMD,
 	{"search artist \"%s\"\n", ans_search_line, mpd_search_ok, mpd_search_ack},		// SEARCH_CMD,
 	{"result %d\n", ans_result_line, NULL, mpd_result_ack}, 				// RESULT_CMD,
-	{"findadd artist \"%s\"\n", NULL, mpd_findadd_ok, mpd_findadd_ok},	// FINDADD_CMD,
+	{"findadd artist \"%s\"\n", ans_status_line, mpd_findadd_ok, NULL},	// FINDADD_CMD,
 	{"script %d\n", NULL, mpd_script_ok, NULL}				// SCRIPT_CMD
 };	
 

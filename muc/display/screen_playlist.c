@@ -65,8 +65,6 @@ view_playlists_changed(){
 
 static void
 screen_enter(){
-
-	lcd_fill(0x00);	
 		
 	/* We always want to start with the first playlist name, because the user might have got lost previously. */
 	playlist_list.first_info_idx = 0;
@@ -78,18 +76,14 @@ screen_enter(){
 		So better reread the information from mpd 
 	*/
 	view_playlists_changed();
-	
-	screen_visible(PLAYLIST_SCREEN, 1);
-	screen_redraw(PLAYLIST_SCREEN);	
 };
 
 static void 
 screen_exit(){
-	screen_visible(PLAYLIST_SCREEN, 0);
 };
 
 // Forward declaration
-static void keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
 
 void
 playlist_screen_init(Screen *this_screen){
@@ -119,7 +113,7 @@ playlist_screen_init(Screen *this_screen){
 
 
 
-void
+static int
 keypress(Screen *pl_screen, int cur_key, UserReq *req){
 		
 	switch (cur_key) {
@@ -166,7 +160,8 @@ keypress(Screen *pl_screen, int cur_key, UserReq *req){
 			break;
 						
 		default:
-			break;
+			return cur_key;
 	};
+	return NO_KEY;
 };
 

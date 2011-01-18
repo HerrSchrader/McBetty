@@ -56,8 +56,8 @@ void lcd_scroll(uint8 row, uint8 col, uint8 width, int height, int offset);
 
 void store_buf (uint8 pos, uint16 pattern, uint8 fg_col, uint8 bg_col);
 
-void read_popup();
-void write_popup();
+void popup_save();
+void popup_restore();
 
 #endif
 

@@ -22,6 +22,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define ERROR_FLAG			(1<<11)
 #define RESULTS_CHANGED		(1<<12)
 #define RESULT_NAMES_CHANGED	(1<<13)
+#define PL_LENGTH_CHANGED	(1<<14)
 
 // Length of artist and title strings each, some songs and some albums really have long titles
 #define TITLE_LEN 149
@@ -70,6 +71,7 @@ struct MODEL {
 	int add;					// is <> -1 iff the user wants to add something to the playlist
 	int num_results;			// number of results after a search command
 	unsigned int script;		// if the user wants a script to be executed this is >= 0
+	int pl_added;				// no. of songs added to the paylist (either + or -), 0 means no change or unknown
 	char errmsg_buf[ERRMSG_SIZE];
 	char *errmsg;				// error message from MPD, NULL if no error
 	UserReq request;			// only used by ans_model, request that this answer is for

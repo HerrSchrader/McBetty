@@ -10,7 +10,7 @@
 
 
 /* Screens are enumerated so that we do not have to use their addresses */
-enum SCREEN {PLAYLIST_SCREEN, TRACKLIST_SCREEN, PLAYING_SCREEN, INFO_SCREEN, SEARCH_SCREEN };
+enum SCREEN {NO_SCREEN, PLAYLIST_SCREEN, TRACKLIST_SCREEN, PLAYING_SCREEN, INFO_SCREEN, SEARCH_SCREEN };
 
 /* We do some object oriented design here.
 	A screen is a number of data structures with some externally callable functions
@@ -24,10 +24,9 @@ typedef struct Screen {
 	struct Window *win_list;		// pointer to array with the windows
 	void (*screen_enter)(void);		// function called when screen is entered
 	void (*screen_exit)(void);		// function called when screen is exited
-	void (*keypress) (struct Screen *, int, UserReq *);		// function called for screen specific key handler
+	int (*keypress) (struct Screen *, int, UserReq *);		// function called for screen specific key handler
+	int (*keypress_popup) (struct Screen *, int, UserReq *);		// function called for screen specific popup key handler
 	enum USER_CMD user_req_cmd;		// ?
-	uint8_t popup_active;			// is TRUE iff this screen is overlayed with a popup
-									// other windows must not draw into screen
 } Screen;
 
 void screen_visible(enum SCREEN screen, int v);
@@ -37,6 +36,8 @@ void user_pressed_a_key(int cur_key);
 void switch_screen(enum SCREEN oldscreen, enum SCREEN newscreen);
 void get_user_request(UserReq *req);
 void show_new_screen(enum SCREEN screen);
+void popup_end();
+void popup(char *text, int time_out);
 
 #endif
 
