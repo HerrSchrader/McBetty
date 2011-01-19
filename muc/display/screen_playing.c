@@ -357,7 +357,7 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			break;
 			
 		case KEY_Betty:
-			popup("A \n\nB  Current\n   playlist\n\nC  All\n   playlists\n\nD  Search\n", 0);
+			popup("A  Current\n   Song\n\nB  Current\n   playlist\n\nC  All\n   playlists\n\nD  Search\n", 0);
 			break;
 			
 		case KEY_A:	
