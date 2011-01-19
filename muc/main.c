@@ -120,6 +120,8 @@ main(void){
 	/* Show something to the user depending on model */
 	mainscreen_init();						// Task 5 == win_scroll_all()
 	
+	dbg("RESET");
+	
 	/* Start the controller task 
 		- keeps model up to date
 		- starts actions according to model

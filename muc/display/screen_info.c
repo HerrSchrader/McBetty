@@ -129,7 +129,7 @@ info_end_of_playlist(){
 	win_new_text(&title_win, "Info");	
 	win_new_text(&info_win, "End of playlist reached.");
 	win_new_text(&help_win, "Select a new track or a new playlist.");
-	show_new_screen(INFO_SCREEN);	
+	show_screen(INFO_SCREEN);	
 }
 
 
@@ -138,7 +138,7 @@ info_playlist_empty(){
 	win_new_text(&title_win, "Info");	
 	win_new_text(&info_win, "Playlist is empty.");
 	win_new_text(&help_win, "Select a new playlist or check mpd configuration.");
-	show_new_screen(INFO_SCREEN);	
+	show_screen(INFO_SCREEN);	
 }
 
 static void
@@ -146,7 +146,7 @@ info_mpd_dead(){
 	win_new_text(&title_win, "Error");	
 	win_new_text(&info_win, "Communication with MPD broken.");
 	win_new_text(&help_win, "Check if MPD is still running and reachable via LAN.");
-	show_new_screen(INFO_SCREEN);		
+	show_screen(INFO_SCREEN);		
 }
 
 void detect_errors(){
@@ -165,7 +165,7 @@ void detect_errors(){
 		info_mpd_dead();
 	} else if ( (error_last & MPD_DEAD) && !(error & MPD_DEAD) ) {
 		// MPD recovered from an error
-		show_new_screen(PLAYING_SCREEN);
+		show_screen(PLAYING_SCREEN);
 	};
 	error_last=error;
 };
@@ -181,7 +181,7 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			*/
 			error &= ~MPD_DEAD; error_last &= ~MPD_DEAD;
 			model_set_last_response(system_time() - 10 * TICKS_PER_SEC);
-			switch_screen(INFO_SCREEN, PLAYLIST_SCREEN);
+			show_screen(PLAYLIST_SCREEN);
 			break;
 			
 		case KEY_VTX1:

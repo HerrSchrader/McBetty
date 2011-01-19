@@ -130,7 +130,7 @@ popup_save(){
 */
 void
 popup_restore(){
-	uint8 page, col, d, i;
+	uint8 page, col, i;
 			
 	for (page=0; page < POPUP_PAGES; page++){
 		lcd_set_page(POPUP_STARTPAGE + page);

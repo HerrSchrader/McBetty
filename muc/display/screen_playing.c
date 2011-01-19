@@ -85,8 +85,9 @@ static void
 screen_exit(){
 };
 
-// Forward declaration
+// Forward declarations
 static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress_popup(Screen *this_screen, int cur_key, UserReq *req);
 
 /* Initialize the playing screen 
 	We clear the whole screen.
@@ -98,6 +99,7 @@ playing_screen_init(Screen *this_screen) {
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
 	this_screen->keypress = keypress;
+	this_screen->keypress_popup = keypress_popup;
 	
 	win_init(&title_win, 0, 0, 50, 128, 1, win_txt[0]);
 	title_win.font = MEDIUMFONT;	
@@ -284,6 +286,29 @@ view_state_changed(enum PLAYSTATE state){
 	
 };
 
+static int
+keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
+	switch (cur_key) {
+		
+		case KEY_Exit:
+		case KEY_Betty:
+			popup_end();
+			return NO_KEY;
+			
+		case KEY_A:
+		case KEY_B:
+		case KEY_C:
+		case KEY_D:
+			popup_end();
+			break;						// give this key to normal screen handler
+			
+		default:
+			return NO_KEY;
+	};
+	return cur_key;
+};
+
+
 static int 
 keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
@@ -331,7 +356,28 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			user_wants_song(PREV_SONG);	
 			break;
 			
-			/* Show/hide version info */
+		case KEY_Betty:
+			popup("A \n\nB  Current\n   playlist\n\nC  All\n   playlists\n\nD  Search\n", 0);
+			break;
+			
+		case KEY_A:	
+			show_screen(PLAYING_SCREEN);
+			break;
+			
+		case KEY_B:	
+			show_screen(TRACKLIST_SCREEN);
+			break;
+			
+		case KEY_C:	
+			show_screen(PLAYLIST_SCREEN);
+			break;
+
+		case KEY_D:	
+			show_screen(SEARCH_SCREEN);
+			break;
+									
+
+		/* Show/hide version info */
 		case KEY_Info:
 			view_version_changed();
 			break;

@@ -40,10 +40,20 @@
 #include "model.h"
 #include "mpd.h"
 
-/* We have a global variable cur_screen which tells us which screen is currently running. 
-	We decide which screen will be shown and how we react to key presses depending on this variable.
+/* We have a global variable cur_screen which tells us which screen is currently shown.
+ 	cur_screen must never be NO_SCREEN. This is taken care of.
+	We decide which screen will be active and how we react to key presses depending on this variable.
+	
+	The variable deferred_screen is for one very special purpose:
+	When a popup is active and the application wants to switch to a new screen, we do not do this
+	immediately. It would confuse the user visually. We set deferred_screen to the new screen 
+	and when the popup ends, it automatically switches to the new screen.
+	All of this should not happen very often, it really irritates the user.
+
+	When there is no deferred next screen, it will be set to NO_SCREEN.
+	
 */
-static enum SCREEN cur_screen, next_screen;
+static enum SCREEN cur_screen, deferred_screen;
 
 /* This is an array of all our screens
 	We can index them with enum SCREEN
@@ -62,6 +72,7 @@ static char popup_txt[POPUP_TXT_SIZE];
 /* Here we store the action wanted by a user keypress */
 static UserReq user_request;
 
+/* Forward declarations */
 static void mainscreen_keypress(int cur_key);
 static void popup_keypress(int cur_key);
 
@@ -102,45 +113,49 @@ screen_redraw(enum SCREEN screen){
 	The current screen has exited.
 	- call the screen specific exit function to end tasks and timers etc.
 	- avoid updating the screens windows
-	- prevent keystrokes to be sent to the screen 
+	- keystrokes are still sent to the screen until another one opens. 
 */
 static void
 screen_exit(enum SCREEN screen){
 	screen_list[screen].screen_exit();
 	screen_visible(screen, 0);
-	cur_screen = NO_SCREEN;
 };
 
 /*
 	Enter a new screen
+
 	- completely clear the display
 	- allow updating the screens windows
 	- call the screen specific enter function to start tasks and timers etc.
 	- draw contents of screens windows
 	- allow keystrokes to be sent to the screen 
 */
-void
+static void
 screen_enter(enum SCREEN screen){
-	if (popup_active){
-		// We do not want to enter a new screen while a popup is showing 
-		// remember the next screen when popup is closed
-		next_screen = screen;
-		return;
-	};
 	lcd_fill(0x00);
+	cur_screen = screen;
+	deferred_screen = NO_SCREEN;
 	screen_visible(screen, 1);
 	screen_list[screen].screen_enter();
 	screen_redraw(screen);
-	cur_screen = screen;
-};
-	
-void 
-switch_screen(enum SCREEN oldscreen, enum SCREEN newscreen){
-	screen_exit(oldscreen);
-	next_screen = newscreen;
-	screen_enter(newscreen);
 };
 
+
+/* This is called when the current task does not know which screen is shown, 
+	so that switch_screen() can not be used.
+	We simply exit the current screen and enter the new one.
+	
+	if a popup is active, do not switch screens,
+		set deferred_screen instead
+*/
+void
+show_screen(enum SCREEN newscreen){
+	screen_exit(cur_screen);
+	if (popup_active)
+		deferred_screen = newscreen;
+	else
+		screen_enter(newscreen);	
+};
 
 /* ------------------------------------------------------------------------------------------------- */
 
@@ -168,6 +183,7 @@ mainscreen_init(void) {
 	popup_win.flags |= WINFLG_CENTER | WINFLG_LFTADJ;
 	
 	popup_active = 0;
+	deferred_screen = NO_SCREEN;
 	
 	playing_screen_init( &(screen_list[PLAYING_SCREEN]) );
 	playlist_screen_init( &(screen_list[PLAYLIST_SCREEN]) );
@@ -180,6 +196,24 @@ mainscreen_init(void) {
 	set_keypress_handler(mainscreen_keypress);
 	screen_enter(PLAYING_SCREEN);
 
+};
+
+/* This is the popup key press handler.
+	After a key press has been detected by the keyboard driver,
+	the kernel calls this routine when a popup is open.
+*/
+static void
+popup_keypress(int cur_key){
+	/* First we call the screen specific popup keypress handler */
+	if ( NULL != screen_list[cur_screen].keypress_popup )
+		cur_key = screen_list[cur_screen].keypress_popup( &(screen_list[cur_screen]), cur_key, &user_request);
+	
+	/* It returns NO_KEY, if it has completely handled the key */
+	if (NO_KEY == cur_key)
+		return;
+	
+	/* If there is still a key to be handled, we try the main keypress routine */
+	mainscreen_keypress(cur_key);
 };
 
 /* ### Automatic popup ending task ###  */
@@ -205,33 +239,29 @@ popup(char *text, int time_out){
 		popup_save();
 		popup_win.flags |= WINFLG_VISIBLE;
 		set_keypress_handler(popup_keypress);
+
 		if (time_out > 0){
 			timer_add(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
 			close_popup_task = task_add(&close_popup);
-			timed_popup = 1;
-		} else
-			timed_popup = 0;
-		win_new_text(&popup_win, text);
-		win_redraw(&popup_win);	
-		return;
-	};
-	if (time_out > 0){
-		if (timed_popup)
-			timer_set(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
-		else {
-			timer_add(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
-			close_popup_task = task_add(close_popup);
-			timed_popup = 1;
-		};
-	} else {
-		if (timed_popup) {
-			task_del(close_popup_task);
-			timer_del(&popup_tmr);
-			timed_popup = 0;
+		} 
+	} else {						// already a popup active
+		if (time_out > 0){
+			if (timed_popup)
+				timer_set(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
+			else {
+				timer_add(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
+				close_popup_task = task_add(close_popup);
+			};
+		} else {
+			if (timed_popup) {
+				task_del(close_popup_task);
+				timer_del(&popup_tmr);
+			};
 		};
 	};
+	timed_popup = (time_out > 0);
 	win_new_text(&popup_win, text);
-	win_redraw(&popup_win);
+	win_redraw(&popup_win);	
 };
 
 void 
@@ -239,46 +269,20 @@ popup_end(){
 	if (timed_popup) {
 		task_del(close_popup_task);
 		timer_del(&popup_tmr);	
-		popup_restore();
 	};
+
 	popup_active = 0;
-	if (next_screen != cur_screen)
-		screen_enter(next_screen);
+	set_keypress_handler(mainscreen_keypress);
+	
+	if (deferred_screen != NO_SCREEN)
+		screen_enter(deferred_screen);
 	else {
+		popup_restore();
 		screen_visible(cur_screen, 1);
 		screen_redraw(cur_screen);
-		set_keypress_handler(mainscreen_keypress);
 	};
 };
 
-
-/* This is called when the current task does not know which screen is shown, 
-	so that switch_screen() can not be used.
-	We simply exit the current screen and enter the new one.
-*/
-void
-show_new_screen(enum SCREEN screen){
-	screen_exit(cur_screen);
-	screen_enter(screen);
-};
-
-/* This is the popup window press handler.
-	After a key press has been detected by the keyboard driver,
-	the kernel calls this routine when a popup is open.
-*/
-static void	
-popup_keypress(int cur_key){
-	/* First we call the screen specific popup keypress handler */
-	if (NULL != screen_list[cur_screen].keypress_popup)
-		cur_key = screen_list[cur_screen].keypress_popup( &(screen_list[cur_screen]), cur_key, &user_request);
-	
-	/* It returns NO_KEY, if it has completely handled the key */
-	if (NO_KEY == cur_key)
-		return;
-	
-	/* If there is still a key to be handled, we try the main keypress routine */
-	mainscreen_keypress(cur_key);
-};
 
 /* This is the main key press handler.
 	After a key press has been detected by the keyboard driver,
@@ -302,31 +306,31 @@ mainscreen_keypress(int cur_key){
 		
 	/* BETTY always shows the playlist screen */
 		case KEY_Betty:
-			switch_screen(cur_screen, PLAYLIST_SCREEN);
+			show_screen(PLAYLIST_SCREEN);
 			return;
 
 	/* The BLUE key enters the search screen */		
 		case KEY_Blue:
-			switch_screen(cur_screen, SEARCH_SCREEN);
+			show_screen(SEARCH_SCREEN);
 			return;
 
 	/* The EXIT key switches through the screens */
 		case KEY_Exit:
 			switch (cur_screen){
 				case PLAYING_SCREEN:
-					switch_screen(cur_screen, TRACKLIST_SCREEN);
+					show_screen(TRACKLIST_SCREEN);
 					break;
 				case TRACKLIST_SCREEN:
-					switch_screen(cur_screen, PLAYLIST_SCREEN);
+					show_screen(PLAYLIST_SCREEN);
 					break;
 				case PLAYLIST_SCREEN:
-					switch_screen(cur_screen, PLAYING_SCREEN);
+					show_screen(PLAYING_SCREEN);
 					break;
 				case INFO_SCREEN:
-					switch_screen(cur_screen, PLAYLIST_SCREEN);
+					show_screen(PLAYLIST_SCREEN);
 					break;
 				default:
-					switch_screen(cur_screen, PLAYLIST_SCREEN);
+					show_screen(PLAYLIST_SCREEN);
 					break;
 			};
 			return;

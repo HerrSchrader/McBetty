@@ -148,8 +148,9 @@ static void
 screen_exit(){
 };
 
-// Forward declaration
+// Forward declarations
 static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress_popup(Screen *this_screen, int cur_key, UserReq *req);
 
 void
 tracklist_screen_init(Screen *this_screen){
@@ -160,6 +161,7 @@ tracklist_screen_init(Screen *this_screen){
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
 	this_screen->keypress = keypress;
+	this_screen->keypress_popup = keypress_popup;
 	
 	cur_start_row = WL_START_ROW;	
 	
@@ -179,6 +181,28 @@ tracklist_screen_init(Screen *this_screen){
 
 };	
 
+static int
+keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
+	switch (cur_key) {
+		case KEY_Exit:
+		case KEY_Betty:
+			popup_end();
+			return NO_KEY;
+			
+		case KEY_A:
+		case KEY_B:
+		case KEY_C:
+		case KEY_D:
+			popup_end();
+			break;						// give this key to normal screen handler
+			
+		default:
+			return NO_KEY;
+			break;
+	};
+	return cur_key;
+};
+
 
 
 /* Handle user input (key presses) 
@@ -196,7 +220,7 @@ keypress(Screen *track_screen, int cur_key, UserReq *req){
 		case KEY_OK:
 			// NOTE info-idx could return -1 if invalid, user_wants_song can handle that 
 			user_wants_song ( info_idx(&track_list, track_list.sel_win) );
-			switch_screen(TRACKLIST_SCREEN, PLAYING_SCREEN);
+			show_screen(PLAYING_SCREEN);
 			break;
 		
 		case KEY_Pplus:	
@@ -240,6 +264,27 @@ keypress(Screen *track_screen, int cur_key, UserReq *req){
 			user_tracklist_clr();	
 			break;
 			
+		case KEY_Betty:
+			popup("A  Current\n   Song\n\nB  Current\n   playlist\n\nC  All\n   playlists\n\nD  Search\n", 0);
+			break;
+			
+		case KEY_A:	
+			show_screen(PLAYING_SCREEN);
+			break;
+			
+		case KEY_B:	
+			show_screen(TRACKLIST_SCREEN);
+			break;
+			
+		case KEY_C:	
+			show_screen(PLAYLIST_SCREEN);
+			break;
+
+		case KEY_D:	
+			show_screen(SEARCH_SCREEN);
+			break;
+									
+				
 		default:
 			return cur_key;
 	};
