@@ -501,14 +501,14 @@ inform_view(int model_changed){
 		rx_reset();
 		// We show the message for 1 seconds less than the time_out, so if the
 		// communication is still broken, the message will soon reappear.
-		view_message("      Error\n\n"
+		view_message("     Error\n\n"
 				"Communication with MPD is broken.\n\n"
 				"Check if MPD is still running and reachable via LAN.",
 	 		(MPD_RETRY_TIMEOUT - 1) * TICKS_PER_SEC);
 	};
 	
 	if (model_changed & PLAYLIST_EMPTY){
-		view_message("Playlist\nis empty!", 4 * TICKS_PER_SEC);
+		view_message("   Playlist\n   is empty!", 4 * TICKS_PER_SEC);
 	};
 	
 	model_reset_changed();

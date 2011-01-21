@@ -26,7 +26,7 @@
 
 
 /* Number of entries in the window list */
-#define WL_SIZE 12
+#define WL_SIZE 11
 
 /* The window list */
 static struct Window win[WL_SIZE];
@@ -70,14 +70,11 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 /* Window to show single state */
 #define single_win (win[10])
 
-#define version_win (win[11])
-
 
 /* Window to show the current album TODO maybe later */
 
 static void 
 screen_enter(){
-	version_win.flags &= ~WINFLG_VISIBLE;	// hidden window
 };
 
 
@@ -160,15 +157,6 @@ playing_screen_init(Screen *this_screen) {
 	single_win.fg_color = WHITE;
 	single_win.bg_color = BLACK;
 	win_new_text(&single_win, "1" );
-	
-	win_init(&version_win, 150, 0, 10, 128, 0, win_txt[11]); 
-	version_win.font = SMALLFONT;	
-	version_win.flags |= WINFLG_CENTER;
-	version_win.fg_color = WHITE;
-	version_win.bg_color = BLACK;
-	win_new_text(&version_win, "Version " VERSION);
-	
-
 }
 
 #define TIMESTR_LEN 30
@@ -228,18 +216,6 @@ view_single_changed(int sgl){
 	win_redraw(&single_win);
 };
 
-static void
-view_version_changed(){
-	if ( (version_win.flags & WINFLG_VISIBLE)){
-		version_win.bg_color = WHITE;
-		win_clear(&version_win, 1); 
-		version_win.flags &= ~WINFLG_VISIBLE;
-		version_win.bg_color = BLACK;
-	} else {
-		version_win.flags |= WINFLG_VISIBLE;
-		win_redraw(&version_win);
-	}; 	
-};
 
 #define VOLSTR_SIZE 20
 /* The volume has changed. Show new value. */
@@ -324,7 +300,7 @@ keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
 	return cur_key;
 };
 
-//TODO think about general menu structure
+
 /*
 	Betty always opens a menu
 	Exit exits a popup, it also cycles through 3 main screens
@@ -336,7 +312,7 @@ keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
 	D = goto search screen
 */
 //TODO add info to title screen track 4 of 17, playlist 1 of 99
-//TODO deactivate the stupid info text
+
 static int 
 keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
@@ -378,7 +354,8 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 				"\xB1 = Seek Back\n"
 				"\xB0 = Seek FWD\n"
 				"\xB2 = Next Song\n"
-				"\xB3 = Prev. Song", 
+				"\xB3 = Prev. Song\n"
+				"TV = Version", 
 				  0, keypress_info_popup);
 			break;
 												
@@ -434,6 +411,13 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			user_wants_script(2);
 			break;
 				
+		case KEY_TV:
+			view_message("   McBetty\n\n"
+						"Version "VERSION"\n\n\n"
+						"  (c) 2010\n   H. Raap",
+	  			5 * TICKS_PER_SEC);
+			break;
+			
 		default:
 			return cur_key;				// we could not handle key
 	};
