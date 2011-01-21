@@ -436,28 +436,6 @@ PT_THREAD (collect_lines(struct pt *pt,
 
 /* ---------------------------- End of functions which handle communication with mpd ------------------- */
  	
-static void
-view_pl_length_changed(int len, int added){
-	char str[100];
-	char num_string[12];
-	
-	strlcpy(str, "",100);
-	
-	if (added != 0){
-		strlcat(str, get_digits(added, num_string, 0), 100);
-		strlcat(str, " songs added.\n\n", 100);	
-	}
-	if (len >= 0){
-		if (0 == len)
-			strlcat(str, " Playlist is\n now empty.\n", 100); 
-		else {
-			strlcat(str, get_digits(len, num_string, 0), 100);
-			strlcat(str, " songs\n in playlist\n", 100);
-		};
-	};
-	if ( (added != 0) || (len >= 0))
-		popup(str, 40);
-}
 
 /* This routine is called when our model has changed in some way. 
 	We inform the view about the changed items.
@@ -489,17 +467,25 @@ inform_view(int model_changed){
 	
 	if (model_changed & SINGLE_CHANGED)
 		view_single_changed(mpd_get_single());
-
-	if (model_changed & TRACKLIST_CHANGED)
-		view_tracklist_changed();
-
+	
+	
+	// This should come before TRACKLIST_CHANGED
 	if (model_changed & PL_LENGTH_CHANGED)
 		view_pl_length_changed(mpd_get_pl_length(), mpd_get_pl_added());
+	
+	if (model_changed & TRACKLIST_CHANGED)
+		view_tracklist_changed();
+	
+	
+	if (model_changed & NUM_PL_CHANGED){
+		view_num_pl_changed(mpd_get_num_pl());
+	};	
 	
 	if (model_changed & PL_NAMES_CHANGED){
 		view_playlists_changed();
 	};
 
+	
 	if (model_changed & RESULTS_CHANGED){
 		view_results_changed(mpd_get_num_results());
 	};
@@ -508,6 +494,7 @@ inform_view(int model_changed){
 		view_resultnames_changed();
 	};	
 	
+
 	model_reset_changed();
 };
 	

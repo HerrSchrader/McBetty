@@ -23,6 +23,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define RESULTS_CHANGED		(1<<12)
 #define RESULT_NAMES_CHANGED	(1<<13)
 #define PL_LENGTH_CHANGED	(1<<14)
+#define NUM_PL_CHANGED		(1<<15)
 
 // Length of artist and title strings each, some songs and some albums really have long titles
 #define TITLE_LEN 149
@@ -88,7 +89,7 @@ void user_wants_script(int script_no);
 void mpd_script_ok(struct MODEL *a);
 
 /* ------------------------------------- Tracklist = current playlist -------------------------------------- */
-int tracklist_range_set(int start, int end);
+void tracklist_range_set(int start, int end);
 char *track_info(int no);
 void mpd_playlistinfo_ok(struct MODEL *a);
 void mpd_playlistinfo_ack(struct MODEL *a);
@@ -96,19 +97,20 @@ int mpd_tracklist_last();
 void user_tracklist_clr();
 void mpd_clear_ok(struct MODEL *a);
 void mpd_load_ok(struct MODEL *a);
-
+int mpd_get_pl_length();
+int mpd_get_pl_added();
 /* ------------------------------------- Playlists -------------------------------------- */
 void mpd_set_playlistname(char *s);
-char *mpd_get_playlistname(int idx);
+char *mpd_playlistname_info(int idx);
 int mpd_playlists_last();
 void user_wants_playlist(int idx);
-int playlists_range_set(int start_pos, int end_pos);
+void playlists_range_set(int start_pos, int end_pos);
 void mpd_set_playlistcount(int n);
 void mpd_store_playlistname(char *name, int playlist_pos);
-
+int mpd_get_num_pl();
 /* --------------------------------------- Search results ------------------------------- */
-char *mpd_get_resultlistname(int pos);
-int resultlist_range_set(int start_pos, int end_pos);
+char *mpd_result_info(int i);
+void resultlist_range_set(int start_pos, int end_pos);
 int  mpd_resultlist_last();
 void mpd_result_ack(struct MODEL *a);
 void mpd_store_resultname(char *name, int result_pos);

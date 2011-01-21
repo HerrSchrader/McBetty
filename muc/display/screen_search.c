@@ -119,11 +119,6 @@ screen_exit(){
 #define WL_HIGH_HEIGHT 18
 
 
-static char * 
-get_result(int i){
-	return mpd_get_resultlistname(i);
-};
-
 // Forward declaration
 static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
 static int keypress_popup(Screen *this_screen, int cur_key, UserReq *req)	;
@@ -152,7 +147,7 @@ search_screen_init(Screen *this_screen) {
 	win_init(&input_win, cur_start_row, 0, 20, 128, 1, win_txt[1]);
 	input_win.font = BIGFONT;	
 	input_win.txt_offs_row = 3;
-	win_new_text(&input_win, " ");
+	win_new_text(&input_win, "");
 	cur_start_row += 20;
 	
 	win_init(&num_results_win, cur_start_row, 0, WL_SMALL_HEIGHT, 128, 0, win_txt[2]);
@@ -162,10 +157,11 @@ search_screen_init(Screen *this_screen) {
 	win_new_text(&num_results_win, "");
 	cur_start_row += WL_SMALL_HEIGHT;
 	
-	init_scroll_list(&result_list, &(win[3]), win_txt[3], WIN_TXT_SIZE, RL_SIZE, &get_result, cur_start_row);
+	init_scroll_list(&result_list, &(win[3]), win_txt[3], WIN_TXT_SIZE, RL_SIZE, &mpd_result_info, cur_start_row, resultlist_range_set);
 
 }
 
+/* Number of results has changed */
 void 
 view_results_changed(int num){
 	char newstr[50];
@@ -182,13 +178,18 @@ view_results_changed(int num){
 		strlcat(newstr, "\n", sizeof(newstr));
 		num_results_win.bg_color = DARK_GREY;
 	};
+	
 	win_new_text(&num_results_win, newstr);	
+	scroll_list_total_len(&result_list, num);
+	
+
 };
 
 
 void
 view_resultnames_changed(){
-	scroll_list_changed(&result_list);
+	// new results should show the cursor reset to the first position
+	scroll_list_start(&result_list, 0);		// also calls scroll_list_changed()
 };
 
 static int
@@ -221,13 +222,13 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			break;
 			
 		case KEY_A:
-			user_wants_add(info_idx(&result_list, result_list.sel_win) );
+			user_wants_add(scroll_list_selected(&result_list) );
 //			switch_screen(SEARCH_SCREEN, TRACKLIST_SCREEN);
 			break;
 			
 		case KEY_B:
 			user_tracklist_clr();	
-			user_wants_add(info_idx(&result_list, result_list.sel_win) );
+			user_wants_add(scroll_list_selected(&result_list) );
 //			switch_screen(SEARCH_SCREEN, TRACKLIST_SCREEN);
 			break;	
 								
@@ -237,28 +238,12 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			
 		case KEY_Pplus:	
 		case KEY_Up:
-			if (result_list.sel_win > 0)
-				sel_win_up(&result_list);
-			else {					// We want to scroll past the upper end of the window list
-				if ( info_idx(&result_list, 0)  > 0){		// We have information to show
-					result_list.first_info_idx = resultlist_range_set(result_list.first_info_idx-1, last_info_idx(&result_list)-1 );
-					view_resultnames_changed();
-				};
-			};	
+			scroll_list_up(&result_list);
 			break;
 			
 		case KEY_Pminus:	
 		case KEY_Down:
-			if (result_list.sel_win < (result_list.num_windows - 1)) {
-				// We need only move our selected window one position down
-				// But we check if we have already reached the last info pos
-				if ( (mpd_resultlist_last() == -1) || (info_idx(&result_list, result_list.sel_win) < mpd_resultlist_last()) )
-						sel_win_down(&result_list);
-
-			} else {					// We want to scroll past the lower end of the window list
-				result_list.first_info_idx = resultlist_range_set(result_list.first_info_idx+1, last_info_idx(&result_list)+1 );
-				view_resultnames_changed();
-			};
+			scroll_list_down(&result_list);
 			break;
 									
 		case KEY_Left:	

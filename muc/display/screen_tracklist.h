@@ -11,6 +11,7 @@ void tracklist_screen_enter();
 enum USER_CMD tracklist_user_request(void);
 int tracklist_arg(void);
 void tracklist_screen_exit();
+void view_pl_length_changed(int len, int added);
 void view_tracklist_changed();
 
 #endif

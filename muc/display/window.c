@@ -282,7 +282,9 @@ win_scroll(struct Window *win){
 	};
 };
 
-/* Remove a window from the scroll list */	
+/* Remove a window from the scroll list 
+	It is safe to try to remove a window which is not in the list
+*/	
 void 
 win_unscroll(struct Window *win){
 	int i;
@@ -332,6 +334,26 @@ win_scroll_init(){
 /* ---------------------------------------------- Scroll List ---------------------------------------- */
 /* 
 	An array of windows can form a scroll list, i.e. the user can scroll in this list.
+	The list is showing strings.
+	The idea is as follows:
+	The model has a large sequential list of strings (which can change).
+	A scroll list can show a small portion of these strings.
+	The user can choose which portion to show.
+	Indices into the list of the model are called positions (or pos) for clarity.
+	
+	We need the following interaction with the model here:
+	- a function (info_text()) which returns the string correspondinvoid init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt_len, int nw, char * (*info_text) (), int start_row );g to a given pos
+	- a function (update_info() ) which is called by the model if the text of a given pos
+		has changed, currently only implemented in scroll_list_update()
+	- a function which tells us the end of the model list, because the user should not
+		scroll past this end 
+	- a function which tells us the start of the model list, because the user must not
+		scroll before this start
+		We do not implement this function, because for all our current lists we have an absolute start
+		value of 0!
+	- a function which tells us if the start or end of the model list have changed 
+	- a function range_set which tells the model the begin and end pos of the info 
+		that we show on screen, so that the model can get those infos for us	
 */
 
 /* The height of a non-selected window in the scroll list */
@@ -341,53 +363,56 @@ win_scroll_init(){
 #define WL_HIGH_HEIGHT 18
 
 /* The given window has its properties set so that it is selected */
-void 
+static void 
 select_win(struct Window *w ){
 	w->font = BIGFONT;
 	w->height = WL_HIGH_HEIGHT;
 	w->border = 1;
+	win_scroll(w);		// enable horizontal scrolling
 };
 
 /* The given window has its properties set so that it is not selected */
-void
+static void
 unselect_win(struct Window *w ){
 	w->font = MEDIUMFONT;
 	w->height = WL_NORMAL_HEIGHT;
 	w->border = 0;
+	win_unscroll(w);		// disable horizontal scrolling
 };
 
 /* The selected window is moved one line up */
-void
+static void
 sel_win_up(scroll_list *sl){
 	if (sl->sel_win >= 1){
 		unselect_win( & (sl->wl[sl->sel_win]) );
 		sl->wl[sl->sel_win].start_row = sl->wl[sl->sel_win - 1].start_row + WL_HIGH_HEIGHT;
-		win_unscroll(& (sl->wl[sl->sel_win]));
 		sl->sel_win--;
+		
 		select_win( & (sl->wl[sl->sel_win]) );
-		win_scroll(& (sl->wl[sl->sel_win]) );				
+						
 		win_redraw(& (sl->wl[sl->sel_win]) );
 		win_redraw(& (sl->wl[sl->sel_win + 1]) );
 	};
 };
 
 /* The selected window is moved one line down */
-void
+static void
 sel_win_down(scroll_list *sl){
 	if (sl->sel_win < (sl->num_windows - 1) ){
+		
 		unselect_win( & (sl->wl[sl->sel_win]) );
-		win_unscroll(& (sl->wl[sl->sel_win]) );
+		
 		sl->sel_win++;
 		select_win( & (sl->wl[sl->sel_win]) );
+		
 		sl->wl[sl->sel_win].start_row = sl->wl[sl->sel_win -1].start_row + WL_NORMAL_HEIGHT;
-		win_scroll(& (sl->wl[sl->sel_win]) );
 		win_redraw(& (sl->wl[sl->sel_win]) );
 		win_redraw(& (sl->wl[sl->sel_win - 1]) );
 	};
 };
 
 /* Set a specific window as the selected one */
-void 
+static void 
 select(scroll_list *sl, int sel){
 	while ( sl->sel_win < sel)
 		sel_win_down(sl);
@@ -396,29 +421,30 @@ select(scroll_list *sl, int sel){
 		sel_win_up(sl);
 };
 
+
+	
 /* Index of last info text that we can show in our list */
-int 
-last_info_idx(scroll_list *sl){
-	return (sl->first_info_idx + sl->num_windows -1); 
+static int 
+last_info_pos(scroll_list *sl){
+	return (sl->first_shown_pos + sl->num_windows -1); 
 };	
 
 
-/* Gets the info index corresponding to a given window index */
-int
-info_idx(scroll_list *sl, int win_idx){
+/* Gets the info pos corresponding to a given window index 
+	-1 if the index is out of range (i.e. not a valid window) 
+*/
+static int
+info_pos(scroll_list *sl, int win_idx){
 	int no;
 	
-	no = win_idx + sl->first_info_idx;
-	if ( (no < 0) || (no > last_info_idx(sl) ) )
+	no = win_idx + sl->first_shown_pos;
+	if ( (no < 0) || (no > last_info_pos(sl) ) )
 		return -1;
 	return no;
 };
 
-
-/* We are called when the current tracklist has potentially changed 
+/* We are called when the scroll list has potentially changed 
 	Updates the info in all windows of the scroll list (sets new text in window).
-	NOTE	Here we are updating the whole list. Could be inefficient.
-			Maybe better to update one song at a time.
 */
 void
 scroll_list_changed(scroll_list *sl){
@@ -427,16 +453,146 @@ scroll_list_changed(scroll_list *sl){
 	struct Window *pwin;
 
 	for (i=0, pwin = sl->wl; i < sl->num_windows; pwin++, i++){
-		info = sl->info_text( info_idx(sl, i) );
+		info = sl->info_text( info_pos(sl, i) );
 
-		if (NULL == info)
+		if (NULL == info)				// TODO this should not occur ?!
 			win_new_text(pwin, "");
 		else 
 			win_new_text( pwin, info);
 	}
 };
 
+/* Returns the positional index corresponding to the selected window
+	Used by the view to tell the controller which item the user selected
+*/
+int 
+scroll_list_selected(scroll_list *sl){
+	return info_pos(sl, sl->sel_win);
+};
+
 /*
+	The position of the currently selected info is decremented,
+	i. e. the selected window is moved up towards the top of the screen
+	If we are already at the top of the window list, we must move
+	the text lines down! 
+*/
+void 
+scroll_list_up(scroll_list *sl){
+	if (sl->sel_win > 0)
+		sel_win_up(sl);
+	else {					// We want to scroll past the upper end of the window list
+		if ( info_pos(sl, 0) > sl->first_pos){		// valid pos
+			sl->first_shown_pos--;
+			sl->range_set(sl->first_shown_pos, last_info_pos(sl) );
+			scroll_list_changed(sl);
+		};
+	};
+};
+
+/*
+	The position of the currently selected info is incremented,
+	i. e. the selected window is moved down towards the bottom of the screen
+	If we are already at the bottom of the window list, we must move
+	the text lines up! 
+*/
+void
+scroll_list_down(scroll_list *sl){
+	if (sl->sel_win < (sl->num_windows - 1)) {
+		
+		// here we must check if we have reached the absolute end of the infos
+		if ( (sl->last_pos < 0) || (scroll_list_selected(sl) < sl->last_pos) )
+			sel_win_down(sl);
+
+	} else {					// We want to scroll past the lower end of the window list
+		// here we must check if we have reached the absolute end of the infos
+		if ( (sl->last_pos < 0) || (scroll_list_selected(sl) < sl->last_pos) ){
+			sl->first_shown_pos++;
+			sl->range_set(sl->first_shown_pos, last_info_pos(sl) );
+			scroll_list_changed(sl);
+		}
+	};	
+};
+
+/* We want to show a completely new "page" of infos,
+	i.e. the scroll list first position is incremented by the number of windows in it
+*/
+void
+scroll_list_fwd(scroll_list *sl){
+	int new_first;
+	
+	// This will be our new first shown position
+	new_first = sl->first_shown_pos+sl->num_windows;
+	// Maybe it is too high (past total end of information)
+	if (sl->last_pos >= 0){
+		if (new_first > sl->last_pos)
+			return;
+	};
+	
+	sl->first_shown_pos = new_first;
+	sl->range_set(sl->first_shown_pos, last_info_pos(sl) );
+	
+	// Now maybe our selected window is too high
+	if (sl->last_pos >= 0){
+		if (scroll_list_selected(sl) > sl->last_pos)
+			select(sl, (sl->last_pos - sl->first_shown_pos));	
+	}
+	scroll_list_changed(sl);
+};
+
+/* We want to show a completely new "page" of infos,
+	i.e. the scroll list first position is decremented by the number of windows in it
+*/
+void
+scroll_list_back(scroll_list *sl){
+	int new_first;
+	
+	// This will be our new first shown position
+	new_first = sl->first_shown_pos - sl->num_windows;	
+	// Maybe it is too low (before start of information)
+	if (new_first < sl->first_pos){
+		new_first = sl->first_pos;
+		select(sl, 0);				// visual clue to the user that we are at top of list
+	};
+		
+	sl->first_shown_pos = new_first; 
+	sl->range_set(sl->first_shown_pos, last_info_pos(sl) );
+	scroll_list_changed(sl);	
+};
+
+/*
+	We tell the scroll list that we want pos to be the first shown info
+	We assume that all infos might have changed and update the windows
+*/
+void
+scroll_list_start(scroll_list *sl, int pos){
+	sl->first_shown_pos = max(0,pos);				// pos below 0 makes no sense
+	sl->range_set(pos, pos + sl->num_windows - 1);
+	select(sl, 0);	
+	scroll_list_changed(sl);	
+};
+
+/* 
+	set the total length of the given scroll list 
+	-1 means unknown
+	0 is the empty list. We simply pretend to have one element,
+		otherwise it would make no sense to display the list
+*/
+void
+scroll_list_total_len(scroll_list *sl, int length){
+	if (length <= 0)
+		sl->last_pos = length;
+	else
+		sl->last_pos = length -1;
+	
+	// We should not have our starting value outside of the limit
+	if ( (sl->last_pos >= 0) && (sl->first_shown_pos > sl->last_pos) )
+		scroll_list_start(sl, sl->last_pos);							// this will call scroll_list_changed(sl)
+	else
+		scroll_list_changed(sl);
+};
+
+ 
+ /*
 Parameters:
 	sl = pointer to scroll_list structure
 	pwl = pointer to the array of windows belonging to the scroll_list
@@ -447,15 +603,19 @@ Parameters:
 	start_row = where shall the scroll_list start on screen
 */
 void 
-init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt_len, int nw, char * (*info_text) (), int start_row ) {
+init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt_len, int nw, 
+				 char * (*info_text) (), int start_row, void (*range_set) ()  ) {
 	int i;
 	struct Window *pwin;
 
 	sl->wl = pwl;
 	sl->num_windows = nw;
-	sl->first_info_idx = 0;
 	sl->sel_win= 0;
 	sl->info_text = info_text;
+	sl->range_set = range_set;
+	sl->first_pos = 0;
+	sl->last_pos = -1;
+	sl->first_shown_pos = 0;
 	
 	/* These windows are scroll list lines */
 	for (i=0, pwin = sl->wl; i < sl->num_windows; pwin++, i++){
@@ -472,7 +632,6 @@ init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt
 		/* Every second window has a different background color */
 		if (0 == (i & 1)) pwin->bg_color = LIGHT_GREY;
 	};
-	win_scroll( & ((sl->wl)[sl->sel_win]));
 };
 
 /* --------------------------------------------- Text Input Window ------------------------------------- */
@@ -504,6 +663,8 @@ static struct timer char_tmr;
 
 void
 win_cursor_clr(){
+	if (NULL == pcursor_win) 
+		return; 
 	pcursor_win->txt[0] = '\0';
 	pcursor_win->text_len = 0;
 	cursor_pos = 0;
@@ -644,14 +805,20 @@ PT_THREAD (win_cursor_blink(struct pt *pt)){
 	PT_END(pt);
 };
 
-/* Giving NULL as parameter stops cursor blinking for this window. */
+/* 
+	Sets a window to have a blinking cursor.
+	At most one window at a time can have a cursor.
+	Giving NULL as parameter stops cursor blinking for the current cursor window. 
+*/
 void
 win_cursor_set(struct Window *pwin, int size){
 	pcursor_win = pwin;
 	max_txt_len = size;
 	cursor_new_pos = -1;
-	cursor_pos = 0;						// TODO better jump to end of string
-	draw_cursor_win(pcursor_win);
+	if (pwin != NULL){
+		cursor_pos = max(0, (strlen(pcursor_win->txt) - 1));
+		draw_cursor_win(pcursor_win);
+	};
 	last_key = -1;
 	key_cnt = -1;
 };
@@ -661,6 +828,9 @@ win_cursor_init(){
 	timer_add(&char_tmr, 0, 0);
 	timer_stop(&char_tmr);
 	task_add(&win_cursor_blink);
+	cursor_pos = 0;
+	key_cnt = -1;
+	last_key = -1;
 };	
 
 

@@ -178,7 +178,7 @@ model_needs_action(UserReq *req){
 		return PLAYLISTCOUNT_CMD;
 	
 	if (user_model.cur_playlist != -1){
-		req->str = mpd_get_playlistname(user_model.cur_playlist);
+		req->str = mpd_playlistname_info(user_model.cur_playlist);
 		return LOAD_CMD;
 	};
 	
@@ -274,7 +274,7 @@ model_needs_action(UserReq *req){
 		return CLEAR_CMD;
 	};
 		
-	pos = cache_find_empty(&tracklist);		
+	pos = cache_find_unknown(&tracklist);
 	if ( (pos >= 0) && (pos < mpd_model.playlistlength) ) {
 		req->arg = pos;
 		return PLINFO_CMD;
@@ -282,7 +282,7 @@ model_needs_action(UserReq *req){
 	
 	/* Something to add to the playlist ? */
 	if (user_model.add != -1){
-		req->str = mpd_get_resultlistname(user_model.add);
+		req->str = mpd_result_info(user_model.add);
 		return FINDADD_CMD;
 	};
 	
@@ -296,7 +296,7 @@ model_needs_action(UserReq *req){
 	*/ 
 
 	/* Find the first unknown playlist name */
-	pos = cache_find_empty(&playlists);
+	pos = cache_find_unknown(&playlists);
 	if ( (pos >= 0) && (pos < mpd_model.num_playlists) ) {
 		req->arg = pos;
 		return PLAYLISTNAME_CMD;
@@ -304,7 +304,7 @@ model_needs_action(UserReq *req){
 
 	/* Find the first unknown result */
 	if (mpd_model.num_results > 0){
-		pos = cache_find_empty(&resultlist);
+		pos = cache_find_unknown(&resultlist);
 		if ( (pos >= 0) && (pos < mpd_model.num_results) ) {
 			req->arg = pos;
 			return RESULT_CMD;
@@ -354,12 +354,10 @@ mpd_script_ok(struct MODEL *a){
 	The cache containing track info has to follow the information that we show on screen.
 	Here we tell the cache which positions we want to show,
 	namely all infos between start_pos and end_pos inclusive.
-
-	We return the start value that we really used.
 */
-int
+void
 tracklist_range_set(int start_pos, int end_pos){	
-	return cache_range_set(&tracklist, start_pos, end_pos, mpd_model.playlistlength);
+	cache_range_set(&tracklist, start_pos, end_pos);
 };
 
 /* The tracklist screen will ask us for the track entry of a specific track_no. 
@@ -368,10 +366,7 @@ tracklist_range_set(int start_pos, int end_pos){
 */
 char *
 track_info(int track_pos){
-	char *s;
-	s = cache_entry(&tracklist, track_pos);
-	if (NULL == s) return "";
-	return s;
+	return cache_info(&tracklist, track_pos);
 };
 
 /* 
@@ -434,26 +429,25 @@ set_playlistlength(int n){
 	if (mpd_model.playlistlength == n)
 		return;								// no change
 
-	/* Do we know the old size of the playlist ? */
-	if (mpd_model.playlistlength >= 0){
-		
+	/* Were songs added? */
+	if ( (mpd_model.playlistlength >= 0) && (n > mpd_model.playlistlength) )
 		mpd_model.pl_added = max(0, n - mpd_model.playlistlength);
-		model_changed(PL_LENGTH_CHANGED);
-	} else mpd_model.pl_added = 0;
+	else 
+		mpd_model.pl_added = 0;
 	
 	mpd_model.playlistlength = n;	
+	cache_set_limit(&tracklist, n);				// new limit for the cache
+	model_changed(PL_LENGTH_CHANGED);
 	
-	// We do not know in which way the playlist was changed (songs added/deleted)
-	// so to be safe we invalidate our whole cache
-	cache_empty(&tracklist, 0);				// cache no longer valid
-	tracklist_range_set(0, CACHE_MAX);	
+	
+	//	tracklist_range_set(0, CACHE_MAX);	
 	/* If the playlist is empty, there can be no current song.*/
 	if (n == 0)
 		mpd_set_pos(NO_SONG);
 
 	/* NOTE We do NOT set TRACKLIST_CHANGED flag here, because only our information about the
 		total number of tracks has changed, but not the tracks itself.
-		The tracks itself can currently only be changed after a LOAD or CLEAR command.
+		The tracks itself can currently only be changed after a LOAD, CLEAR or FINDADD command.
 	*/
 };
 
@@ -470,8 +464,9 @@ mpd_load_ok(struct MODEL *a){
 	user_model.cur_playlist = -1;			// wish fulfilled
 	user_model.playlistlength = -1;	
 
+	set_playlistlength(0);					// old playlist was cleared
 	model_changed(TRACKLIST_CHANGED);
-	mpd_status_ok(a);	
+	mpd_status_ok(a);						// here we set the new real playlistlength
 	
 	// now we should know the playlistlength and we can begin to play
 	user_wants_song(0);						// user wants first song ... 
@@ -495,8 +490,8 @@ mpd_clear_ok(struct MODEL *a){
 	user_model.playlistlength = -1;	
 	user_model.cur_playlist = -1;			// wish fulfilled
 	set_playlistlength(0);	
-	cache_empty(&tracklist, 0);
-	tracklist_range_set(0, 0);
+//	cache_clear(&tracklist, 0);
+//	tracklist_range_set(0, 0);
 	model_changed(TRACKLIST_CHANGED);
 	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR command!
 	mpd_set_pos(SONG_UNKNOWN);			// the previous current song is no longer valid
@@ -529,30 +524,27 @@ user_wants_song(int pos){
 
 /* Given an index starting from 0, we return the corresponding playlist name entry.
 	If we have no info or the playlist does not exist we return "".
+	Does return a non-NULL string.
 */
 char *
-mpd_get_playlistname(int pos){
-	char *s;
-	s = cache_entry(&playlists, pos);
-	if (NULL == s) return "";
-	return s;	
+mpd_playlistname_info(int pos){
+	return cache_info(&playlists, pos);
 };
 
 /* 
 	The cache containing playlists info has to follow the information that we show on screen.
 	Here we tell the cache which positions we want to show,
 	namely all infos between start_pos and end_pos inclusive.
-
-	We return the start value that we really used.
 */
-int
+void
 playlists_range_set(int start_pos, int end_pos){
-	return cache_range_set(&playlists, start_pos, end_pos, mpd_model.num_playlists);
+	cache_range_set(&playlists, start_pos, end_pos);
 };
 
 void
 mpd_set_playlistcount(int n){
 	mpd_model.num_playlists = n;
+	model_changed(NUM_PL_CHANGED);
 };
 
 void
@@ -562,13 +554,12 @@ mpd_store_playlistname(char *name, int playlist_pos){
 };
 
 /* 
-	Returns pos of the last playlist known to MPD
+	Returns number playlists known to MPD
 	Is < 0 if the total number of playlists is unknown
-	or if no playlist at all.
 */
 int 
-mpd_playlists_last(){
-	return mpd_model.num_playlists - 1;
+mpd_get_num_pl(){
+	return mpd_model.num_playlists;
 };
 
 
@@ -596,13 +587,11 @@ user_wants_playlist(int idx){
 
 /* Given an index starting from 0, we return the corresponding resultlist name entry.
 	If we have no info or the result does not exist we return "".
+	Does return a non-NULL string
 */
 char *
-mpd_get_resultlistname(int pos){
-	char *s;
-	s = cache_entry(&resultlist, pos);
-	if (NULL == s) return "";
-	return s;
+mpd_result_info(int pos){
+	return cache_info(&resultlist, pos);
 };
 
 /* 
@@ -610,11 +599,12 @@ mpd_get_resultlistname(int pos){
 	Here we tell the cache which positions we want to show,
 	namely all infos between start_pos and end_pos inclusive.
 
-	We return the start value that we really used.
+	This routine is called by the scroll_list routines whenever the
+	range that the scroll_list shows is changed
 */
-int
+void
 resultlist_range_set(int start_pos, int end_pos){
-	return cache_range_set(&resultlist, start_pos, end_pos, mpd_model.num_results);
+	cache_range_set(&resultlist, start_pos, end_pos);
 };
 
 
@@ -646,7 +636,8 @@ mpd_result_ack(struct MODEL *a){
 void
 mpd_store_num_results(int n){
 	mpd_model.num_results = n;
-	cache_empty(&resultlist, 0);			// all result names in cache are unknown
+	cache_set_limit(&resultlist, n);	
+	cache_unknown(&resultlist, 0);			// all results in cache are unknown	
 	model_changed(RESULTS_CHANGED);
 	model_changed(RESULT_NAMES_CHANGED);
 };
@@ -716,6 +707,14 @@ mpd_set_time(int elapsed, int total){
 		model_changed(TIME_CHANGED);
 	mpd_model.time_elapsed = elapsed;
 	mpd_model.time_total = total;
+	
+	// There are songs with incorrect timing information.
+	// It can happen that elapsed time is greater than total time.
+	// This is clearly wrong.
+	// We temporarily adjust the total time and ask again in a few seconds
+	if (mpd_model.time_elapsed > mpd_model.time_total)
+		mpd_model.time_total = mpd_model.time_elapsed + 3;
+
 	/* Here we check if MPD is close to the specific time wanted by the user.
 		If it is closely within the real time, we set users wish to don't care,
 		else we leave it as it is (and later try to skip forward or backward)

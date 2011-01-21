@@ -91,9 +91,14 @@ typedef struct {
 	struct Window *wl;					/* Address of first window showing the scroll list */
 	int win_offs;						/* TODO ??? offset from win_txt ???*/
 	int num_windows;					/* number of windows (== lines) in the scroll list */
-	int first_info_idx;					/* index of first info shown on screen */
+	int first_shown_pos;				/* positional index of first info shown on screen */
 	int sel_win;						/* selected window */
-	char * (*info_text) (int info_idx);	;	/* pointer to function to get the text corresponding to an info index */
+	int	first_pos;						/* positional index of first available info in the model (currently always 0) */
+	int last_pos;						/* positional index of last available info in the model (absolute end of list) 
+											-1 if not known (unlimited)
+										*/
+	char * (*info_text) (int info_pos);	;	/* pointer to function to get the text corresponding to an info index */
+	void (*range_set) (int start, int end); 	/* pointer to function to tell model our first and last shown pos */
 } scroll_list;
 
 
@@ -106,20 +111,22 @@ void win_new_text(struct Window *win, char *s);
 void win_init(struct Window *win, uint8 row, uint8 col, uint8 height, uint8 width, uint8 border, char *txt);
 void win_draw_border(struct Window *win);
 void win_redraw(struct Window *win);
+
 void win_scroll(struct Window *win);
 void win_unscroll(struct Window *win);
 void win_scroll_init();
 void win_clear(struct Window *win, int clr_border);
 
-void select(scroll_list *sl, int sel);
-void select_win(struct Window *w );
-void unselect_win(struct Window *w );
-int last_info_idx(scroll_list *sl);
-int info_idx(scroll_list *sl, int win_idx);
-void sel_win_up(scroll_list *sl);
-void sel_win_down(scroll_list *sl);
 void scroll_list_changed(scroll_list *sl);
-void init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt_len, int nw, char * (*info_text) (), int start_row );
+void init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt_len, int nw, 
+		 char * (*info_text) (), int start_row, void (*range_set) ()  );
+void scroll_list_up(scroll_list *sl);
+void scroll_list_down(scroll_list *sl);
+void scroll_list_fwd(scroll_list *sl);
+void scroll_list_back(scroll_list *sl);
+void scroll_list_start(scroll_list *sl, int pos);
+int scroll_list_selected(scroll_list *sl);
+void scroll_list_total_len(scroll_list *sl, int length);
 
 void win_cursor_set(struct Window *pwin, int size);
 void win_cursor_input(int new_key);

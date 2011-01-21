@@ -287,10 +287,10 @@ int rand(){
 
 /* ==================================== String cache functions ========================================= */
 
-/* Given a string pos, we return the index into str[] corresponding to this number.
+/* Given a string pos, we return the index of the cache entry corresponding to this number.
 	If the number is outside of our list, we return -1.
 */
-int
+static int
 cache_index(STR_CACHE *pc, int pos){
 	int idx;
 
@@ -304,19 +304,72 @@ cache_index(STR_CACHE *pc, int pos){
 };
 
 /* We are given a string pos. We return the corresponding string 
-	or NULL if the pos is outside our cache.
+	or NULL if the pos is outside of our cache.
 	NULL might also mean we do not have information about that string.
 */
-char *
-cache_entry(STR_CACHE *pc, int pos){
+static char *
+cache_string(STR_CACHE *pc, int pos){
 	int i = cache_index(pc, pos);
 	if (i < 0) return NULL;
-	return pc->str[i];
+	return pc->entry[i].cache_str;
 };
+
+static int
+cache_pos(STR_CACHE *pc, int pos){
+	int i = cache_index(pc, pos);
+	if (i < 0) return NOT_KNOWN;
+	return pc->entry[i].pos;
+};
+
+char *
+cache_info(STR_CACHE *pc, int pos){
+	int p = cache_pos(pc, pos);
+	
+	if (p == NOT_KNOWN)
+		return "...";
+	
+	if (p == NOT_AVAIL)
+		return "";
+	return cache_string(pc, pos);	
+};
+
+	
+static void inline 
+entry_unknown(STR_CACHE *pc, int idx){
+	pc->entry[idx].pos = NOT_KNOWN;
+	pc->entry[idx].cache_str[0] = '\0';	
+};
+
+static void inline 
+entry_not_avail(STR_CACHE *pc, int idx){
+	pc->entry[idx].pos = NOT_AVAIL;
+	pc->entry[idx].cache_str[0] = '\0';
+};
+
+static void inline
+pos_unknown(STR_CACHE *pc, int pos){
+	int idx;
+	idx = cache_index(pc, pos);	
+	if (idx >= 0){
+		entry_unknown(pc, idx);
+	}
+}
+
+static void inline
+pos_not_avail (STR_CACHE *pc, int pos){
+	int idx;
+	idx = cache_index(pc, pos);	
+	if (idx >= 0){
+		entry_not_avail(pc, idx);
+	}
+}
+	
 
 /* 
 	Given a string, store this info in our cache (if it fits) 
-	If the string is NULL, a NULL is stored else the string is copied length-limited by CACHE_ENTRY_LEN.
+	If the string is NULL, pos is set to NOT_KNOWN and "" is stored 
+	else the string is copied length-limited by CACHE_ENTRY_LEN
+	and pos is set to pos
 */
 void
 cache_store(STR_CACHE *pc, int pos, char *content){
@@ -325,54 +378,78 @@ cache_store(STR_CACHE *pc, int pos, char *content){
 	idx = cache_index(pc, pos);
 	if (idx < 0)
 		return;
-	if (NULL == content)
-		pc->str[idx] = NULL;
-	else {
-		strlcpy(pc->cache_entry[idx], content, CACHE_ENTRY_SIZE); 
-		pc->str[idx] = pc->cache_entry[idx];
+	if (NULL == content){
+		entry_unknown(pc,idx);
+	} else {
+		strlcpy(pc->entry[idx].cache_str, content, CACHE_ENTRY_SIZE); 
+		pc->entry[idx].pos = pos;
 	};	
 };
 
-/* All the cache entries starting at pos are made empty (unknown). */
+/* All the cache entries starting at pos are made unknown. */
 void 
-cache_empty(STR_CACHE *pc, int pos){
-	int i;
+cache_unknown(STR_CACHE *pc, int pos){
+	int p;
 	
 	if (pos > last_pos(pc)) 
 		return;				/* not in our cache */
 	
 	pos = max(pc->first_pos, pos);		/* Need not start before begin of cache */
 
-	for (i=pos; i <= last_pos(pc); i++)
-		cache_store(pc, i, NULL);
+	for (p=pos; p <= last_pos(pc); p++)
+		pos_unknown(pc, p);
 };
+
+#if 0
+/* All the cache entries starting at pos are set to NOT_AVAIL. */
+void 
+cache_clear(STR_CACHE *pc, int pos){
+	int p;
+	
+	if (pos > last_pos(pc)) 
+		return;				/* not in our cache */
+	
+	pos = max(pc->first_pos, pos);		/* Need not start before begin of cache */
+
+	for (p=pos; p <= last_pos(pc); p++)
+		pos_not_avail(pc, p);
+};
+#endif
 
 void
 cache_init(STR_CACHE *pc){
 	pc->first_idx = 0;
 	pc->first_pos = 0;
-	cache_empty(pc, 0);
+	pc->pos_lim = -1;
+	cache_unknown(pc, 0);
 };
 	
 /* We are shifting the start of our tracklist up by 1 position.
 	I.e. if the cache started at pos 17, it now starts at pos 18
-	We are not changing most of the information in str[], only the start (and end) of the array.
-	We are setting the information of the previous first track to NULL, because it is no longer valid.
-		(That information now belongs to the new last track)
+	We are not changing most of the information in str[], only the start and end of the array.
+
+	The last information is set to UNKNOWN or NOT_AVAIL depending on pos_lim
 */
 static void
 cache_inc_first(STR_CACHE *pc){
-	pc->first_pos++;
-	pc->str[pc->first_idx] = NULL;
+	pc->first_pos++;			// sets last_pos() also
+
+	// the cache is a ring buffer, so the old first element will be the new last element
+	if ( (pc->pos_lim >= 0) && (last_pos(pc) >= pc->pos_lim) )
+		entry_not_avail(pc,pc->first_idx);
+	else
+		entry_unknown(pc,pc->first_idx);
+	
 	pc->first_idx++;
 	if (pc->first_idx > CACHE_MAX)
 		pc->first_idx = 0;
 };
 
-/* We are shifting the start of our tracklist down by 1 pos 
+/* We are shifting the start of our cache down by 1 pos 
 	I.e. if the cache started at pos 17, it now starts at pos 16
-	We are not changing most of the information in tracklist[], only the start (and end) of the array.
-	We are setting the information of the new first track no. to NULL, because we do not know it.
+	We are not changing most of the information in cache, only the start (and end) of the array.
+	We are setting the information of the new first info to NOT_KNOWN,, because we do not know it,
+	except when it is above the absolute information limit, then it is NOT_AVAIL
 */
 static void
 cache_dec_first(STR_CACHE *pc){
@@ -380,31 +457,35 @@ cache_dec_first(STR_CACHE *pc){
 	pc->first_idx--;
 	if (pc->first_idx < 0)
 		pc->first_idx = CACHE_MAX;
-	pc->str[pc->first_idx] = NULL;
+	
+	if ( (pc->pos_lim >= 0)	&& (pc->first_pos >= pc->pos_lim) )			// valid limit known and start is above it
+		entry_not_avail(pc,pc->first_idx);
+	else 
+		entry_unknown(pc,pc->first_idx);
 };
 
-void
+static void
 cache_shift_up(STR_CACHE *pc, int diff){
 	for (;diff > 0; diff --)
 		cache_inc_first(pc);
 };
 
-void
+static void
 cache_shift_down(STR_CACHE *pc, int diff){
 	for (;diff > 0; diff --)
 		cache_dec_first(pc);
 };
 
-/* Returns the first empty pos in our cache 
-	or -1 if every pos has a non-NULL entry.
+/* Returns the first unknown pos in our cache 
+	or -1 if every pos is either known or not available.
 */
 int
-cache_find_empty(STR_CACHE *pc){
+cache_find_unknown(STR_CACHE *pc){
 	int pos;
 	for (pos=pc->first_pos; pos <= last_pos(pc); pos++)
-		if (cache_entry(pc, pos) == NULL)
+		if (cache_pos(pc, pos) == NOT_KNOWN)
 			return pos;
-	return -1;	
+	return -1;
 }
 
 
@@ -427,23 +508,85 @@ cache_find_empty(STR_CACHE *pc){
 	i.e. which positions actually exist and may be shown on screen.
 	
 */
-int
-cache_range_set(STR_CACHE *pc, int start_pos, int end_pos, int total_infos){
+void
+cache_range_set(STR_CACHE *pc, int start_pos, int end_pos){
+	int p, margin, left_margin;
 	
-	start_pos = max(0, start_pos);
+	// ideally we want to keep the needed info in the middle of our cache,
+	// so that the user can scroll back and forth relatively fast without
+	// reloading a lot of cache values.
+	// We center the info in the cache like a text on a page
 	
-	if (total_infos >= 0){
-		end_pos = min (end_pos, total_infos - 1);
-		start_pos = min (start_pos, total_infos - 1);
+	// Check if the needed info fits completely within our cache
+	if ( end_pos - start_pos + 1 <= CACHE_LIM ) {
+		margin = CACHE_LIM - (end_pos - start_pos + 1);				// size of cache - size of needed info
+		left_margin = margin / 2;
+		start_pos = start_pos - left_margin;
 	};
 		
+	// start < 0 does not make sense
+	start_pos = max(0, start_pos);
+	
+	// lets say the end_pos is much larger than our cache_size.
+	// we assume that the starting values are more important than the later ones
+	// because these will be shown first.
+	// so we will truncate the end if too large
+	// it would be too complicated to keep a dynamic length of the cache
+	// so we allocate the complete cache space even if the real end is lower than that
+	end_pos = start_pos + CACHE_MAX;
+		
+	// Maybe some of the values in our cache are still good
+	// for ex. the user just shifted the range by 1
+	if (pc->first_pos > start_pos)
+		cache_shift_down(pc, pc->first_pos - start_pos);
+	// pc->first_pos is now <= start_pos
+	
+	if (pc->first_pos < start_pos)
+		cache_shift_up(pc, start_pos - pc->first_pos);
+	// pc->first_pos is now == start_pos
+	
+
+	// Now maybe some infos are not available, i.e. there pos is bigger than the actual pos limit
+	
+	// is the limit already known ?
+	if (pc->pos_lim >= 0){				// 0 is valid and means list of information is empty
+		// all infos in our cache >= pos_lim are NOT_AVAIL
+		for (p = max(pc->first_pos, pc->pos_lim); p < last_pos(pc); p++)
+			pos_not_avail(pc,p);
+	};
+	
+#if 0	
+	if (pc->pos_lim >= 0){								// valid limit information
+		end_pos = min (end_pos, pc->pos_lim - 1);
+		start_pos = min (start_pos, pc->pos_lim - 1);
+	};
+
 	if (end_pos > last_pos(pc))				// user wants more information than we currently have
 		cache_shift_up(pc, end_pos - last_pos(pc));
 	else
 		if (start_pos < pc->first_pos)		// user wants information from earlier tracks than we have
 			cache_shift_down(pc, pc->first_pos - start_pos);
+#endif			
+};
+
+void
+cache_set_limit(STR_CACHE *pc, int limit){
+	int p;
 	
-	return start_pos;
+	/* Was the current limit expanded ?
+		Then all subsequent entries are NOT_KNOWN
+	*/
+	if (limit > pc->pos_lim){
+		for (p = pc->pos_lim; p < min(last_pos(pc), limit); p++)
+			pos_unknown(pc, p);	
+			
+	// or did the limit shrink? then the entries are NOT_AVAIL
+	} else if (limit < pc->pos_lim){
+		for (p = pc->pos_lim; p <= max(pc->first_pos, limit); p++)
+			pos_not_avail(pc, p);
+	};
+	pc->pos_lim = limit;
+
 };
 
 /* ==================================== End of string cache functions ========================================= */

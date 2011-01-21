@@ -104,6 +104,32 @@ view_tracklist_changed(){
 	scroll_list_changed(&track_list);
 };
 
+void
+view_pl_length_changed(int len, int added){
+	char str[100];
+	char num_string[12];
+	
+	strlcpy(str, "",100);
+	
+	if (added != 0){
+		strlcat(str, get_digits(added, num_string, 0), 100);
+		strlcat(str, " songs added.\n\n", 100);	
+	}
+	if (len >= 0){
+		if (0 == len)
+			strlcat(str, " Playlist is\n now empty.\n", 100); 
+		else {
+			strlcat(str, get_digits(len, num_string, 0), 100);
+			strlcat(str, " songs\n in playlist\n", 100);
+		};
+	};
+	if ( (added != 0) || (len >= 0))
+		popup(str, 40);
+	
+	scroll_list_total_len(&track_list, len);
+
+}
+
 static void
 screen_enter(){
 	int cur_song;
@@ -113,7 +139,9 @@ screen_enter(){
 		because we want to adjust our track list range screen with the current song in the selected window.
 	*/
 	cur_song = max (0, mpd_get_pos());
-	
+
+// utterly complicated
+#if 0	
 	/* We like to start our list with the last 2 songs before the current one. */
 	if (cur_song >= 2){
 		track_list.first_info_idx = cur_song - 2;
@@ -132,6 +160,7 @@ screen_enter(){
 			start_sel = max(0, cur_song - track_list.first_info_idx);
 		};
 	};
+
 	
 	/* We always want to startup showing the current song in the selected window */
 	select(&track_list, start_sel);
@@ -141,6 +170,10 @@ screen_enter(){
 	
 	/* Redraw the scroll list */
 	scroll_list_changed(&track_list);
+#endif	
+	
+	/* We always want to start with the first playlist name, because the user might have got lost previously. */
+	scroll_list_start(&track_list, 0);	
 };
 
 
@@ -174,7 +207,7 @@ tracklist_screen_init(Screen *this_screen){
 	win[0].flags |= WINFLG_CENTER;
 	cur_start_row += WL_SMALL_HEIGHT;
 	
-	init_scroll_list(&track_list, &(win[1]), win_txt[1], WIN_TXT_SIZE, TL_SIZE, &track_info, cur_start_row);
+	init_scroll_list(&track_list, &(win[1]), win_txt[1], WIN_TXT_SIZE, TL_SIZE, &track_info, cur_start_row, &tracklist_range_set);
 	
 	win_new_text(&win[0], "Current playlist");
 	
@@ -219,44 +252,26 @@ keypress(Screen *track_screen, int cur_key, UserReq *req){
 
 		case KEY_OK:
 			// NOTE info-idx could return -1 if invalid, user_wants_song can handle that 
-			user_wants_song ( info_idx(&track_list, track_list.sel_win) );
+			user_wants_song ( scroll_list_selected(&track_list) );
 			show_screen(PLAYING_SCREEN);
 			break;
 		
 		case KEY_Pplus:	
 		case KEY_Up:
-			if (track_list.sel_win > 0)
-				sel_win_up(&track_list);
-			else {					// We want to scroll past the upper end of the window list
-				if ( info_idx(&track_list, 0)  > 0){		// We have information to show
-					track_list.first_info_idx = tracklist_range_set(track_list.first_info_idx-1, last_info_idx(&track_list)-1 );
-					view_tracklist_changed();
-				};
-			};	
+			scroll_list_up(&track_list);
 			break;
 			
 		case KEY_Pminus:	
 		case KEY_Down:
-			if (track_list.sel_win < (track_list.num_windows - 1)) {
-				// We need only move our selected window one position down
-				// But we check if we have already reached the last info pos
-				if ( (mpd_tracklist_last() == -1) || (info_idx(&track_list, track_list.sel_win) < mpd_tracklist_last()) )
-						sel_win_down(&track_list);
-
-			} else {					// We want to scroll past the lower end of the window list
-				track_list.first_info_idx = tracklist_range_set(track_list.first_info_idx+1, last_info_idx(&track_list)+1 );
-				view_tracklist_changed();
-			};
+			scroll_list_down(&track_list);
 			break;
 			
 		case KEY_Left:
-			track_list.first_info_idx = tracklist_range_set(track_list.first_info_idx-TL_SIZE, last_info_idx(&track_list)-TL_SIZE );
-			view_tracklist_changed();
+			scroll_list_back(&track_list);
 			break;
 					
 		case KEY_Right:
-			track_list.first_info_idx = tracklist_range_set(track_list.first_info_idx+TL_SIZE, last_info_idx(&track_list)+TL_SIZE );
-			view_tracklist_changed();
+			scroll_list_fwd(&track_list);
 			break;
 			
 		// This clears the current tracklist

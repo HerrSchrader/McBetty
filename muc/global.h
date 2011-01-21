@@ -100,7 +100,7 @@ typedef struct format_values {
 #define PLAYLIST_EMPTY		(1<<1)
 #define MPD_DEAD			(1<<2)
 
-#define CACHE_LIM	25
+#define CACHE_LIM	33
 #define CACHE_MAX	(CACHE_LIM -1)
 
 #define CACHE_ENTRY_SIZE 64
@@ -108,28 +108,36 @@ typedef struct format_values {
 #define CACHE_ENTRY_LEN (CACHE_ENTRY_SIZE - 1)
 
 /* 
-	This structure is an indexed cache of string values.
+	This structure is an indexed cache of consecutive string values.
 	It is a ring buffer.
-	Each entry either points to a string 
-		or is NULL (meaning unknown or out of bound)
 
 	We associate a numeric positional index with each string (called pos) 
 	pos starts at 0 (for the first string we can possibly store)
 	and each following string has its pos incremented by 1 
+	pos == -1 means information is not yet known
+	pos == -2 means information is not available (non-existant)
 	We always store only a small portion of all strings.
 	The first string that we currently have in our cache is given by the variable first_pos.
 	The variable first_idx gives the index into our array that corresponds to first_pos.
 	The constant CACHE_LIM gives the maximum total number of entries in our cache.
 
-	The real strings are stored in cache_entry[][]. Normally str[i] == cache_entry[i], but if
-	the entry is unknown, str[i] == NULL.
+	The real strings are stored in cache_entry[i].cache_str. 
 
 */
+
+#define NOT_KNOWN	-1
+#define NOT_AVAIL	-2
+
+struct cache_entry {
+	int pos;		// positional id of this entry, or NOT_KNOWN or NOT_AVAIL
+	char cache_str[CACHE_ENTRY_SIZE];	// the cached string
+};
+
 typedef struct str_cache {
-	char *str[CACHE_LIM]; 
-	char cache_entry[CACHE_LIM][CACHE_ENTRY_LEN + 1];
-	int first_pos;
-	int first_idx;
+	struct cache_entry entry[CACHE_LIM];
+	int first_pos;	// positional id of first cached information
+	int first_idx;	// index of cache-entry corresponding to first_pos.
+	int pos_lim;	// positional index of the last available info + 1 (-1 means unknown) 
 } STR_CACHE;
 
 /* 
@@ -157,13 +165,13 @@ void sec2hms(char *s, int sec);
 void rand_seed(int s);
 int rand(void);
 
-char *cache_entry(STR_CACHE *pc, int pos);
+char *cache_info(STR_CACHE *pc, int pos);
 void cache_init(STR_CACHE *pc);
-void cache_empty(STR_CACHE *pc, int pos);
+void cache_unknown(STR_CACHE *pc, int pos);
+void cache_clear(STR_CACHE *pc, int pos);
 void cache_store(STR_CACHE *pc, int pos, char *content);
-int cache_find_empty(STR_CACHE *pc);
-void cache_shift_up(STR_CACHE *pc, int diff);
-void cache_shift_down(STR_CACHE *pc, int diff);
-int cache_range_set(STR_CACHE *pc, int start_pos, int end_pos, int total_infos);
+int cache_find_unknown(STR_CACHE *pc);
+void cache_range_set(STR_CACHE *pc, int start_pos, int end_pos);
+void cache_set_limit(STR_CACHE *pc, int limit);
 
 #endif
