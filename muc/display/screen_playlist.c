@@ -88,7 +88,6 @@ playlist_screen_init(Screen *this_screen){
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
 	this_screen->keypress = keypress;
-	this_screen->keypress_popup = keypress_popup;
 
 	cur_start_row = WL_START_ROW;	
 	
@@ -118,7 +117,6 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 			popup_end();
 			return NO_KEY;
 			
-		case KEY_A:
 		case KEY_B:
 		case KEY_C:
 		case KEY_D:
@@ -134,10 +132,63 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 
 
 static int
+keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
+	switch (cur_key) {
+		
+		case KEY_Exit:
+		case KEY_OK:
+		case KEY_Info:
+			popup_end();
+			return NO_KEY;
+			
+		default:
+			popup_end();
+			break;						// give this key to normal screen handler
+	};
+	return cur_key;
+};
+
+
+static int
 keypress(Screen *pl_screen, int cur_key, UserReq *req){
 		
 	switch (cur_key) {
 
+		case KEY_Betty:
+			popup("A\n\n"
+				"B  Current\n   playlist\n\n"
+				"C  Search\n\n"
+				"D  Now playing\n\n"
+				"i  Info",
+					0, keypress_popup);
+			break;
+			
+		case KEY_Exit:	
+			show_screen(PLAYING_SCREEN);
+			break;
+			
+		case KEY_B:	
+			show_screen(TRACKLIST_SCREEN);
+			break;
+			
+		case KEY_C:	
+			show_screen(SEARCH_SCREEN);
+			break;
+
+		case KEY_D:	
+			show_screen(PLAYING_SCREEN);
+			break;
+									
+		case KEY_Info:
+			popup("\xB1 = Page Back\n"
+				"\xB0 = Page FWD\n"
+				"\xB2 = Up\n"
+				"\xB3 = Down\n"
+				"OK = Load\n"
+				"      playlist", 
+				  0, keypress_info_popup);
+			break;
+															
 		case KEY_OK:
 			user_wants_playlist(scroll_list_selected(&playlist_list) );
 			show_screen(PLAYING_SCREEN);
@@ -161,27 +212,7 @@ keypress(Screen *pl_screen, int cur_key, UserReq *req){
 			scroll_list_fwd(&playlist_list);
 			break;
 			
-		case KEY_Betty:
-			popup("A  Current\n   Song\n\nB  Current\n   playlist\n\nC  All\n   playlists\n\nD  Search\n", 0);
-			break;
-			
-		case KEY_A:	
-			show_screen(PLAYING_SCREEN);
-			break;
-			
-		case KEY_B:	
-			show_screen(TRACKLIST_SCREEN);
-			break;
-			
-		case KEY_C:	
-			show_screen(PLAYLIST_SCREEN);
-			break;
 
-		case KEY_D:	
-			show_screen(SEARCH_SCREEN);
-			break;
-									
-										
 		default:
 			return cur_key;
 	};

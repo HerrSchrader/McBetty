@@ -134,7 +134,6 @@ search_screen_init(Screen *this_screen) {
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
 	this_screen->keypress = keypress;
-	this_screen->keypress_popup = keypress_popup;
 	
 	win_init(&title_win, cur_start_row, 0, WL_SMALL_HEIGHT, 128, 1, win_txt[0]);
 	title_win.font = SMALLFONT;	
@@ -195,6 +194,7 @@ view_resultnames_changed(){
 static int
 keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
+		case KEY_Betty:
 		case KEY_Exit:
 			popup_end(this_screen);
 			return NO_KEY;
@@ -202,6 +202,7 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 		case KEY_A:
 		case KEY_B:
 		case KEY_C:
+		case KEY_D:
 			popup_end(this_screen);
 			break;						// give this key to normal screen handler
 			
@@ -213,29 +214,67 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 };
 
 
+static int
+keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
+	switch (cur_key) {
+		
+		case KEY_Exit:
+		case KEY_OK:
+		case KEY_Info:
+			popup_end();
+			return NO_KEY;
+			
+		default:
+			popup_end();
+			break;						// give this key to normal screen handler
+	};
+	return cur_key;
+};
+
+
 static int 
 keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 		
+		case KEY_Betty:			
 		case KEY_OK:
-			popup("A Append to\n   playlist\n\nB Begin new\n   playlist\n\nC Clear search\n   mask\n\nD\n", 0);
+			popup("A Append to\n   playlist\n\nB Begin new\n   playlist\n\nC Clear search\n\nD Now playing\n\ni Info", 0, keypress_popup);
 			break;
+					
+		case KEY_Exit:	
+			show_screen(TRACKLIST_SCREEN);
+			break;
+			
 			
 		case KEY_A:
 			user_wants_add(scroll_list_selected(&result_list) );
-//			switch_screen(SEARCH_SCREEN, TRACKLIST_SCREEN);
 			break;
 			
 		case KEY_B:
 			user_tracklist_clr();	
 			user_wants_add(scroll_list_selected(&result_list) );
-//			switch_screen(SEARCH_SCREEN, TRACKLIST_SCREEN);
 			break;	
 								
 		case KEY_C:	
 			win_cursor_clr();
 			break;
 			
+		case KEY_D:	
+			show_screen(PLAYING_SCREEN);
+			break;
+			
+		case KEY_Info:
+			popup("\xB1 = Left\n"
+				"\xB0 = Right\n"
+				"\xB2 = Up\n"
+				"\xB3 = Down\n"
+				"0 .. 9 = Input\n"
+				"-/-- = delete\n"		
+				"OK = Load\n"
+				"      results", 
+				  0, keypress_info_popup);
+			break;
+								
 		case KEY_Pplus:	
 		case KEY_Up:
 			scroll_list_up(&result_list);

@@ -84,36 +84,6 @@ static STR_CACHE resultlist;
 
 
 
-// Maximum number of seconds that we wait for MPD to send anything to us before raising an error
-// Currently we rely on the fact that we send a "status" command regularily,
-// so we should get our regular responses from MPD
-#define MAX_MPD_TIMEOUT 34
-// status command interval, must be smaller than MAX_MPD_TIMEOUT
-#define STATUS_SYNC_TIME 25
-
-/* TODO
-	If we let the SCART software and mpdtool each send regular radio packets to us, we can detect much better
-	what kind of communication problem we have.
-	But that does not fit the current communication protocol. Every communication is initiated by Betty.
-	Possible solution:
-	Betty sends status commands in regular intervals (already implemented).
-	If they go through to MPD and we get an answer back, everything is ok.
-	If MPD is not responding, mpdtool does detect that.
-	In this case mpdtool sends an "ACK" answer with an appropriate error number.
-	If mpdtool does not respond anymore, the scart adapter has to send something back.
-	(Question: Can the scart adapter even recognize a dead mpdtool ?)
-	And if we get nothing back after some time, either our own radio link is dead or
-	the scart adapter is hung up.
-*/
-
-void
-model_check_mpd_dead(){
-	if ((system_time() - mpd_model.last_response) > MAX_MPD_TIMEOUT * TICKS_PER_SEC)
-		set_error(MPD_DEAD);
-	else
-		clr_error(MPD_DEAD);
-}
-
 
 /* Returns TRUE iff there are one or more variables in mpd_model that are unknown and which we can get
 	be issuing a status command.
@@ -192,15 +162,15 @@ model_needs_action(UserReq *req){
 
 				/* Only issue a play command if the playlist is not empty 
 					We might just have issued a CLEAR command, which stopped MPD, but user wants playing.
-					Issue PLAY command after we have loaded the new playlist and determined it is not empty.
+					Inform user about empty playlist.
 				*/
 				if (mpd_model.playlistlength > 0){
-					clr_error(PLAYLIST_EMPTY);
 					return PLAY_CMD;
 				} else
-					if (mpd_model.playlistlength == 0)
-						set_error(PLAYLIST_EMPTY);
-				
+					if (mpd_model.playlistlength == 0){
+						model_changed(PLAYLIST_EMPTY);
+						user_model.state = -1;
+					};
 				break;
 				
 			case PAUSE:
@@ -506,10 +476,8 @@ void
 user_wants_song(int pos){
 	if (pos >= 0) {			// a specific song, we make sure that the wish makes sense.
 		if ((mpd_model.playlistlength >= 0) && (pos > mpd_model.playlistlength - 1)){
-			set_error(END_OF_PLAYLIST);
 			return;
 		} else {
-			clr_error(END_OF_PLAYLIST);
 			user_model.pos = pos;
 			return;
 		}
@@ -1189,6 +1157,31 @@ void
 model_set_last_response(unsigned int t){
 	mpd_model.last_response = t;
 };
+
+/* TODO
+	If we let the SCART software and mpdtool each send regular radio packets to us, we can detect much better
+	what kind of communication problem we have.
+	But that does not fit the current communication protocol. Every communication is initiated by Betty.
+	Possible solution:
+	Betty sends status commands in regular intervals (already implemented).
+	If they go through to MPD and we get an answer back, everything is ok.
+	If MPD is not responding, mpdtool does detect that.
+	In this case mpdtool sends an "ACK" answer with an appropriate error number.
+	If mpdtool does not respond anymore, the scart adapter has to send something back.
+	(Question: Can the scart adapter even recognize a dead mpdtool ?)
+	And if we get nothing back after some time, either our own radio link is dead or
+	the scart adapter is hung up.
+*/
+
+void
+model_check_mpd_dead(){
+	if ((system_time() - mpd_model.last_response) > MAX_MPD_TIMEOUT * TICKS_PER_SEC){
+		model_changed(MPD_DEAD);
+		// will time-out again after 10 seconds
+		mpd_model.last_response = system_time() - (MAX_MPD_TIMEOUT - MPD_RETRY_TIMEOUT) * TICKS_PER_SEC;
+	};
+}
+
 
 /* -------------------------------------- Status -------------------------------------------------- */
 

@@ -104,6 +104,7 @@ view_tracklist_changed(){
 	scroll_list_changed(&track_list);
 };
 
+
 void
 view_pl_length_changed(int len, int added){
 	char str[100];
@@ -124,7 +125,7 @@ view_pl_length_changed(int len, int added){
 		};
 	};
 	if ( (added != 0) || (len >= 0))
-		popup(str, 40);
+		view_message(str, 4 * TICKS_PER_SEC);
 	
 	scroll_list_total_len(&track_list, len);
 
@@ -194,7 +195,6 @@ tracklist_screen_init(Screen *this_screen){
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
 	this_screen->keypress = keypress;
-	this_screen->keypress_popup = keypress_popup;
 	
 	cur_start_row = WL_START_ROW;	
 	
@@ -223,7 +223,6 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 			return NO_KEY;
 			
 		case KEY_A:
-		case KEY_B:
 		case KEY_C:
 		case KEY_D:
 			popup_end();
@@ -236,7 +235,22 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 	return cur_key;
 };
 
-
+static int
+keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
+	switch (cur_key) {
+		
+		case KEY_Exit:
+		case KEY_OK:
+		case KEY_Info:
+			popup_end();
+			return NO_KEY;
+			
+		default:
+			popup_end();
+			break;						// give this key to normal screen handler
+	};
+	return cur_key;
+};
 
 /* Handle user input (key presses) 
 	We have 4 possible responses:
@@ -250,6 +264,36 @@ keypress(Screen *track_screen, int cur_key, UserReq *req){
 		
 	switch (cur_key) {
 
+		case KEY_Betty:
+			popup("A  All\n   playlists\n\nB\n\nC  Search\n\nD  Now playing\n\ni  Info", 0, keypress_popup);
+			break;
+			
+		case KEY_Exit:	
+			show_screen(PLAYLIST_SCREEN);
+			break;
+			
+		case KEY_A:	
+			show_screen(PLAYLIST_SCREEN);
+			break;
+			
+		case KEY_C:	
+			show_screen(SEARCH_SCREEN);
+			break;
+
+		case KEY_D:	
+			show_screen(PLAYING_SCREEN);
+			break;
+			
+		case KEY_Info:
+			popup("OK = Play Song\n"
+				"\xB1 = Page Back\n"
+				"\xB0 = Page FWD\n"
+				"\xB2 = Down\n"
+				"\xB3 = Up\n"				
+				"\xAD = Clear\n     playlist", 
+				  0, keypress_info_popup);
+			break;
+																				
 		case KEY_OK:
 			// NOTE info-idx could return -1 if invalid, user_wants_song can handle that 
 			user_wants_song ( scroll_list_selected(&track_list) );
@@ -279,27 +323,7 @@ keypress(Screen *track_screen, int cur_key, UserReq *req){
 			user_tracklist_clr();	
 			break;
 			
-		case KEY_Betty:
-			popup("A  Current\n   Song\n\nB  Current\n   playlist\n\nC  All\n   playlists\n\nD  Search\n", 0);
-			break;
-			
-		case KEY_A:	
-			show_screen(PLAYING_SCREEN);
-			break;
-			
-		case KEY_B:	
-			show_screen(TRACKLIST_SCREEN);
-			break;
-			
-		case KEY_C:	
-			show_screen(PLAYLIST_SCREEN);
-			break;
 
-		case KEY_D:	
-			show_screen(SEARCH_SCREEN);
-			break;
-									
-				
 		default:
 			return cur_key;
 	};

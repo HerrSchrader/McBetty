@@ -99,7 +99,6 @@ playing_screen_init(Screen *this_screen) {
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
 	this_screen->keypress = keypress;
-	this_screen->keypress_popup = keypress_popup;
 	
 	win_init(&title_win, 0, 0, 50, 128, 1, win_txt[0]);
 	title_win.font = MEDIUMFONT;	
@@ -298,7 +297,7 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 		case KEY_A:
 		case KEY_B:
 		case KEY_C:
-		case KEY_D:
+		case KEY_Info:
 			popup_end();
 			break;						// give this key to normal screen handler
 			
@@ -308,19 +307,81 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 	return cur_key;
 };
 
+static int
+keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
+	switch (cur_key) {
+		
+		case KEY_Exit:
+		case KEY_OK:
+		case KEY_Info:
+			popup_end();
+			return NO_KEY;
+			
+		default:
+			popup_end();
+			break;						// give this key to normal screen handler
+	};
+	return cur_key;
+};
 
+//TODO think about general menu structure
+/*
+	Betty always opens a menu
+	Exit exits a popup, it also cycles through 3 main screens
+	OK may open a popup if there are more than 1 options what to do
+	i button can open a color menu or an info popup
+	A = add to current playlist (search and playlists screen)
+	B = begin new playlist (search and playlists screen)
+	C = clear search term (search only)
+	D = goto search screen
+*/
+//TODO add info to title screen track 4 of 17, playlist 1 of 99
+//TODO deactivate the stupid info text
 static int 
 keypress(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
+			
+		case KEY_Betty:
+		case KEY_Menu:
+			popup(
+				"A  All\n   playlists\n\n"
+				"B  Current\n   playlist\n\n"
+				"C  Search\n\n"
+				"D \n\n"
+				"i  Info",
+					0, keypress_popup);
+			break;
+			
+		case KEY_Exit:	
+			show_screen(TRACKLIST_SCREEN);
+			break;
+			
+		case KEY_A:	
+			show_screen(PLAYLIST_SCREEN);
+			break;
+			
+		case KEY_B:	
+			show_screen(TRACKLIST_SCREEN);
+			break;
+			
+		case KEY_C:	
+			show_screen(SEARCH_SCREEN);
+			break;
 
-		case KEY_Yellow:
-			user_toggle_pause();
+		case KEY_Info:
+			popup("Red = Stop\n"
+				"Green = Play\n"
+				"Yellow = Pause\n"
+				"PiP = Random\n"
+				"A/B = Repeat\n"
+				"16:9 = Single\n"
+				"\xB1 = Seek Back\n"
+				"\xB0 = Seek FWD\n"
+				"\xB2 = Next Song\n"
+				"\xB3 = Prev. Song", 
+				  0, keypress_info_popup);
 			break;
-			
-		case KEY_Green:
-			user_wants_state(PLAY);
-			break;
-			
+												
 		case KEY_Left:
 			user_wants_time_add(-10);	
 			break;
@@ -329,10 +390,30 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			user_wants_time_add(+10);	
 			break;
 			
+		case KEY_Up:
+		case KEY_Pminus:
+			user_wants_song(PREV_SONG);	
+			break;
+					
+		case KEY_Down:
+		case KEY_Pplus:
+			user_wants_song(NEXT_SONG);
+			break;
+			
+
 		case KEY_Red:
 			user_wants_state(STOP);
 			break;
+			
+		case KEY_Green:
+			user_wants_state(PLAY);
+			break;
+						
+		case KEY_Yellow:
+			user_toggle_pause();
+			break;
 
+			
 		case KEY_PiP:
 			user_toggle_random();	
 			break;
@@ -345,43 +426,6 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			user_toggle_single();	
 			break;
 
-		case KEY_Down:
-		case KEY_Pplus:
-			user_wants_song(NEXT_SONG);
-			break;
-			
-			/* Inform the controller that the user wants the previous song */
-		case KEY_Up:
-		case KEY_Pminus:
-			user_wants_song(PREV_SONG);	
-			break;
-			
-		case KEY_Betty:
-			popup("A  Current\n   Song\n\nB  Current\n   playlist\n\nC  All\n   playlists\n\nD  Search\n", 0);
-			break;
-			
-		case KEY_A:	
-			show_screen(PLAYING_SCREEN);
-			break;
-			
-		case KEY_B:	
-			show_screen(TRACKLIST_SCREEN);
-			break;
-			
-		case KEY_C:	
-			show_screen(PLAYLIST_SCREEN);
-			break;
-
-		case KEY_D:	
-			show_screen(SEARCH_SCREEN);
-			break;
-									
-
-		/* Show/hide version info */
-		case KEY_Info:
-			view_version_changed();
-			break;
-			
 		case KEY_VTX1:
 			user_wants_script(1);
 			break;

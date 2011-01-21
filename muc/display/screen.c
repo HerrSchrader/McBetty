@@ -35,7 +35,6 @@
 #include "screen_playing.h"
 #include "screen_tracklist.h"
 #include "screen_playlist.h"
-#include "screen_info.h"
 #include "screen_search.h"
 #include "model.h"
 #include "mpd.h"
@@ -59,10 +58,10 @@ static enum SCREEN cur_screen, deferred_screen;
 	We can index them with enum SCREEN
 	See screen.h for more documentation
 */
-static Screen screen_list[6];
+static Screen screen_list[5];
 
 
-#define POPUP_TXT_SIZE	128
+#define POPUP_TXT_SIZE	200
 /* The popup window does not belong to any one screen 
 	It is handled here.
 */
@@ -80,7 +79,7 @@ static task_id close_popup_task;
 static struct timer popup_tmr;
 static uint8_t timed_popup;	
 static uint8_t popup_active;			// is TRUE iff screen is overlayed with a popup
-
+static int (*popup_keypress_handler) (struct Screen *, int, UserReq *);		// popup specific key handler
 /* ------------------------------------------------------------------------------------------------- */
 
 /* Functions which are the same for all screens */
@@ -178,17 +177,16 @@ mainscreen_init(void) {
 	win_cursor_init();
 	
 	// popup window
-	win_init(&popup_win, POPUP_STARTPAGE * 8, 8, 112, POPUP_PAGES * 8, 1, popup_txt);
+	win_init(&popup_win, POPUP_STARTPAGE * 8, 8, POPUP_PAGES * 8, 112, 1, popup_txt);
 	popup_win.font = SMALLFONT;	
 	popup_win.flags |= WINFLG_CENTER | WINFLG_LFTADJ;
-	
+	popup_win.buffer_size = POPUP_TXT_SIZE;
 	popup_active = 0;
 	deferred_screen = NO_SCREEN;
 	
 	playing_screen_init( &(screen_list[PLAYING_SCREEN]) );
 	playlist_screen_init( &(screen_list[PLAYLIST_SCREEN]) );
 	tracklist_screen_init( &(screen_list[TRACKLIST_SCREEN]) );
-	info_screen_init( &(screen_list[INFO_SCREEN]) );
 	search_screen_init( &(screen_list[SEARCH_SCREEN]) );
 	
 	user_request.cmd = NO_CMD;
@@ -198,15 +196,39 @@ mainscreen_init(void) {
 
 };
 
+/*
+	This is a standard keyboard input handler for simple messages.
+	Any key that is pressed closes the popup.
+	But the key is consumed and not returned to the screen.
+*/
+int
+keypress_msg_popup(Screen *this_screen, int cur_key, UserReq *req){
+	switch (cur_key) {
+		case NO_KEY:
+			return NO_KEY;
+
+		default:
+			popup_end();
+			return NO_KEY;
+			break;
+	};
+	return cur_key;
+};
+
+void
+view_message(char *m, int time){
+	popup(m, time, keypress_msg_popup);
+};
+
 /* This is the popup key press handler.
 	After a key press has been detected by the keyboard driver,
 	the kernel calls this routine when a popup is open.
 */
 static void
 popup_keypress(int cur_key){
-	/* First we call the screen specific popup keypress handler */
-	if ( NULL != screen_list[cur_screen].keypress_popup )
-		cur_key = screen_list[cur_screen].keypress_popup( &(screen_list[cur_screen]), cur_key, &user_request);
+	/* First we call the popup keypress handler */
+	if ( NULL != popup_keypress_handler )
+		cur_key = popup_keypress_handler( &(screen_list[cur_screen]), cur_key, &user_request);
 	
 	/* It returns NO_KEY, if it has completely handled the key */
 	if (NO_KEY == cur_key)
@@ -232,24 +254,27 @@ PT_THREAD (close_popup(struct pt *pt)){
 };
 
 void 
-popup(char *text, int time_out){
+popup(char *text, int time_out, int (*keypress_handler) (struct Screen *, int, UserReq *)){
 	if 	( ! popup_active ){
 		popup_active = 1;
 		screen_visible(cur_screen, 0);
 		popup_save();
 		popup_win.flags |= WINFLG_VISIBLE;
+		if (keypress_handler != NULL)
+				popup_keypress_handler = keypress_handler;
+
 		set_keypress_handler(popup_keypress);
 
 		if (time_out > 0){
-			timer_add(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
+			timer_add(&popup_tmr, time_out, 0);
 			close_popup_task = task_add(&close_popup);
 		} 
 	} else {						// already a popup active
 		if (time_out > 0){
 			if (timed_popup)
-				timer_set(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
+				timer_set(&popup_tmr, time_out, 0);
 			else {
-				timer_add(&popup_tmr, time_out * TICKS_PER_TENTH_SEC, 0);
+				timer_add(&popup_tmr, time_out, 0);
 				close_popup_task = task_add(close_popup);
 			};
 		} else {
@@ -304,37 +329,6 @@ mainscreen_keypress(int cur_key){
 	/* We can handle some keys on our own */	
 	switch (cur_key){
 		
-	/* BETTY always shows the playlist screen */
-		case KEY_Betty:
-			show_screen(PLAYLIST_SCREEN);
-			return;
-
-	/* The BLUE key enters the search screen */		
-		case KEY_Blue:
-			show_screen(SEARCH_SCREEN);
-			return;
-
-	/* The EXIT key switches through the screens */
-		case KEY_Exit:
-			switch (cur_screen){
-				case PLAYING_SCREEN:
-					show_screen(TRACKLIST_SCREEN);
-					break;
-				case TRACKLIST_SCREEN:
-					show_screen(PLAYLIST_SCREEN);
-					break;
-				case PLAYLIST_SCREEN:
-					show_screen(PLAYING_SCREEN);
-					break;
-				case INFO_SCREEN:
-					show_screen(PLAYLIST_SCREEN);
-					break;
-				default:
-					show_screen(PLAYLIST_SCREEN);
-					break;
-			};
-			return;
-			
 		case KEY_Vplus:	
 			/* Inform the controller that the user wants a volume increase */
 			user_wants_volume_add(+5);
@@ -345,14 +339,10 @@ mainscreen_keypress(int cur_key){
 			user_wants_volume_add(-5);
 			return;
 		
-	/* The first video text key toggles the serial debug output. */
-		case KEY_VTX1:
-			fDebug ^= 1;
-			return;
-		
 		case KEY_Mute:
 			user_toggle_mute();
 			return;
+			
 	};
 	return;
 };

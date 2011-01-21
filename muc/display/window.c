@@ -60,7 +60,7 @@ win_init(struct Window *win, uint8 row, uint8 col, uint8 height, uint8 width, ui
 	win->fits = 1;
 	win->scroll = 0;
 	win->font = MEDIUMFONT;
-	win->buffer_lim = WIN_DEFAULT_TXT_SIZE;
+	win->buffer_size = WIN_DEFAULT_TXT_SIZE;
 	win->cur_char = 0;
 	win->txt = txt;
 	txt[0] = '\0';
@@ -208,7 +208,7 @@ win_new_text(struct Window *win, char *s){
 	/* We copy the new text to our internal buffer with clipping if necessary
 		We also check if the text currently in buffer is identical
 	*/
-	if ( strn_cpy_cmp(win->txt, s, win->buffer_lim - 1, &(win->text_len)) != 0)
+	if ( strn_cpy_cmp(win->txt, s, win->buffer_size - 1, &(win->text_len)) != 0)
 		return;			// the two strings are identical, do nothing
 
 	win_draw_text(win);

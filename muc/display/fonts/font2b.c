@@ -126,7 +126,7 @@ const u8 font_data[]={
 /* All characters above this in the original font are ignored.
 	We do not want to store more than this number of characters + 1 !
 */
-#define MAX_CHAR 127 
+#define MAX_CHAR 179 
 
 #endif 
 

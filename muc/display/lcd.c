@@ -40,7 +40,7 @@ static void (*write_pattern) (uint8 row, uint8 col, uint8 l, uint8 mask, uint8 p
 	We can really address the LCD only in terms of pages. A page is 128 pixels wide and 8 pixels high.
 	Pages start on a row boundary which is divisble by 8.
 	
-	We can address up to 22 pages of LCD RAM. 
+	We can address up to 22 pages of LCD RAM. (Only 20 are shown)
 	Each page contains 256 bytes.
 	They are organized as 8 rows and 128 colums per row.
 	The first byte in each page contains the msb of the color of 8 bits of column 0.
@@ -79,8 +79,8 @@ static uint16 drawbuf16[2][128];
 /* 
 	This buffer is used for pop-up windows.
 	It saves a rectangular region in the middle of the screen
-	with a size of 144 rows ( = 14 pages ) and 128 columns.
-	That are 18 432 color bits = 36 864 real bits = 4608 bytes
+	with a size of POPUP_PAGES*8 rows and 128 columns.
+	That are around 5 kBytes.
 	Indexed by page and column
 */
 static uint8 popup_buf[POPUP_PAGES][2 * 128];

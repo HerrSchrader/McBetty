@@ -36,7 +36,7 @@
 #define LCD_SIZE_Y	160
 
 // Number of pages that our popup buffer can store
-#define POPUP_PAGES	14
+#define POPUP_PAGES	16
 
 // Start page of our popup buffer
 #define POPUP_STARTPAGE 2

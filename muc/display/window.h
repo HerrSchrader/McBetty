@@ -45,7 +45,7 @@ struct Window {
 	uint8 fits;						// is <>0 iff text fits completely in window
 	uint8 scroll;					// is <>0 iff ??? TODO
 	uint16_t flags;					// see defines below
-	uint8 buffer_lim;
+	uint8 buffer_size;				// size of the window text buffer
 	char *txt;						// Pointer to the window text buffer
 };
 

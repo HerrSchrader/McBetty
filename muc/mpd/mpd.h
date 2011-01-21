@@ -73,14 +73,6 @@ typedef struct {
 } UserReq;
 
 
-extern int playlist_changed;
-
-/* TODO this should be a real function. just for testing */
-#define pl_changed (model_changed_flags & (1<<5))
-
-void tx_init();
-void do_tx();
-	
 PT_THREAD (controller(struct pt *pt));
 
 

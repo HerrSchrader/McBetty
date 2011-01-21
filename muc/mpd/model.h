@@ -24,11 +24,22 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define RESULT_NAMES_CHANGED	(1<<13)
 #define PL_LENGTH_CHANGED	(1<<14)
 #define NUM_PL_CHANGED		(1<<15)
+#define MPD_DEAD			(1<<16)
+#define PLAYLIST_EMPTY		(1<<17)
 
 // Length of artist and title strings each, some songs and some albums really have long titles
 #define TITLE_LEN 149
 // Size of the character array needed to store artist and title strings each
 #define TITLE_SIZE	(TITLE_LEN + 1)
+
+// Maximum number of seconds that we wait for MPD to send anything to us before raising an error
+// Currently we rely on the fact that we send a "status" command regularily,
+// so we should get our regular responses from MPD
+#define MAX_MPD_TIMEOUT 34
+#define MPD_RETRY_TIMEOUT 10
+
+// status command interval, must be smaller than MAX_MPD_TIMEOUT
+#define STATUS_SYNC_TIME 25
 
 // Maximum length of MPD error message that we store
 #define ERRMSG_LEN 	63
@@ -174,9 +185,8 @@ void mpd_volume_ok(struct MODEL *a);
 void mpd_status_ok(struct MODEL *a);
 
 /* -------------------------------------- Other information -------------------------------------------------- */
-
+void model_check_mpd_dead();
 void model_set_last_response(unsigned int time);
-void mpd_check_mpd_dead();
 void model_reset(struct MODEL *m);
 
 int get_comm_error();

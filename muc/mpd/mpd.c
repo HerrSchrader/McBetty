@@ -494,7 +494,23 @@ inform_view(int model_changed){
 		view_resultnames_changed();
 	};	
 	
-
+	if (model_changed & MPD_DEAD){
+		/*We try to solve the communication error by resetting our
+		radio reception to a sane state.
+		*/
+		rx_reset();
+		// We show the message for 1 seconds less than the time_out, so if the
+		// communication is still broken, the message will soon reappear.
+		view_message("      Error\n\n"
+				"Communication with MPD is broken.\n\n"
+				"Check if MPD is still running and reachable via LAN.",
+	 		(MPD_RETRY_TIMEOUT - 1) * TICKS_PER_SEC);
+	};
+	
+	if (model_changed & PLAYLIST_EMPTY){
+		view_message("Playlist\nis empty!", 4 * TICKS_PER_SEC);
+	};
+	
 	model_reset_changed();
 };
 	
@@ -586,7 +602,6 @@ PT_THREAD (exec_action(struct pt *pt, struct MODEL *ans_model) ){
 	
 		if (response_finished){							// Our cmd got an OK or ACK
 			model_set_last_response (system_time());
-			clr_error(MPD_DEAD);
 			break;
 	
 		} else {
@@ -700,8 +715,6 @@ PT_THREAD (controller(struct pt *pt)){
 			inform_view(model_get_changed());
 			PT_YIELD(pt);
 		};
-
-		detect_errors();
 
 	};
 	PT_END(pt);

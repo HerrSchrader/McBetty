@@ -95,11 +95,6 @@ typedef struct format_values {
 
 #define EOT 0x04
 
-/* Possible error flags */
-#define END_OF_PLAYLIST		(1<<0)
-#define PLAYLIST_EMPTY		(1<<1)
-#define MPD_DEAD			(1<<2)
-
 #define CACHE_LIM	33
 #define CACHE_MAX	(CACHE_LIM -1)
 
