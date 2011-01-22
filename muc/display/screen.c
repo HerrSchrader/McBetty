@@ -199,18 +199,23 @@ mainscreen_init(void) {
 /*
 	This is a standard keyboard input handler for simple messages.
 	Any key that is pressed closes the popup.
-	But the key is consumed and not returned to the screen.
+	Normal exiting keys are consumed, other keys are returned to the screen.
 */
 int
 keypress_msg_popup(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
-		case NO_KEY:
-			return NO_KEY;
-
-		default:
+		
+		case KEY_Exit:
+		case KEY_OK:
+		case KEY_Info:
+		case KEY_Betty:
+		case KEY_Menu:
 			popup_end();
 			return NO_KEY;
-			break;
+			
+		default:
+			popup_end();
+			break;						// give all other keys to normal screen handler
 	};
 	return cur_key;
 };

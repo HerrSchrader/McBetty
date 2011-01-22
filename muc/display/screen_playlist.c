@@ -109,17 +109,21 @@ view_num_pl_changed(int new_num_pl){
 	scroll_list_total_len(&playlist_list, new_num_pl);	
 };
 
+/* Betty popup key handler */
 static int
 keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 		case KEY_Exit:
 		case KEY_Betty:
+		case KEY_Menu:
+		case KEY_OK:
 			popup_end();
 			return NO_KEY;
 			
 		case KEY_B:
 		case KEY_C:
 		case KEY_D:
+		case KEY_Info:
 			popup_end();
 			break;						// give this key to normal screen handler
 			
@@ -138,6 +142,8 @@ keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
 		case KEY_Exit:
 		case KEY_OK:
 		case KEY_Info:
+		case KEY_Betty:
+		case KEY_Menu:
 			popup_end();
 			return NO_KEY;
 			
@@ -155,6 +161,7 @@ keypress(Screen *pl_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
 		case KEY_Betty:
+		case KEY_Menu:
 			popup("A\n\n"
 				"B  Current\n   playlist\n\n"
 				"C  Search\n\n"

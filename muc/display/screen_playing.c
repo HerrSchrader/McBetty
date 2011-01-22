@@ -270,6 +270,8 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 		
 		case KEY_Exit:
 		case KEY_Betty:
+		case KEY_Menu:
+		case KEY_OK:
 			popup_end();
 			return NO_KEY;
 			
@@ -293,6 +295,8 @@ keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
 		case KEY_Exit:
 		case KEY_OK:
 		case KEY_Info:
+		case KEY_Menu:
+		case KEY_Betty:
 			popup_end();
 			return NO_KEY;
 			

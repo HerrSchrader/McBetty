@@ -219,12 +219,15 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 		case KEY_Exit:
 		case KEY_Betty:
+		case KEY_Menu:
+		case KEY_OK:
 			popup_end();
 			return NO_KEY;
 			
 		case KEY_A:
 		case KEY_C:
 		case KEY_D:
+		case KEY_Info:
 			popup_end();
 			break;						// give this key to normal screen handler
 			
@@ -240,7 +243,8 @@ keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 		
 		case KEY_Exit:
-		case KEY_OK:
+		case KEY_Betty:
+		case KEY_Menu:
 		case KEY_Info:
 			popup_end();
 			return NO_KEY;
@@ -265,6 +269,7 @@ keypress(Screen *track_screen, int cur_key, UserReq *req){
 	switch (cur_key) {
 
 		case KEY_Betty:
+		case KEY_Menu:
 			popup("A  All\n   playlists\n\nB\n\nC  Search\n\nD  Now playing\n\ni  Info", 0, keypress_popup);
 			break;
 			
