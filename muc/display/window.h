@@ -92,7 +92,7 @@ typedef struct {
 	int win_offs;						/* TODO ??? offset from win_txt ???*/
 	int num_windows;					/* number of windows (== lines) in the scroll list */
 	int first_shown_pos;				/* positional index of first info shown on screen */
-	int sel_win;						/* selected window */
+	int sel_win;						/* index of selected window (0 .. num_windows -1) */
 	int	first_pos;						/* positional index of first available info in the model (currently always 0) */
 	int last_pos;						/* positional index of last available info in the model (absolute end of list) 
 											-1 if not known (unlimited)

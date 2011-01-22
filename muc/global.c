@@ -573,16 +573,26 @@ void
 cache_set_limit(STR_CACHE *pc, int limit){
 	int p;
 	
+	// Limit unknown ?
+	// All entries above old limit are now unknown
+	if (limit == -1){
+		for (p = max(pc->first_pos, pc->pos_lim); p <= last_pos(pc); p++)
+			pos_unknown(pc,p);
+		pc->pos_lim = -1;
+		return;
+	};
+	
 	/* Was the current limit expanded ?
 		Then all subsequent entries are NOT_KNOWN
 	*/
 	if (limit > pc->pos_lim){
-		for (p = pc->pos_lim; p < min(last_pos(pc), limit); p++)
+		for (p = max(pc->first_pos, pc->pos_lim); p <= min(last_pos(pc), limit -1); p++)
 			pos_unknown(pc, p);	
 			
-	// or did the limit shrink? then the entries are NOT_AVAIL
+	// or did the limit shrink?
+	// all entries between new limit and old limit are NOT_AVAIL	
 	} else if (limit < pc->pos_lim){
-		for (p = pc->pos_lim; p <= max(pc->first_pos, limit); p++)
+		for (p = max(pc->first_pos, limit); p <= min(last_pos(pc), pc->pos_lim - 1); p++)
 			pos_not_avail(pc, p);
 	};
 	pc->pos_lim = limit;

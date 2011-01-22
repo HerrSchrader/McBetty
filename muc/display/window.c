@@ -423,26 +423,22 @@ select(scroll_list *sl, int sel){
 
 
 	
-/* Index of last info text that we can show in our list */
-static int 
-last_info_pos(scroll_list *sl){
+/* Index of last info text that we currently show in our list */
+static inline int 
+last_shown_pos(scroll_list *sl){
 	return (sl->first_shown_pos + sl->num_windows -1); 
 };	
 
 
 /* Gets the info pos corresponding to a given window index 
-	-1 if the index is out of range (i.e. not a valid window) 
+	win_idx must be from 0 ... num_windows -1 
 */
-static int
-info_pos(scroll_list *sl, int win_idx){
-	int no;
-	
-	no = win_idx + sl->first_shown_pos;
-	if ( (no < 0) || (no > last_info_pos(sl) ) )
-		return -1;
-	return no;
+static inline int
+info_pos(scroll_list *sl, int win_idx){	
+	return (sl->first_shown_pos + win_idx);
 };
 
+	
 /* We are called when the scroll list has potentially changed 
 	Updates the info in all windows of the scroll list (sets new text in window).
 */
@@ -454,11 +450,7 @@ scroll_list_changed(scroll_list *sl){
 
 	for (i=0, pwin = sl->wl; i < sl->num_windows; pwin++, i++){
 		info = sl->info_text( info_pos(sl, i) );
-
-		if (NULL == info)				// TODO this should not occur ?!
-			win_new_text(pwin, "");
-		else 
-			win_new_text( pwin, info);
+		win_new_text( pwin, info);
 	}
 };
 
@@ -483,7 +475,7 @@ scroll_list_up(scroll_list *sl){
 	else {					// We want to scroll past the upper end of the window list
 		if ( info_pos(sl, 0) > sl->first_pos){		// valid pos
 			sl->first_shown_pos--;
-			sl->range_set(sl->first_shown_pos, last_info_pos(sl) );
+			sl->range_set(sl->first_shown_pos, last_shown_pos(sl) );
 			scroll_list_changed(sl);
 		};
 	};
@@ -507,7 +499,7 @@ scroll_list_down(scroll_list *sl){
 		// here we must check if we have reached the absolute end of the infos
 		if ( (sl->last_pos < 0) || (scroll_list_selected(sl) < sl->last_pos) ){
 			sl->first_shown_pos++;
-			sl->range_set(sl->first_shown_pos, last_info_pos(sl) );
+			sl->range_set(sl->first_shown_pos, last_shown_pos(sl) );
 			scroll_list_changed(sl);
 		}
 	};	
@@ -529,7 +521,7 @@ scroll_list_fwd(scroll_list *sl){
 	};
 	
 	sl->first_shown_pos = new_first;
-	sl->range_set(sl->first_shown_pos, last_info_pos(sl) );
+	sl->range_set(sl->first_shown_pos, last_shown_pos(sl) );
 	
 	// Now maybe our selected window is too high
 	if (sl->last_pos >= 0){
@@ -555,7 +547,7 @@ scroll_list_back(scroll_list *sl){
 	};
 		
 	sl->first_shown_pos = new_first; 
-	sl->range_set(sl->first_shown_pos, last_info_pos(sl) );
+	sl->range_set(sl->first_shown_pos, last_shown_pos(sl) );
 	scroll_list_changed(sl);	
 };
 
