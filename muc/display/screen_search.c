@@ -96,8 +96,21 @@ PT_THREAD (auto_search(struct pt *pt)){
 };
 
 
+static void
+set_title_win(int t){
+	if (t == FIND_TYPE_ARTIST)
+			win_new_text(&title_win, "Search Artist");	
+	
+	if (t == FIND_TYPE_TITLE)
+			win_new_text(&title_win, "Search Title");
+		
+	if (t == FIND_TYPE_ALBUM)
+			win_new_text(&title_win, "Search Album");
+};
+
 static void 
 screen_enter(){
+	set_title_win(mpd_find_type());
 	screen_redraw(SEARCH_SCREEN);	
 	win_cursor_set(&input_win, WIN_TXT_SIZE-1);
 	auto_search_task = task_add(&auto_search);
@@ -180,8 +193,6 @@ view_results_changed(int num){
 	
 	win_new_text(&num_results_win, newstr);	
 	scroll_list_total_len(&result_list, num);
-	
-
 };
 
 
@@ -253,12 +264,12 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			
 			
 		case KEY_A:
-			user_wants_add(scroll_list_selected(&result_list) );
+			user_find_add(scroll_list_selected(&result_list) );
 			break;
 			
 		case KEY_B:
 			user_tracklist_clr();	
-			user_wants_add(scroll_list_selected(&result_list) );
+			user_find_add(scroll_list_selected(&result_list) );
 			break;	
 								
 		case KEY_C:	
@@ -275,7 +286,10 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 				"\xB2 = Up\n"
 				"\xB3 = Down\n"
 				"0 .. 9 = Input\n"
-				"-/-- = delete\n"		
+				"-/-- = delete\n"
+				"Red = Artist\n"
+				"Green = Title\n"
+				"Yellow = Album\n"
 				"OK = Load\n"
 				"      results", 
 				  0, keypress_info_popup);
@@ -291,6 +305,30 @@ keypress(Screen *this_screen, int cur_key, UserReq *req){
 			scroll_list_down(&result_list);
 			break;
 									
+		case KEY_Red:
+			if (mpd_find_type() != FIND_TYPE_ARTIST){
+				mpd_set_find_type(FIND_TYPE_ARTIST);
+				set_title_win(FIND_TYPE_ARTIST);
+				user_set_search_string(input_win.txt);	// doing a new search resets the results !
+			};		
+			break;
+			
+		case KEY_Green:
+			if (mpd_find_type() != FIND_TYPE_TITLE){
+				mpd_set_find_type(FIND_TYPE_TITLE);
+				set_title_win(FIND_TYPE_TITLE);
+				user_set_search_string(input_win.txt);
+			}
+			break;
+			
+		case KEY_Yellow:
+			if (mpd_find_type() != FIND_TYPE_ALBUM){
+				mpd_set_find_type(FIND_TYPE_ALBUM);
+				set_title_win(FIND_TYPE_ALBUM);
+				user_set_search_string(input_win.txt);
+			}
+			break;	
+				
 		case KEY_Left:	
 			win_cursor_input(CURSOR_LEFT);
 			break;

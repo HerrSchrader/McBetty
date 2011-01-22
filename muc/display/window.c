@@ -628,18 +628,13 @@ init_scroll_list(scroll_list *sl, struct Window *pwl, char *win_txt, int win_txt
 
 /* --------------------------------------------- Text Input Window ------------------------------------- */
 /*
-// got_input(k) user pressed key k 
-    show k in window at current cursor position
-
 We need a blink task. Cursor blinks in selected window at 1|2 HZ
-
-
 */
 #define BLINK_PERIOD (5 * TICKS_PER_TENTH_SEC)
 
 #define WAIT_KEY_TIME (25 * TICKS_PER_TENTH_SEC)
 
-/* We only have one window where the cursor blinks */
+/* We have at most one window where the cursor blinks */
 static struct Window *pcursor_win = NULL;
 /* Maximum length of text for this window */
 static int max_txt_len;

@@ -182,7 +182,7 @@ get_hex_digits(unsigned long v, char *s){
 	return s;
 };
 
-/* Division by repeated subtraction
+/* Division with remainder (by repeated subtraction)
 	Computes (*pu_longval % tval)
 	and leaves remainder in *pu_longval
 */
@@ -303,16 +303,6 @@ cache_index(STR_CACHE *pc, int pos){
 	return idx;
 };
 
-/* We are given a string pos. We return the corresponding string 
-	or NULL if the pos is outside of our cache.
-	NULL might also mean we do not have information about that string.
-*/
-static char *
-cache_string(STR_CACHE *pc, int pos){
-	int i = cache_index(pc, pos);
-	if (i < 0) return NULL;
-	return pc->entry[i].cache_str;
-};
 
 static int
 cache_pos(STR_CACHE *pc, int pos){
@@ -323,14 +313,19 @@ cache_pos(STR_CACHE *pc, int pos){
 
 char *
 cache_info(STR_CACHE *pc, int pos){
-	int p = cache_pos(pc, pos);
+	int p;
+	int i = cache_index(pc, pos);
 	
+	if (i < 0)
+		return "...";
+		
+	p = pc->entry[i].pos;
 	if (p == NOT_KNOWN)
 		return "...";
 	
 	if (p == NOT_AVAIL)
 		return "";
-	return cache_string(pc, pos);	
+	return pc->entry[i].cache_str;	
 };
 
 	
@@ -400,21 +395,6 @@ cache_unknown(STR_CACHE *pc, int pos){
 		pos_unknown(pc, p);
 };
 
-#if 0
-/* All the cache entries starting at pos are set to NOT_AVAIL. */
-void 
-cache_clear(STR_CACHE *pc, int pos){
-	int p;
-	
-	if (pos > last_pos(pc)) 
-		return;				/* not in our cache */
-	
-	pos = max(pc->first_pos, pos);		/* Need not start before begin of cache */
-
-	for (p=pos; p <= last_pos(pc); p++)
-		pos_not_avail(pc, p);
-};
-#endif
 
 void
 cache_init(STR_CACHE *pc){
@@ -554,19 +534,6 @@ cache_range_set(STR_CACHE *pc, int start_pos, int end_pos){
 		for (p = max(pc->first_pos, pc->pos_lim); p < last_pos(pc); p++)
 			pos_not_avail(pc,p);
 	};
-	
-#if 0	
-	if (pc->pos_lim >= 0){								// valid limit information
-		end_pos = min (end_pos, pc->pos_lim - 1);
-		start_pos = min (start_pos, pc->pos_lim - 1);
-	};
-
-	if (end_pos > last_pos(pc))				// user wants more information than we currently have
-		cache_shift_up(pc, end_pos - last_pos(pc));
-	else
-		if (start_pos < pc->first_pos)		// user wants information from earlier tracks than we have
-			cache_shift_down(pc, pc->first_pos - start_pos);
-#endif			
 };
 
 void

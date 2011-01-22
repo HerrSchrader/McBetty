@@ -41,7 +41,7 @@
 */
 
 #define VERSION_MAJOR 1
-#define VERSION_MINOR 4
+#define VERSION_MINOR 5
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1273,6 +1273,12 @@ translate_to_mpd(char *buf){
 		mpd_emu |= SEARCH_CMD; //| SEND_SEARCH_OK;
 		mpd_emu_cnt = 0;
 		num_results = 0;
+		if (0 == strncmp(buf, "search artist", 13))
+			mpd_emu_arg = 0;
+		if (0 == strncmp(buf, "search title", 12))
+			mpd_emu_arg = 1;
+		if (0 == strncmp(buf, "search album", 12))
+			mpd_emu_arg = 2;	
 	} else {
 		mpd_emu &= ~SEARCH_CMD;
 	};
@@ -1417,9 +1423,16 @@ translate_to_serial(){
 		
 		mpd_emu_cnt++;
 	
-		if (0 == strncmp(mpd_resp_buf, "Artist: ", 8)){
-			if (num_results < MAX_NUM_RESULTS)	
-				cmp_and_store(mpd_resp_buf + 8);
+		if (  ( (mpd_emu_arg == 0) && (0 == strncmp(mpd_resp_buf, "Artist: ", 8)) )
+			||( (mpd_emu_arg == 1) && (0 == strncmp(mpd_resp_buf, "Title: ", 7)) )  
+			||( (mpd_emu_arg == 2) && (0 == strncmp(mpd_resp_buf, "Album: ", 7)) )  ){
+			
+			int txt_offset;
+			if (mpd_emu_arg == 0) txt_offset = 8;
+			else txt_offset = 7;
+			
+			if (num_results < MAX_NUM_RESULTS)
+				cmp_and_store(mpd_resp_buf + txt_offset);
 				
 			/* MPD sends every single matching file, which can take very long.
 				So after MAX_NUM_RESULTS or after our timer reaches 2 seconds we cancel the connection to stop mpd.

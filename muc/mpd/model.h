@@ -58,6 +58,10 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define NO_SONG			-2
 #define SONG_UNKNOWN	-1
 
+#define FIND_TYPE_ARTIST 0
+#define FIND_TYPE_TITLE 1
+#define FIND_TYPE_ALBUM 2
+
 struct MODEL {
 	int	num_playlists;			// total number of playlists known by MPD (-1 if unknown to us)
 	int cur_playlist;			// index to currently loaded playlist (or -1 if unknown)
@@ -66,7 +70,7 @@ struct MODEL {
 	int old_volume;				// -1 if unknown, volume before a mute command, used to unmute
 	int pos; 					// current song position in the playlist. Starts with 0! For values below 0 see above.
 	enum PLAYSTATE state;		// PLAY, PAUSE, STOP or UNKNOWN
-	int8_t	random;				// 1 if random mode is on
+	int8_t random;				// 1 if random mode is on
 	int8_t repeat;				// 1 if repeat mode is on
 	int8_t single;				// 1 if single mode is on
 	int songid;					// MPD's internal id of the current song
@@ -78,8 +82,9 @@ struct MODEL {
 	int time_total;				// in seconds
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
 	unsigned int last_status;	// system time when we last got a valid status answer
+	int find_type;				// what does the user search for ?
 	char *search_string;		// is <> NULL iff the user wants to search for something
-	int add;					// is <> -1 iff the user wants to add something to the playlist
+	int find_add;				// is <> -1 iff the user wants to add something to the playlist
 	int num_results;			// number of results after a search command
 	unsigned int script;		// if the user wants a script to be executed this is >= 0
 	int pl_added;				// no. of songs added to the paylist (either + or -), 0 means no change or unknown
@@ -124,6 +129,8 @@ void resultlist_range_set(int start_pos, int end_pos);
 int  mpd_resultlist_last();
 void mpd_result_ack(struct MODEL *a);
 void mpd_store_resultname(char *name, int result_pos);
+int mpd_find_type();
+void mpd_set_find_type(int t);
 
 /* -------------------------------------- Searching ----------------------------------------------------------- */
 void mpd_store_num_results(int n);
@@ -133,7 +140,7 @@ void mpd_search_ok(struct MODEL *a);
 void mpd_search_ack(struct MODEL *a);
 void user_set_search_string(char * str);
 void mpd_findadd_ok();
-void user_wants_add(int idx);
+void user_find_add(int idx);
 
 /* ------------------ Elapsed and total time ------------------------------- */
 

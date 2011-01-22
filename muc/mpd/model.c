@@ -46,6 +46,7 @@ static void mpd_set_title(char *s);
 static void mpd_set_artist(char *s);
 static void mpd_set_pos(int newpos);
 static void user_song_unknown();
+static char *mpd_result_string(int pos);
 
 /* ===================== Info about changes ====================================== */
 
@@ -251,8 +252,8 @@ model_needs_action(UserReq *req){
 	};
 	
 	/* Something to add to the playlist ? */
-	if (user_model.add != -1){
-		req->str = mpd_result_info(user_model.add);
+	if (user_model.find_add != -1){
+		req->str = mpd_result_string(user_model.find_add);
 		return FINDADD_CMD;
 	};
 	
@@ -557,11 +558,27 @@ user_wants_playlist(int idx){
 	If we have no info or the result does not exist we return "".
 	Does return a non-NULL string
 */
+static char *
+mpd_result_string(int pos){
+	static char string[200];
+	if (mpd_model.find_type == FIND_TYPE_ARTIST)
+		strlcpy(string, "artist \"", sizeof(string));
+	if (mpd_model.find_type == FIND_TYPE_TITLE)
+		strlcpy(string, "title \"", sizeof(string));
+	if (mpd_model.find_type == FIND_TYPE_ALBUM)
+		strlcpy(string, "album \"", sizeof(string));
+
+	strlcat(string,	cache_info(&resultlist, pos), sizeof(string));
+	strlcat(string, "\"",sizeof(string));	
+	
+	return string;
+};
+
 char *
 mpd_result_info(int pos){
 	return cache_info(&resultlist, pos);
 };
-
+	
 /* 
 	The cache containing result info has to follow the information that we show on screen.
 	Here we tell the cache which positions we want to show,
@@ -614,9 +631,19 @@ int
 mpd_get_num_results(){
 	return	(mpd_model.num_results);
 }
+
 char *
 mpd_get_search_string(){
-	return user_model.search_string;
+	static char string[200];
+	if (mpd_model.find_type == FIND_TYPE_ARTIST)
+		strlcpy(string, "artist \"", sizeof(string));
+	if (mpd_model.find_type == FIND_TYPE_TITLE)
+		strlcpy(string, "title \"", sizeof(string));
+	if (mpd_model.find_type == FIND_TYPE_ALBUM)
+		strlcpy(string, "album \"", sizeof(string));
+	strlcat(string,	user_model.search_string, sizeof(string));
+	strlcat(string, "\"",sizeof(string));
+	return string;
 };
 
 /* A search command has been successfully executed. */
@@ -644,17 +671,30 @@ user_set_search_string(char * s){
 
 void
 mpd_findadd_ok(struct MODEL *a){
-	user_model.add = -1;				// wish fulfilled
+	user_model.find_add = -1;				// wish fulfilled
 	user_model.playlistlength = -1;
 	model_changed(TRACKLIST_CHANGED);
 	mpd_status_ok(a);	
 };
 
-
-/* index into the result list */
+/* 
+	User has found what he wanted.
+	He wants to add the result to the current playlist
+	idx is the chosen position in the result list 
+*/
 void
-user_wants_add(int idx){
-	user_model.add = idx;
+user_find_add(int pos){
+	user_model.find_add = pos;
+};
+
+int
+mpd_find_type(){
+	return mpd_model.find_type;
+};
+
+void
+mpd_set_find_type(int t){
+	mpd_model.find_type = t;
 };
 
 /* ------------------ Elapsed and total time ------------------------------- */
@@ -1238,14 +1278,14 @@ model_reset(struct MODEL *m){
 	m->random = -1;
 	m->repeat = -1;
 	m->single = -1;
+	m->find_type = FIND_TYPE_ARTIST;
 	m->search_string = NULL;
-	m->add = -1;
+	m->find_add = -1;
 	m->num_results = -1;
 	m->script = -1;
 	m->pl_added = 0;
 	m->errmsg = NULL;
 	m->errmsg_buf[0] = '\0';
-
 };
 
 /* Initialize our model

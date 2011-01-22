@@ -553,9 +553,9 @@ static const struct cmd_proc_info cmd_info[] = {
 	{"playlistcount\n",	 ans_plcount_line, NULL, NULL},		// PLAYLISTCOUNT_CMD,
 	{"playlistname %d\n", ans_plname_line, NULL, NULL},		// PLAYLISTNAME_CMD,
 	{"clear\n", NULL, mpd_clear_ok, NULL},					// CLEAR_CMD,
-	{"search artist \"%s\"\n", ans_search_line, mpd_search_ok, mpd_search_ack},		// SEARCH_CMD,
+	{"search %s\n", ans_search_line, mpd_search_ok, mpd_search_ack},		// SEARCH_CMD,
 	{"result %d\n", ans_result_line, NULL, mpd_result_ack}, 				// RESULT_CMD,
-	{"findadd artist \"%s\"\n", ans_status_line, mpd_findadd_ok, NULL},	// FINDADD_CMD,
+	{"findadd %s\n", ans_status_line, mpd_findadd_ok, NULL},	// FINDADD_CMD,
 	{"script %d\n", NULL, mpd_script_ok, NULL}				// SCRIPT_CMD
 };	
 
