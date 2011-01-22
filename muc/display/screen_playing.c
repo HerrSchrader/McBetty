@@ -170,7 +170,10 @@ view_time_changed(int te, int tt){
 	sec2hms(newstr+8, tt);
 	win_new_text(&time_win, newstr);
 		
-	newval = (te * 100) / tt;
+	if ( (te < 0) || (tt < 0) )
+		newval = 0;
+	else
+		newval = (te * 100) / tt;
 	
 	if ( (win->flags & WINFLG_VISIBLE))
 		draw_progressbar(time_prog_win.start_row+1, time_prog_win.start_col, time_prog_win.height-2, 

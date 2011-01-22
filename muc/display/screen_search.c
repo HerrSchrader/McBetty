@@ -203,6 +203,7 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 		case KEY_B:
 		case KEY_C:
 		case KEY_D:
+		case KEY_Info:
 			popup_end(this_screen);
 			break;						// give this key to normal screen handler
 			

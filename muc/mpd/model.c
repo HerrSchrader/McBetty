@@ -464,7 +464,7 @@ mpd_clear_ok(struct MODEL *a){
 //	tracklist_range_set(0, 0);
 	model_changed(TRACKLIST_CHANGED);
 	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR command!
-	mpd_set_pos(SONG_UNKNOWN);			// the previous current song is no longer valid
+	mpd_set_pos(NO_SONG);				// there is no current song
 };
 
 /* 
@@ -680,7 +680,7 @@ mpd_set_time(int elapsed, int total){
 	// It can happen that elapsed time is greater than total time.
 	// This is clearly wrong.
 	// We temporarily adjust the total time and ask again in a few seconds
-	if (mpd_model.time_elapsed > mpd_model.time_total)
+	if ((mpd_model.time_total >= 0) && (mpd_model.time_elapsed > mpd_model.time_total))
 		mpd_model.time_total = mpd_model.time_elapsed + 3;
 
 	/* Here we check if MPD is close to the specific time wanted by the user.
@@ -772,7 +772,7 @@ mpd_set_state(enum PLAYSTATE newstate){
 	
 	mpd_model.state = newstate;
 	
-	/* STOP resets elapsed time */
+	/* STOP resets elapsed time (if there is a song) */
 	if (newstate == STOP)
 		mpd_set_time(0, mpd_model.time_total);
 	
@@ -945,12 +945,12 @@ mpd_set_pos(int newpos){
 	if (newpos == NO_SONG){ 
 		mpd_set_artist("");
 		mpd_set_title("");
-		mpd_model.songid = UNKNOWN;				// NOTE songid is currently not used
+		mpd_model.songid = NO_SONG;
+		mpd_set_state(STOP);						// can set time, but not always correct
 		mpd_set_time(-1, -1);	
-		mpd_set_state(STOP);
+
 		if (user_model.state == PLAY){				// user wanted to play something
-			model_changed(ERROR_FLAG);				// Not possible, so tell the user
-			user_model.state = STOP;				// and change his wish
+			user_model.state = STOP;				// not possible, change his wish
 		};
 	} else { 
 		mpd_set_artist(NULL);						// We do not yet know which artist and title we have
@@ -1225,6 +1225,8 @@ model_reset(struct MODEL *m){
 	m->volume = -1;
 	m->state = UNKNOWN;
 	m->cur_playlist = -1;
+	m->time_elapsed = -1;
+	m->time_total = -1;
 	m->last_response = 0;
 	m->last_status = 0;
 	m->pos = SONG_UNKNOWN;

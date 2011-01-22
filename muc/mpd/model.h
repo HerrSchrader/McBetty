@@ -19,13 +19,12 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define RANDOM_CHANGED		(1<<8)
 #define REPEAT_CHANGED		(1<<9)
 #define SINGLE_CHANGED		(1<<10)
-#define ERROR_FLAG			(1<<11)
-#define RESULTS_CHANGED		(1<<12)
-#define RESULT_NAMES_CHANGED	(1<<13)
-#define PL_LENGTH_CHANGED	(1<<14)
-#define NUM_PL_CHANGED		(1<<15)
-#define MPD_DEAD			(1<<16)
-#define PLAYLIST_EMPTY		(1<<17)
+#define RESULTS_CHANGED		(1<<11)
+#define RESULT_NAMES_CHANGED	(1<<12)
+#define PL_LENGTH_CHANGED	(1<<13)
+#define NUM_PL_CHANGED		(1<<14)
+#define MPD_DEAD			(1<<15)
+#define PLAYLIST_EMPTY		(1<<16)
 
 // Length of artist and title strings each, some songs and some albums really have long titles
 #define TITLE_LEN 149
