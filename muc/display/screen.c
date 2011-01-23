@@ -19,13 +19,12 @@
 	This modules manages the different screens.
 	It keeps track of the screen which is currently displayed.
 	It receives input from the user (key presses) and sends them to the appropriate screen handlers.
-	( Not all input is handled directly by the current screen, for example the "MUTE" key is given to
-	  the playing screen to handle. It only makes sense there. )
+	( Not all input is handled directly by the current screen, for example the "MUTE" key is acted upon
+	  directly. It is useful in all screens. )
 	
-	TODO Maybe handle error messages here. Any info/warning/error message means that we must interrupt the normal view on screen.
-	We must switch to the error screen to show the error window and react to some keys.
-	After handling of the error we should resume the previous screen or switch to a completely different screen depending
-	on the kind of error. So this could be handled here. 
+	Error messages are handled here with popups. Any info/warning/error message means that we must interrupt the normal view on screen.
+	We must popup the error window and react to some keys.
+	After handling of the error we should resume the previous screen. 
 */	
 #include "kernel.h"
 #include "timerirq.h"
@@ -50,7 +49,6 @@
 	All of this should not happen very often, it really irritates the user.
 
 	When there is no deferred next screen, it will be set to NO_SCREEN.
-	
 */
 static enum SCREEN cur_screen, deferred_screen;
 
@@ -62,24 +60,21 @@ static Screen screen_list[5];
 
 
 #define POPUP_TXT_SIZE	200
-/* The popup window does not belong to any one screen 
+/* The popup window belongs to all screens 
 	It is handled here.
 */
 static struct Window popup_win;
 static char popup_txt[POPUP_TXT_SIZE];
 
-/* Here we store the action wanted by a user keypress */
-static UserReq user_request;
 
 /* Forward declarations */
 static void mainscreen_keypress(int cur_key);
-static void popup_keypress(int cur_key);
 
 static task_id close_popup_task;
 static struct timer popup_tmr;
 static uint8_t timed_popup;	
 static uint8_t popup_active;			// is TRUE iff screen is overlayed with a popup
-static int (*popup_keypress_handler) (struct Screen *, int, UserReq *);		// popup specific key handler
+static int (*popup_keypress_handler) (struct Screen *, int);		// popup specific key handler
 /* ------------------------------------------------------------------------------------------------- */
 
 /* Functions which are the same for all screens */
@@ -163,8 +158,6 @@ show_screen(enum SCREEN newscreen){
 	Initialize all screens.
 	We clear the whole screen.
 	We start the PLAYING screen.
-	// TODO We could check mpd status to see if we have a current song.
-	// Only then is the PLAYING screen useful.
 */
 void 
 mainscreen_init(void) {
@@ -189,8 +182,6 @@ mainscreen_init(void) {
 	tracklist_screen_init( &(screen_list[TRACKLIST_SCREEN]) );
 	search_screen_init( &(screen_list[SEARCH_SCREEN]) );
 	
-	user_request.cmd = NO_CMD;
-
 	set_keypress_handler(mainscreen_keypress);
 	screen_enter(PLAYING_SCREEN);
 
@@ -201,8 +192,8 @@ mainscreen_init(void) {
 	Any key that is pressed closes the popup.
 	Normal exiting keys are consumed, other keys are returned to the screen.
 */
-int
-keypress_msg_popup(Screen *this_screen, int cur_key, UserReq *req){
+static int
+keypress_msg_popup(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 		
 		case KEY_Exit:
@@ -220,20 +211,27 @@ keypress_msg_popup(Screen *this_screen, int cur_key, UserReq *req){
 	return cur_key;
 };
 
+/* 
+	Pop up a simple message on screen.
+	Used for error messages and notifications
+*/
 void
 view_message(char *m, int time){
 	popup(m, time, keypress_msg_popup);
 };
 
-/* This is the popup key press handler.
-	After a key press has been detected by the keyboard driver,
-	the kernel calls this routine when a popup is open.
+/* This is the popup key press dispatcher.
+	When a popup is open, keys are first given to this routine.
+	If a screen specific popup keypress handler is available,
+	the key is given to that.
+	If the key is still noc processed after that, it is given to
+	the normal keypress handler.
 */
 static void
-popup_keypress(int cur_key){
+popup_keypress_dispatch(int cur_key){
 	/* First we call the popup keypress handler */
 	if ( NULL != popup_keypress_handler )
-		cur_key = popup_keypress_handler( &(screen_list[cur_screen]), cur_key, &user_request);
+		cur_key = popup_keypress_handler( &(screen_list[cur_screen]), cur_key);
 	
 	/* It returns NO_KEY, if it has completely handled the key */
 	if (NO_KEY == cur_key)
@@ -259,7 +257,7 @@ PT_THREAD (close_popup(struct pt *pt)){
 };
 
 void 
-popup(char *text, int time_out, int (*keypress_handler) (struct Screen *, int, UserReq *)){
+popup(char *text, int time_out, int (*keypress_handler) (struct Screen *, int)){
 	if 	( ! popup_active ){
 		popup_active = 1;
 		screen_visible(cur_screen, 0);
@@ -268,7 +266,7 @@ popup(char *text, int time_out, int (*keypress_handler) (struct Screen *, int, U
 		if (keypress_handler != NULL)
 				popup_keypress_handler = keypress_handler;
 
-		set_keypress_handler(popup_keypress);
+		set_keypress_handler(popup_keypress_dispatch);
 
 		if (time_out > 0){
 			timer_add(&popup_tmr, time_out, 0);
@@ -321,11 +319,9 @@ popup_end(){
 static void
 mainscreen_keypress(int cur_key){
 	
-	user_request.cmd = NO_CMD;
-	
 	/* First we call the screen specific key handler if there is one */
 	if (cur_screen != NO_SCREEN)
-		cur_key = screen_list[cur_screen].keypress( &(screen_list[cur_screen]), cur_key, &user_request);
+		cur_key = screen_list[cur_screen].keypress( &(screen_list[cur_screen]), cur_key);
 	
 	/* If the current screen has completely handled the key, it returns NO_KEY and we are finished */
 	if (NO_KEY == cur_key)

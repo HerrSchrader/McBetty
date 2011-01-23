@@ -24,8 +24,8 @@
 
 
 /* These variables are used to store function pointers.
-	They are needed to access functions which are in ".fastcode" segments.
-	TODO some functions have type definitions, others are explicitly stated. Change that.
+	They are needed to access functions which are in ".fastcode" segments
+	from functions not in ".fastcode" segments
 */
 void (*write_buf) (uint8 row, uint8 col, uint8 w, uint8 h);
 void (*draw_block) (uint8 row, uint8 col, uint8 w, uint8 h, uint8 fg_col);
@@ -319,7 +319,12 @@ _do_scroll(uint8 row, uint8 col, uint8 width, uint8 bitmask, uint8 offset){
 	};
 }
 	
-
+// TODO maybe increase scrolling speed
+// we could allocate a 3 page buffer and read all info at the start of the scroll routine
+// into this buffer.
+// Scroll the contents of the buffer
+// and then write back the whole buffer all at once
+// should be visually more pleasing
 /* Scroll an area on LCD with height =  0..16 
 	We can only efficiently scroll those pixels at a time, which are on the same page.
 	So we shift in phases.

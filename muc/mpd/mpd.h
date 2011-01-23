@@ -60,10 +60,10 @@ enum USER_CMD {
 };
 
 
-/* A structure to hold a command and its arguments 
-	This is used by model functions to tell mpd.c which action it wants
+/* 
+	A structure to hold a command and its arguments 
+	This is used by model functions to tell the controller which action it wants
 	and with what parameters.
-	TODO Is also used by the screen functions which is probably a bad idea.
 */
 typedef struct {
 	enum USER_CMD cmd;

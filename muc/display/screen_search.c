@@ -133,8 +133,8 @@ screen_exit(){
 
 
 // Forward declaration
-static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
-static int keypress_popup(Screen *this_screen, int cur_key, UserReq *req)	;
+static int keypress(Screen *this_screen, int cur_key)	;
+static int keypress_popup(Screen *this_screen, int cur_key)	;
 	
 /* Initialize the search screen 
 */
@@ -203,7 +203,7 @@ view_resultnames_changed(){
 };
 
 static int
-keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
+keypress_popup(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 		case KEY_Exit:
 		case KEY_Betty:
@@ -229,7 +229,7 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 
 
 static int
-keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
+keypress_info_popup(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 		
 		case KEY_Exit:
@@ -249,7 +249,7 @@ keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
 
 
 static int 
-keypress(Screen *this_screen, int cur_key, UserReq *req){
+keypress(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 		
 		case KEY_Betty:

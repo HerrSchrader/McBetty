@@ -83,8 +83,8 @@ screen_exit(){
 };
 
 // Forward declarations
-static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
-static int keypress_popup(Screen *this_screen, int cur_key, UserReq *req);
+static int keypress(Screen *this_screen, int cur_key)	;
+static int keypress_popup(Screen *this_screen, int cur_key);
 
 /* Initialize the playing screen 
 	We clear the whole screen.
@@ -265,7 +265,7 @@ view_state_changed(enum PLAYSTATE state){
 };
 
 static int
-keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
+keypress_popup(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 		
 		case KEY_Exit:
@@ -289,7 +289,7 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 };
 
 static int
-keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
+keypress_info_popup(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 		
 		case KEY_Exit:
@@ -321,7 +321,7 @@ keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
 //TODO add info to title screen track 4 of 17, playlist 1 of 99
 
 static int 
-keypress(Screen *this_screen, int cur_key, UserReq *req){
+keypress(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 			
 		case KEY_Betty:

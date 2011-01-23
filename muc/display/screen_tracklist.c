@@ -183,8 +183,8 @@ screen_exit(){
 };
 
 // Forward declarations
-static int keypress(Screen *this_screen, int cur_key, UserReq *req)	;
-static int keypress_popup(Screen *this_screen, int cur_key, UserReq *req);
+static int keypress(Screen *this_screen, int cur_key)	;
+static int keypress_popup(Screen *this_screen, int cur_key);
 
 void
 tracklist_screen_init(Screen *this_screen){
@@ -215,7 +215,7 @@ tracklist_screen_init(Screen *this_screen){
 };	
 
 static int
-keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
+keypress_popup(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 		case KEY_Exit:
 		case KEY_Betty:
@@ -239,7 +239,7 @@ keypress_popup(Screen *this_screen, int cur_key, UserReq *req){
 };
 
 static int
-keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
+keypress_info_popup(Screen *this_screen, int cur_key){
 	switch (cur_key) {
 		
 		case KEY_Exit:
@@ -264,7 +264,7 @@ keypress_info_popup(Screen *this_screen, int cur_key, UserReq *req){
 	- pass the key through to PLAYING screen
 */
 static int
-keypress(Screen *track_screen, int cur_key, UserReq *req){
+keypress(Screen *track_screen, int cur_key){
 		
 	switch (cur_key) {
 

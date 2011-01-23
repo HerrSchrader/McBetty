@@ -24,20 +24,17 @@ typedef struct Screen {
 	struct Window *win_list;		// pointer to array with the windows
 	void (*screen_enter)(void);		// function called when screen is entered
 	void (*screen_exit)(void);		// function called when screen is exited
-	int (*keypress) (struct Screen *, int, UserReq *);		// function called for screen specific key handler
-	enum USER_CMD user_req_cmd;		// ?
+	int (*keypress) (struct Screen *, int);		// function called for screen specific key handler
 } Screen;
 
 void screen_visible(enum SCREEN screen, int v);
 void screen_redraw(enum SCREEN screen);
 void mainscreen_init(void);
 void user_pressed_a_key(int cur_key);
-
-int keypress_msg_popup(Screen *this_screen, int cur_key, UserReq *req);
-void get_user_request(UserReq *req);
 void show_screen(enum SCREEN screen);
+
 void popup_end();
-void popup(char *text, int time_out, int (*keypress_handler) (struct Screen *, int, UserReq *));
+void popup(char *text, int time_out, int (*keypress_handler) (struct Screen *, int));
 void view_message(char *m, int time);
 
 

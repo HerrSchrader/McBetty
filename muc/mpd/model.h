@@ -3,7 +3,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-/* mpd can be in one of those states TODO maybe add a state ERROR */
+/* MPD can be in one of those states  */
 enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 
 
@@ -15,7 +15,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define STATE_CHANGED		(1<<4)
 #define PL_NAMES_CHANGED	(1<<5)
 #define TRACKLIST_CHANGED	(1<<6)
-#define POS_CHANGED			(1<<7)
+//#define POS_CHANGED			(1<<7)			// currently not used
 #define RANDOM_CHANGED		(1<<8)
 #define REPEAT_CHANGED		(1<<9)
 #define SINGLE_CHANGED		(1<<10)
@@ -195,7 +195,6 @@ void model_check_mpd_dead();
 void model_set_last_response(unsigned int time);
 void model_reset(struct MODEL *m);
 
-int get_comm_error();
 
 #endif
 
