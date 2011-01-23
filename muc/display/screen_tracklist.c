@@ -98,6 +98,9 @@ static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 
 static scroll_list track_list;
 
+/* Remember the last selected pos when leaving the screen */
+static int last_selected = 0;
+
 
 void
 view_tracklist_changed(){
@@ -134,52 +137,22 @@ view_pl_length_changed(int len, int added){
 static void
 screen_enter(){
 	int cur_song;
-	int start_sel;
 	
 	/* We try to get the index of the current song, if there is any 
-		because we want to adjust our track list range screen with the current song in the selected window.
+		because we want to show our scroll list with the current song in the selected window.
+		If we have no current song, we use the last remembered position.
 	*/
-	cur_song = max (0, mpd_get_pos());
+	cur_song = mpd_get_pos();
+	if (cur_song < 0)
+		cur_song = last_selected;
 
-// utterly complicated
-#if 0	
-	/* We like to start our list with the last 2 songs before the current one. */
-	if (cur_song >= 2){
-		track_list.first_info_idx = cur_song - 2;
-		start_sel = 2;
-	} else {
-		track_list.first_info_idx = cur_song;
-		start_sel = 0;
-	};
-	
-	/* If we are near the end of the playlist, don't show mostly empty windows.
-		Adjust start.
-	*/
-	if (mpd_tracklist_last() >= 0){
-		if ((mpd_tracklist_last() - track_list.first_info_idx + 1) < track_list.num_windows){
-			track_list.first_info_idx =  max( 0, mpd_tracklist_last() - track_list.num_windows + 1);
-			start_sel = max(0, cur_song - track_list.first_info_idx);
-		};
-	};
-
-	
-	/* We always want to startup showing the current song in the selected window */
-	select(&track_list, start_sel);
-
-	// Tell model which range we want
-	tracklist_range_set( track_list.first_info_idx, last_info_idx(&track_list) );
-	
-	/* Redraw the scroll list */
-	scroll_list_changed(&track_list);
-#endif	
-	
-	/* We always want to start with the first playlist name, because the user might have got lost previously. */
-	scroll_list_start(&track_list, 0);	
+	scroll_list_start(&track_list, cur_song);	
 };
 
 
 static void 
 screen_exit(){
+	last_selected = scroll_list_selected(&track_list) ;
 };
 
 // Forward declarations
@@ -300,7 +273,6 @@ keypress(Screen *track_screen, int cur_key){
 			break;
 																				
 		case KEY_OK:
-			// NOTE info-idx could return -1 if invalid, user_wants_song can handle that 
 			user_wants_song ( scroll_list_selected(&track_list) );
 			show_screen(PLAYING_SCREEN);
 			break;
