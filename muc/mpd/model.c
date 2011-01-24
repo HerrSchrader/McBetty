@@ -998,8 +998,7 @@ mpd_set_pos(int newpos){
 		mpd_model.songid = UNKNOWN;				// NOTE songid is currently not used
 		mpd_set_time(0, -1);						// The 0 is just a guess. But we have to get total time anyway
 	};
-//	model_changed(POS_CHANGED);						// this is (maybe) important to know for track list handling
-													// POS_CHANGED is currently not used
+	model_changed(POS_CHANGED);	
 };
 
 /* We sent a "PLAY xxx" command and got "OK". */

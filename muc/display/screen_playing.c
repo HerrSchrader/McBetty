@@ -24,9 +24,11 @@
 #include "model.h"
 #include "mpd.h"
 
+/* The height of a small window */
+#define WL_SMALL_HEIGHT 10
 
 /* Number of entries in the window list */
-#define WL_SIZE 11
+#define WL_SIZE 12
 
 /* The window list */
 static struct Window win[WL_SIZE];
@@ -35,48 +37,56 @@ static struct Window win[WL_SIZE];
 /* Text buffer for the windows */
 static char win_txt[WL_SIZE][WIN_TXT_SIZE];
 
+// row to start with the windows
+#define WL_START_ROW 0
+
 /* Some definitions to refer to specific windows by name */
 
+#define caption_win (win[0])
+
 /* Window to show the current title */
-#define title_win (win[0])
+#define title_win (win[1])
 
 /* Window to show the current artist */
-#define artist_win (win[1])
+#define artist_win (win[2])
 
 /* Window to show running time and total time */
-#define time_win (win[2])
+#define time_win (win[3])
 
 /* Window to show a progress bar for running time */
-#define time_prog_win (win[3])
+#define time_prog_win (win[4])
 
 /* Window to show volume ramp */
-#define vol_ramp_win (win[4])
+#define vol_ramp_win (win[5])
 
 /* Window to show the current volume in precent */
-#define volume_win (win[5])
+#define volume_win (win[6])
 
 /* Window to show speaker on/off */
-#define speaker_win (win[6])
+#define speaker_win (win[7])
 
 /* Window to show play/stop/pause status */
-#define state_win (win[7])
+#define state_win (win[8])
 
 /* Window to show random state */
-#define rnd_win (win[8])
+#define rnd_win (win[9])
 
 /* Window to show repeat state */
-#define rpt_win (win[9])
+#define rpt_win (win[10])
 
 /* Window to show single state */
-#define single_win (win[10])
+#define single_win (win[11])
 
 
 /* Window to show the current album TODO maybe later */
 
+// Forward declarations
+void view_pos_changed();
+
 static void 
 screen_enter(){
+	view_pos_changed();				// sets caption window title
 };
-
 
 static void 
 screen_exit(){
@@ -91,72 +101,99 @@ static int keypress_popup(Screen *this_screen, int cur_key);
 */
 void 
 playing_screen_init(Screen *this_screen) {
+	int cur_start_row;
+	
 	this_screen->wl_size = WL_SIZE;
 	this_screen->win_list = win;
 	this_screen->screen_enter = screen_enter;
 	this_screen->screen_exit = screen_exit;
 	this_screen->keypress = keypress;
 	
-	win_init(&title_win, 0, 0, 50, 128, 1, win_txt[0]);
+	cur_start_row = WL_START_ROW;	
+	
+	win_init(&title_win, cur_start_row, 0, 50, 128, 1, win_txt[1]);
 	title_win.font = MEDIUMFONT;	
 	title_win.flags |= WINFLG_CENTER;
 	
-	win_init(&artist_win, 49, 0, 30, 128, 1, win_txt[1]);
+	// The first line overlaps with the last line of the previous window
+	cur_start_row += 49;
+
+	win_init(&artist_win, cur_start_row, 0, 30, 128, 1, win_txt[2]);
 	artist_win.font = MEDIUMFONT;	
 	artist_win.flags |= WINFLG_CENTER;
 	
-	win_init(&time_win, 84, 22, 10, 128-22, 0, win_txt[2]);
+	// leave some room between artist and time window
+	cur_start_row += 30 + 5;			// 84
+			
+	win_init(&time_win, cur_start_row, 22, 10, 128-22, 0, win_txt[3]);
 	time_win.font = SMALLFONT;
+	
+	// state windows lies between time window and progress bar
+	cur_start_row +=  5;				// 89
 
 	/* The state window, on the same line as the time progress */
-	win_init(&state_win, 89, 1, 16, 18, 0, win_txt[3]);
+	win_init(&state_win, cur_start_row, 1, 16, 18, 0, win_txt[4]);
 
 	state_win.font = BIGFONT;
 	win_new_text(&state_win, "\xB3"); 	// play icon == b3
 	
+	cur_start_row +=  5;				// 94
+	
 	/* This is our progressbar */
-	win_init(&time_prog_win, 95, 22, 8, 102, 1, win_txt[4]);
+	win_init(&time_prog_win, cur_start_row, 22, 8, 102, 1, win_txt[5]);
 	time_prog_win.font = SMALLFONT;
 	time_prog_win.flags = WINFLG_BAR;
 	time_prog_win.fg_color = DARK_GREY;
 	time_prog_win.cur_char = 0;		/* current value */
 	
-#define VOL_ROW 114	
+	cur_start_row +=  16;				// 110
+
 	/* The speaker indicator is on the same line as volume text */
-	win_init(&speaker_win, VOL_ROW, 15, 18, 15, 0, win_txt[5]);
+	win_init(&speaker_win, cur_start_row, 15, 18, 15, 0, win_txt[6]);
 	speaker_win.font = BIGFONT;
 	win_new_text(&speaker_win, "\xB8");	// speaker icon on
 	
 	/* Our indicator for the volume (triangle progress bar) */
-	win_init(&vol_ramp_win, VOL_ROW, 31, 16, 50, 0, win_txt[6]);
+	win_init(&vol_ramp_win, cur_start_row, 31, 16, 50, 0, win_txt[7]);
 	vol_ramp_win.flags = WINFLG_RAMP;
 	vol_ramp_win.fg_color = BLACK;
 	vol_ramp_win.cur_char = 100/2;		/* We initialize the volume with 100 % */
 
 	/* The text portion of the volume follows on the same line as the ramp */
-	win_init(&volume_win, VOL_ROW, 88, 16, 128-88, 0, win_txt[7]);
+	win_init(&volume_win, cur_start_row, 88, 16, 128-88, 0, win_txt[8]);
 	win_new_text(&volume_win, "100 %");
+	
+	cur_start_row +=  20;				// 130
 
-	win_init(&rnd_win, 134, 0, 14, 33, 1, win_txt[8]);
+	win_init(&rnd_win, cur_start_row, 0, 14, 32, 1, win_txt[9]);
 	rnd_win.font = SMALLFONT;
 	rnd_win.flags |= WINFLG_CENTER | WINFLG_FRAME | WINFLG_HIDE;
 	rnd_win.fg_color = WHITE;
 	rnd_win.bg_color = BLACK;
 	win_new_text(&rnd_win, "RND" );
 	
-	win_init(&rpt_win, 134, 43, 14, 33, 1, win_txt[9]);
+	win_init(&rpt_win, cur_start_row, 48, 14, 32, 1, win_txt[10]);
 	rpt_win.font = SMALLFONT;
 	rpt_win.flags |= WINFLG_CENTER | WINFLG_FRAME | WINFLG_HIDE;
 	rpt_win.fg_color = WHITE;
 	rpt_win.bg_color = BLACK;
 	win_new_text(&rpt_win, "RPT" );
 	
-	win_init(&single_win, 134, 86, 14, 33, 1, win_txt[10]);
+	win_init(&single_win, cur_start_row, 96, 14, 32, 1, win_txt[11]);
 	single_win.font = SMALLFONT;
 	single_win.flags |= WINFLG_CENTER | WINFLG_FRAME | WINFLG_HIDE;
 	single_win.fg_color = WHITE;
 	single_win.bg_color = BLACK;
 	win_new_text(&single_win, "1" );
+		
+	cur_start_row +=  20;				// 150
+	
+	/* The caption window is the last window */
+	win_init(&caption_win, cur_start_row, 0, WL_SMALL_HEIGHT, 128,0, win_txt[0]);
+	caption_win.font = SMALLFONT;
+	caption_win.fg_color = BLACK;
+	caption_win.bg_color = LIGHT_GREY;
+	caption_win.flags |= WINFLG_CENTER;
 }
 
 #define TIMESTR_LEN 30
@@ -179,6 +216,41 @@ view_time_changed(int te, int tt){
 		draw_progressbar(time_prog_win.start_row+1, time_prog_win.start_col, time_prog_win.height-2, 
 							time_prog_win.fg_color, time_prog_win.bg_color, time_prog_win.cur_char, newval);
 	time_prog_win.cur_char = newval;
+};
+
+/* 
+	The current song or the playlistlength (or both) has changed.
+	Redraw the caption window
+*/
+void
+view_pos_changed(){
+	char newstr[30];
+	char number[20];
+	char *numstr;
+	int cur_song, pl_length;		
+	
+	cur_song = mpd_get_pos();
+	if (cur_song == SONG_UNKNOWN) {
+		win_new_text(&caption_win,"");
+		return;
+	};
+	
+	if (cur_song == NO_SONG){
+		win_new_text(&caption_win,"No current song");
+		return;
+	};
+
+	strlcpy(newstr, "Song ", sizeof(newstr));
+	numstr = get_digits(cur_song, number, 0); 
+	strlcat(newstr, numstr, sizeof(newstr));
+	
+	pl_length = mpd_get_pl_length();
+	if (pl_length >= 0){
+		strlcat(newstr, " of ", sizeof(newstr));
+		numstr = get_digits(pl_length, number, 0); 
+		strlcat(newstr, numstr, sizeof(newstr));
+	};
+	win_new_text(&caption_win, newstr);
 };
 
 

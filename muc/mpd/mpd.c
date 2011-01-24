@@ -476,6 +476,8 @@ inform_view(int model_changed){
 	if (model_changed & TRACKLIST_CHANGED)
 		view_tracklist_changed();
 	
+	if ( (model_changed & PL_LENGTH_CHANGED) || (model_changed & POS_CHANGED) )
+		view_pos_changed();
 	
 	if (model_changed & NUM_PL_CHANGED){
 		view_num_pl_changed(mpd_get_num_pl());

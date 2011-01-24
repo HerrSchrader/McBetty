@@ -91,7 +91,7 @@ playlist_screen_init(Screen *this_screen){
 
 	cur_start_row = WL_START_ROW;	
 	
-	/* The first window is a help window */
+	/* The first window is the title window */
 	win_init(&win[0], cur_start_row, 0, WL_SMALL_HEIGHT, 128,0, win_txt[0]);
 	win[0].font = SMALLFONT;
 	win[0].fg_color = WHITE;

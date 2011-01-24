@@ -15,7 +15,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define STATE_CHANGED		(1<<4)
 #define PL_NAMES_CHANGED	(1<<5)
 #define TRACKLIST_CHANGED	(1<<6)
-//#define POS_CHANGED			(1<<7)			// currently not used
+#define POS_CHANGED			(1<<7)
 #define RANDOM_CHANGED		(1<<8)
 #define REPEAT_CHANGED		(1<<9)
 #define SINGLE_CHANGED		(1<<10)
