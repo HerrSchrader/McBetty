@@ -243,7 +243,7 @@ keypress(Screen *track_screen, int cur_key){
 
 		case KEY_Betty:
 		case KEY_Menu:
-			popup("A  All\n   playlists\n\nB\n\nC  Search\n\nD  Now playing\n\ni  Info", 0, keypress_popup);
+			popup("A  All\n   playlists\n\nB\n\nC  Search\n\nD  Main Screen\n\ni  Info", 0, keypress_popup);
 			break;
 			
 		case KEY_Exit:	

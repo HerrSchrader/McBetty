@@ -165,7 +165,7 @@ keypress(Screen *pl_screen, int cur_key){
 			popup("A\n\n"
 				"B  Current\n   playlist\n\n"
 				"C  Search\n\n"
-				"D  Now playing\n\n"
+				"D  Main Screen\n\n"
 				"i  Info",
 					0, keypress_popup);
 			break;

@@ -255,7 +255,8 @@ keypress(Screen *this_screen, int cur_key){
 		case KEY_Betty:
 		case KEY_Menu:			
 		case KEY_OK:
-			popup("A Append to\n   playlist\n\nB Begin new\n   playlist\n\nC Clear search\n\nD Now playing\n\ni Info", 0, keypress_popup);
+			popup("A Add to\n   playlist\n\nB Begin new\n   playlist\n\nC Clear search\n\nD Main Screen\n\ni Info",
+				  0, keypress_popup);
 			break;
 					
 		case KEY_Exit:	
