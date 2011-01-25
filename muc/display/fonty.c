@@ -116,14 +116,31 @@ set_font(enum FONT f)
 #define char_width(c) (font_info[ (unsigned char) c])
 
 
+/* 
+	Given a character position, returns the corresponding start column at which the character would be drawn.
+	Is used by cursor drawing routine.
+*/
+uint8_t
+char_start_col(char *txt, int pos){ 
+	unsigned char ch;
+	unsigned int i, w = 0, cpos;
+	
+	for (i = 0; i < pos; i++){
+		ch = txt[i];
+		
+		if (ch <= max_char){ 
+			cpos = char_pos[ch];		// Start of glyph bits in font_bits[]
+			w += char_width(ch) + ic_space;
+		};
+	};
+	return w;
+};
+
 /* The most important routine here!
 	Draw a single character 
-
-	c is color and m is mode
-		 
+	 
 	width tells us how many display columns we can use at most to draw the character
 	
-	tx and ty are already set to the current pixel start locations
 	returns 0 iff the character did not fit completely (with inter character space) into the given width
 	if it did fit, returns the number of columns drawn (with inter character space) 
 	

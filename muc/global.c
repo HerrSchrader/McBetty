@@ -109,16 +109,24 @@ strlcat(char *dst, const char *src, int size){
 
 /* Delete the character at position pos in the string 
 	Deletes in place, original string is changed
-	Returns new strlen(s). 
+	Returns new strlen(s).
 */
 int
 str_del(char *s, int pos){
 	int i;
-	for (i=0; s[i]; i++)
-		if (i == pos) break;
-	for (; s[i]; i++)
-		s[i] = s[i+1];
-	return i;
+	
+	for (i=0; i< pos; i++)
+		if (s[i] == '\0')
+			return strlen(s);
+	
+	if (s[pos] == '\0')
+		return pos;
+	
+	while (s[pos]){
+		s[pos] = s[pos+1];
+		pos++;
+	};
+	return pos - 1;	
 };
 
 /* String copy and compare.

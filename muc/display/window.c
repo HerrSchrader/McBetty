@@ -120,26 +120,6 @@ draw_cur_char(struct Window *win){
 	return 1;
 };
 
-/* We assume the cursor is at the current character column.
-	We also use the cur_char.
-	The cursor is not advanced after drawing.
-*/	
-static uint8_t
-draw_cursor(struct Window *win, uint8_t reversed){
-	char ch;
-	
-	/* If we are past the text length, draw space */
-	if (win->cur_char >= win->text_len) ch = ' ';
-	else ch = win->txt[win->cur_char];
-	
-	if (reversed)
-		draw_char(win_txt_row(win), win->cur_col, ch, win->bg_color, win->fg_color, txt_col_lim(win) - win->cur_col ); 
-	else	
-		draw_char(win_txt_row(win), win->cur_col, ch, win->fg_color, win->bg_color,  txt_col_lim(win) - win->cur_col ); 
-	
-	return 1;
-};
-
 /* 	Clear window (except border) and draw the contents completely (except border) new. Use text in win->txt
 	Sets win->fits to 1 if the text fits in window, else sets it to 0.
 	Text is centered in window (horizontally as well as vertically)
@@ -636,18 +616,30 @@ We need a blink task. Cursor blinks in selected window at 1|2 HZ
 
 /* We have at most one window where the cursor blinks */
 static struct Window *pcursor_win = NULL;
-/* Maximum length of text for this window */
+
+/* Maximum length of text for this window that we allow 
+	There is at least room for another '\0' character in the array 
+*/
 static int max_txt_len;
 
-static int cursor_new_pos = -1;
 static int cursor_pos = 0;				// position of cursor within text string (0 == first character)
-static int cursor_col = 0;				// column on screen where cursor has to be drawn
+static int cursor_on = 0;				// is cursor currently on (1 = black) or off
 
 static int last_key = -1;
 static int key_cnt = -1;
 
+#define cursor_col(p) (char_start_col(pcursor_win->txt, p))
+
+/* 
+	When this timer expires, the user has not pressed a key for some time
+	Used to move the cursor to the next position automatically.
+*/ 
 static struct timer char_tmr;
 
+/* 
+	Clear the input window. Reset cursor to start position. 
+	Stop char_tmr.
+*/
 void
 win_cursor_clr(){
 	if (NULL == pcursor_win) 
@@ -655,97 +647,124 @@ win_cursor_clr(){
 	pcursor_win->txt[0] = '\0';
 	pcursor_win->text_len = 0;
 	cursor_pos = 0;
-	cursor_new_pos = 0;
 	key_cnt = -1;
 	last_key = -1;
 	timer_stop(&char_tmr);
+	win_draw_text(pcursor_win);	
 }
 
-/* Redraws window and remembers cursor_col, win->cur_char and win->cur_col 
-	The variable cursor_pos tells us at which position the cursor currently is.
-	cursor_pos >= 0 and <= win->text_len.
-	If cursor_pos == win_text_len, the cursor is past the end of string (at NULL character).
-	This routine will nevertheless set the correct column for cursor_col.
+/* 
+	We do not want to redraw our input window every time the cursor blinks.
+	We only redraw the character under the cursor.
+	For that we have to known the position in the text at which the cursor is.
+	If the cursor is past the last character in the window text, we draw a space.
+*/	
+static uint8_t
+draw_cursor(struct Window *win, uint8_t cursor_pos, uint8_t reversed){
+	char ch;
+	int cc;
 	
-*/
-static void
-draw_cursor_win(struct Window *win){
-	if (NULL == win) return;
-	 
-	win_clear(win, 0);
-	set_font(win->font);
+	set_font(win->font);			// necessary !
+	cc = cursor_col(cursor_pos);
 	
-	cursor_col = -1;
-
-	win->cur_char = 0;
-	win->cur_col = win_txt_col(win);
-	win->fits = 1;
+	/* If we are past the text length, draw space */
+	if (cursor_pos >= win->text_len) ch = ' ';
+	else ch = win->txt[cursor_pos];
 	
-	while (win->cur_char < win->text_len){
-		
-		// remember at which column the cursor has to be drawn
-		if (win->cur_char == cursor_pos)
-			cursor_col = win->cur_col;
-
-		if (draw_cur_char(win) == 0) {
-			win->fits = 0;
-			break;
-		};
-	};
-	if (cursor_col == -1)			// we were past the end of string
-		cursor_col = win->cur_col;
+	if (reversed)
+		draw_char(win_txt_row(win), win_txt_col(win)+ cc, ch, win->bg_color, win->fg_color, txt_col_lim(win) - cc ); 
+	else	
+		draw_char(win_txt_row(win), win_txt_col(win)+ cc, ch, win->fg_color, win->bg_color, txt_col_lim(win) - cc ); 
 	
-	win->cur_char = cursor_pos;
-	win->cur_col = cursor_col;
+	return 1;
 };
 
-
-/* If pos is at end of string, increase text length (append a space) 
-	Returns 0 if text length limit was reached
-
-	Real name: increase text when necessary and possible
-*/
+/* Returns 1 if cursor position could be decremented */
 static int
-inc_txt(int pos){
-	if (0 == pcursor_win->txt[pos]){
-		if (pos >= max_txt_len )
-			return 0;
-		pcursor_win->txt[pos] = ' ';
-		pcursor_win->txt[pos + 1] = 0;
-		pcursor_win->text_len++;
-	};
-	return 1;
+dec_cursor(){
+	if (cursor_pos <= 0) 
+		return 0;
+	
+	/* Clear old cursor */
+	draw_cursor(pcursor_win, cursor_pos, 0);
+	
+	/* Draw new cursor at new position */
+	cursor_on = 1;
+	cursor_pos--;
+	draw_cursor(pcursor_win, cursor_pos, cursor_on);
+	return 1;	
 };
 
 /* Returns 1 if cursor could be advanced */
 static int
 advance_cursor(){
 	/* We must not move beyond end of string */
-	if (0 == pcursor_win->txt[cursor_pos])
+	if ('\0' == pcursor_win->txt[cursor_pos])
 		return 0;
 	
-	/* Move to next position in text if possible ? */
-	if (cursor_pos < (max_txt_len - 1) ){
-		cursor_new_pos = cursor_pos + 1;
-		return 1;
-	} else
-		cursor_new_pos = cursor_pos;
-	return 0;
+	/* Clear old cursor */
+	draw_cursor(pcursor_win, cursor_pos, 0);
+	
+	/* Draw new cursor at new position */
+	cursor_on = 1;
+	cursor_pos++;
+	draw_cursor(pcursor_win, cursor_pos, cursor_on);
+	return 1;
 };
 
-/* Change the character at pos */
+
+
+/* 
+	Store a character at pos p in the window text 
+	If p is beyond the current text, the character is appended at the
+	end (if possible)
+*/
 static void
-store_char(int pos, char c){
-	if (!inc_txt(pos)) return;					// no space for a character
-	pcursor_win->txt[pos] = c;
-	cursor_new_pos = pos;						// Cursor stays the same, but text has changed
-	timer_set(&char_tmr, WAIT_KEY_TIME, 0);		// New character, start auto advance timer
-}
+store_char(struct Window *win, int p, char c){
+	if (p >= max_txt_len)
+		return;
+	
+	/* Clear old cursor */
+	cursor_on = 0;
+	draw_cursor(win, cursor_pos, 0);
+			
+	if (p >= win->text_len){ 
+		win->txt[win->text_len++] = c;
+		win->txt[win->text_len] = '\0';
+	} else {
+		win->txt[p] = c;
+	};
+	
+	win_draw_text(win);	
+};
 
 /*
-	1. Nothing has changed. Wait for time out. Draw cursor on/off. Repeat.
-	2. New cursor position or new char at position (new_pos >= 0): Redraw string, remember new cursor column. Goto 2.
-	3. Character Timer has expired. New cursor position + 1. Goto 2
+	Delete a character at position p in the window text.
+*/
+static void
+del_char(struct Window *win, int p){
+	// No text ==> nothing to delete 
+	if ( (0 == win->text_len) || (p > win->text_len) )
+		return;
+	
+	/* Clear old cursor */
+	cursor_on = 0;
+	draw_cursor(win, cursor_pos, 0);
+				
+	if (p == win->text_len) {
+		win->text_len = str_del(win->txt, win->text_len - 1);
+	} else {	
+		win->text_len = str_del(win->txt, p);	
+	};
+	win_draw_text(win);	
+};
+
+
+/*
+	This thread does 2 things.
+	- It regularily blinks the cursor at the current position.
+	- It advances the cursor if no new input via keyboard has arrived.
+
 */
 
 /* ### Cursor Blinking Task ###  */
@@ -761,7 +780,7 @@ PT_THREAD (win_cursor_blink(struct pt *pt)){
 		tmr.expired = 0;
 		cursor_on ^= 1;	
 		
-		PT_WAIT_UNTIL(pt, ( timer_expired(&tmr) || timer_expired(&char_tmr) || (cursor_new_pos >= 0) ) );
+		PT_WAIT_UNTIL(pt, ( timer_expired(&tmr) || timer_expired(&char_tmr) ) );
 		
 		if (pcursor_win == NULL) {
 			timer_stop(&char_tmr);
@@ -773,21 +792,12 @@ PT_THREAD (win_cursor_blink(struct pt *pt)){
 		if (pcursor_win->flags & WINFLG_HIDE) continue;
 		
 		/* Check if we should advance the cursor because user did not press a key again within time */
-		if ( (cursor_new_pos < 0) && timer_expired(&char_tmr)) {	
+		if ( timer_expired(&char_tmr)) {	
 			advance_cursor();
 			timer_stop(&char_tmr);
 			key_cnt = -1;
-		};
-		
-		/* Set cursor to a new position ? */
-		if (cursor_new_pos >= 0){
-			cursor_pos = cursor_new_pos;
-			draw_cursor_win(pcursor_win);
-			cursor_new_pos = -1;
-		};
-		
-		set_font(pcursor_win->font);
-		draw_cursor(pcursor_win, cursor_on);
+		} else
+			draw_cursor(pcursor_win, cursor_pos, cursor_on);
 	};
 	PT_END(pt);
 };
@@ -801,10 +811,9 @@ void
 win_cursor_set(struct Window *pwin, int size){
 	pcursor_win = pwin;
 	max_txt_len = size;
-	cursor_new_pos = -1;
 	if (pwin != NULL){
 		cursor_pos = max(0, (strlen(pcursor_win->txt) - 1));
-		draw_cursor_win(pcursor_win);
+//		draw_cursor_win(pcursor_win);
 	};
 	last_key = -1;
 	key_cnt = -1;
@@ -840,8 +849,7 @@ win_cursor_input(int new_key){
 	char c;
 	
 	if (new_key == CURSOR_LEFT){
-		if (cursor_pos <= 0) return;
-		cursor_new_pos = cursor_pos - 1;
+		dec_cursor();
 		key_cnt = -1;
 		last_key = -1;
 		timer_stop(&char_tmr);
@@ -849,45 +857,44 @@ win_cursor_input(int new_key){
 	};
 	
 	if (new_key == CURSOR_RIGHT){
-		/* We must not move beyond end of string */
-		if (advance_cursor()){
-			cursor_new_pos = cursor_pos + 1;
-			key_cnt = -1;
-			last_key = -1;
-			timer_stop(&char_tmr);
-		};
-		return;
-	};	
-		
-	if (new_key == CURSOR_BACKSPACE){
-		if (cursor_pos <= 0) return;
-		cursor_new_pos = cursor_pos - 1;
+		advance_cursor();
 		key_cnt = -1;
 		last_key = -1;
 		timer_stop(&char_tmr);
-		pcursor_win->text_len = str_del(pcursor_win->txt, cursor_new_pos);
+		return;
+	};
+	
+	/* A bit tricky. It makes sense to implement this as a kind of delete, i.e. delete the character 
+		under the cursor. This only fails if the cursor is at end of text. Then delete the last character.
+	*/
+	if (new_key == CURSOR_BACKSPACE){
+		key_cnt = -1;
+		last_key = -1;
+		timer_stop(&char_tmr);
+		
+		del_char(pcursor_win, cursor_pos);
+		cursor_pos = min(cursor_pos, pcursor_win->text_len);
 		return;	
 	};
-		
+	
+	timer_set(&char_tmr, WAIT_KEY_TIME, 0);				// start auto advance timer	
 	/* This is the first time a key is pressed here */
 	if (key_cnt < 0){
 		key_cnt = 0;
 		c = key2char(new_key, 0);
-		store_char(cursor_pos, c);
-		
+		store_char(pcursor_win, cursor_pos, c);
 	} else {
 		/* We already entered text at this cursor position */	
 		if (new_key == last_key){			// User pressed the same key twice before a time out occured 
 			key_cnt++;
 			c = key2char(new_key, key_cnt);
-			store_char(cursor_pos, c);
-
+			store_char(pcursor_win, cursor_pos, c);
 		} else {
 		// User pressed a different key, advance to the next cursor position, store new char
 			key_cnt = 0;
 			c = key2char(new_key, 0);
 			advance_cursor();
-			store_char(cursor_new_pos, c);
+			store_char(pcursor_win, cursor_pos, c);
 		};
 	};
 	last_key = new_key;		

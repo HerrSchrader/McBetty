@@ -119,7 +119,7 @@ screen_enter(){
 static void 
 screen_exit(){
 	task_del(auto_search_task);
-	win_cursor_set(NULL, WIN_TXT_SIZE-1);
+	win_cursor_set(NULL, 15);				// more than 15 characters do not fit on one line
 };
 
 /* The height of a small window */
@@ -149,7 +149,7 @@ search_screen_init(Screen *this_screen) {
 	this_screen->keypress = keypress;
 	
 	win_init(&title_win, cur_start_row, 0, WL_SMALL_HEIGHT, 128, 1, win_txt[0]);
-	title_win.font = SMALLFONT;	
+	title_win.font = SMALLFONT;							// must be SMALLFONT !
 	title_win.flags |= WINFLG_CENTER;
 	title_win.fg_color = WHITE;
 	title_win.bg_color = BLACK;
@@ -255,7 +255,7 @@ keypress(Screen *this_screen, int cur_key){
 		case KEY_Betty:
 		case KEY_Menu:			
 		case KEY_OK:
-			popup("A Add to\n   playlist\n\nB Begin new\n   playlist\n\nC Clear search\n\nD Main Screen\n\ni Info",
+			popup("A Add to\n   playlist\n\nB Begin new\n   playlist\n\nC Add & play\n\nD Main Screen\n\ni Info",
 				  0, keypress_popup);
 			break;
 					
@@ -269,12 +269,20 @@ keypress(Screen *this_screen, int cur_key){
 			break;
 			
 		case KEY_B:
-			user_tracklist_clr();	
+			user_tracklist_clr();
+			user_wants_song(0);	
+			user_wants_state(PLAY);
 			user_find_add(scroll_list_selected(&result_list) );
 			break;	
 								
 		case KEY_C:	
-			win_cursor_clr();
+			/* If possible play the first newly added song */
+			if (mpd_get_pl_length() >= 0)
+				user_wants_song(mpd_get_pl_length());
+			else
+				user_wants_song(0);
+			user_wants_state(PLAY);
+			user_find_add(scroll_list_selected(&result_list) );
 			break;
 			
 		case KEY_D:	
@@ -291,8 +299,8 @@ keypress(Screen *this_screen, int cur_key){
 				"Red = Artist\n"
 				"Green = Title\n"
 				"Yellow = Album\n"
-				"OK = Load\n"
-				"      results", 
+				"AV = Clr Input\n"
+				"OK = Load", 
 				  0, keypress_info_popup);
 			break;
 								
@@ -340,6 +348,10 @@ keypress(Screen *this_screen, int cur_key){
 			
 		case KEY_Minus:
 			win_cursor_input(CURSOR_BACKSPACE);
+			break;
+		
+		case KEY_AV:
+			win_cursor_clr();
 			break;
 			
 		case KEY_0:

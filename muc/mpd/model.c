@@ -145,12 +145,24 @@ model_needs_action(UserReq *req){
 	/* Most of the following commands only work if we have loaded the correct playlist.
 		So check that first.
 	*/ 
+	
+	/* To clear the playlist we have to know nothing else. Simply issue the command. */
+	if ((0 == user_model.playlistlength) && (mpd_model.playlistlength != 0) )
+		return CLEAR_CMD;
+
+	/* To load the playlist that the user wants, we have to know the list of available playlists */
 	if (mpd_model.num_playlists == -1)
 		return PLAYLISTCOUNT_CMD;
 	
 	if (user_model.cur_playlist != -1){
 		req->str = mpd_playlistname_info(user_model.cur_playlist);
 		return LOAD_CMD;
+	};
+	
+	/* Something to add to the playlist ? We must know the find string */
+	if ( user_model.find_add != -1) {
+		req->str = mpd_result_string(user_model.find_add);
+		return FINDADD_CMD;
 	};
 	
 	/* mpd playing state and the user state should match */
@@ -241,22 +253,14 @@ model_needs_action(UserReq *req){
 		return REWIND_CMD;	
 	};
 	
-	if ((0 == user_model.playlistlength) && (mpd_model.playlistlength != 0) ){
-		return CLEAR_CMD;
-	};
-		
+
 	pos = cache_find_unknown(&tracklist);
 	if ( (pos >= 0) && (pos < mpd_model.playlistlength) ) {
 		req->arg = pos;
 		return PLINFO_CMD;
 	};
 	
-	/* Something to add to the playlist ? */
-	if (user_model.find_add != -1){
-		req->str = mpd_result_string(user_model.find_add);
-		return FINDADD_CMD;
-	};
-	
+
 	/* Something to search ? */
 	if (user_model.search_string != NULL){
 		req->str = mpd_get_search_string();
@@ -460,9 +464,7 @@ void
 mpd_clear_ok(struct MODEL *a){
 	user_model.playlistlength = -1;	
 	user_model.cur_playlist = -1;			// wish fulfilled
-	set_playlistlength(0);	
-//	cache_clear(&tracklist, 0);
-//	tracklist_range_set(0, 0);
+	set_playlistlength(0);					// clears the cache
 	model_changed(TRACKLIST_CHANGED);
 	mpd_set_state(STOP);				// mpd changes its state to STOP after a CLEAR command!
 	mpd_set_pos(NO_SONG);				// there is no current song
@@ -475,17 +477,9 @@ mpd_clear_ok(struct MODEL *a){
 */
 void
 user_wants_song(int pos){
-	if (pos >= 0) {			// a specific song, we make sure that the wish makes sense.
-		if ((mpd_model.playlistlength >= 0) && (pos > mpd_model.playlistlength - 1)){
-			return;
-		} else {
-			user_model.pos = pos;
-			return;
-		}
-	} else {				// pos < 0
-		if (pos == -1) return;	// invalid, do nothing
-		user_model.pos = pos;	// either NEXT_SONG or PREV_SONG
-	}
+	if (pos == -1) 
+		return;				// invalid, do nothing
+	user_model.pos = pos;
 };
 
 
@@ -554,7 +548,7 @@ user_wants_playlist(int idx){
 
 /* --------------------------------------- Search results ------------------------------- */
 
-/* Given an index starting from 0, we return the corresponding resultlist name entry.
+/* Given a result position starting from 0, we return the corresponding resultlist name entry.
 	If we have no info or the result does not exist we return "".
 	Does return a non-NULL string
 */
@@ -669,6 +663,8 @@ user_set_search_string(char * s){
 	user_model.search_string = s;
 };
 
+
+/* We got an ok after a findadd command */
 void
 mpd_findadd_ok(struct MODEL *a){
 	user_model.find_add = -1;				// wish fulfilled
@@ -678,13 +674,12 @@ mpd_findadd_ok(struct MODEL *a){
 };
 
 /* 
-	User has found what he wanted.
-	He wants to add the result to the current playlist
-	idx is the chosen position in the result list 
+	User has selected what he wants to add to the playlist.
+	result_pos is the chosen position in the result list 
 */
 void
-user_find_add(int pos){
-	user_model.find_add = pos;
+user_find_add(int result_pos){
+	user_model.find_add = result_pos;
 };
 
 int

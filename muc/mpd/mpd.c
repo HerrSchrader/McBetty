@@ -615,6 +615,25 @@ PT_THREAD (exec_action(struct pt *pt, struct MODEL *ans_model) ){
 	if (tries >= max_tries) {
 		debug_out("No answer ", 1);
 		model_check_mpd_dead();
+		// TODO If MPD is not dead, we should tell the model that we did not get
+		// an answer.
+		// We really have 2 kind of commands.
+		// - Single shot: Issue the command. If it was OK, change something in the model.
+		// 				If it was ACK or no answer, do not try it again (set the user wish to
+		//				be fulfilled anyway). It is the responsibility of the user to re-issue
+		//				that command if he really wants to.
+		//				Example: "play" command when there is no current song. Will get an ACK.
+		//						No need to try again, because it will get the same answer repeatedly.
+		//						Could inform the user "currently not possible"
+		//	- Indispensable: We absolutely need this request to be executed, else we can not proceed.
+		//				Example: "playlistname" command. We can not show all available playlists when 
+		//						we can not get their names. The "All playlists" screen does not work.
+		//						Retry this command until it works or MPD is dead.
+		//  Currently we can distinguish these 2 kind of commands in model.c
+		//  Commands of the first kind are reset to "wish fulfilled" as soon as they are issued.
+		//  The other kind of commands are reset only after an "OK" answer.
+		//  This works quite well, and maybe need not be changed. But it should be applied consistently!
+		
 	};
 	
 	PT_END(pt);
