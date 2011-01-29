@@ -209,7 +209,7 @@ win_redraw(struct Window *win){
 	};
 };
 
-/* ------------------------------ Windows with scrolling text ------------------------------------------------------- */
+/* ------------------------------ Windows with horizontally scrolling text ------------------------------------------------------- */
 
 /* ### Scroll Task ###  
 	Some windows might need scrolling to show their full content.
@@ -311,7 +311,7 @@ win_scroll_init(){
 	task_add(&win_scroll_all);
 };	
 
-/* ---------------------------------------------- Scroll List ---------------------------------------- */
+/* ---------------------------------------------- Vertical Scroll List ---------------------------------------- */
 /* 
 	An array of windows can form a scroll list, i.e. the user can scroll in this list.
 	The list is showing strings.

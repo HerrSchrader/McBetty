@@ -173,45 +173,6 @@ draw_char(uint8_t start_row, uint8_t start_col, unsigned char ch, uint8_t fg_col
 	return res;	
 }
 
-// TODO currently not used, we better wrap at white space boundaries. Maybe remove this routine.
-/* Draw a text into a given rectangle 
-	We wrap the text at character boundaries	
-	If the variable cnt is TRUE, we do NOT draw the text, but simply count the height in pixels
-	that we would draw.
-*/
-#if 0
-int
-draw_text (char *s, int start_row, int start_col, int width, int height, uint8 fg_col, uint8 bg_col, int cnt){
-	char ch;
-	int c = 0, r=0;
-	int n = 0;			/* number of characters drawn on the current line */
-	
-	if (font_height > height) return 0;		// No room to draw anything
-	
-	while (*s ){
-		/* can we put the next character on the line ? */
-		ch = *s;
-		if ( c + char_width(ch) <= width ){
-			/* draw this character */
-			if (0 == cnt)  draw_char(start_row + r, start_col + c, ch, fg_col, bg_col, width - c -1 );
-			c += (char_width(ch) + ic_space);
-			s++;
-			n++;
-		} else {
-			/* character does not fit on this line, advance to next line */ 
-			r += font_height;	/* We have drawn a line font_height pixels high */
-			c = 0;
-			n = 0;
-			/* is there enough room for another line */
-			if ((r + 2 + font_height) > height)
-				break;
-			r += 2;			/* inter line space */
-		};
-	};
-	if (n > 0) r += font_height;
-	return r;
-};
-#endif
 
 static int
 is_whitespace(char c){

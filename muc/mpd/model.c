@@ -261,8 +261,8 @@ model_needs_action(UserReq *req){
 	};
 	
 
-	/* Something to search ? */
-	if (user_model.search_string != NULL){
+	/* Something to search ? Due to popular request we do not search for the empty string */
+	if ( (user_model.search_string != NULL) && (*user_model.search_string != '\0') ){
 		req->str = mpd_get_search_string();
 		return SEARCH_CMD;
 	};
