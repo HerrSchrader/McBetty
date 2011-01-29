@@ -84,6 +84,7 @@ struct MODEL {
 	int time_total;				// in seconds
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
 	unsigned int last_status;	// system time when we last got a valid status answer
+	unsigned int last_cursong;	// system time when we last got a valid currentsong answer
 	int find_type;				// what does the user search for ?
 	char *search_string;		// is <> NULL iff the user wants to search for something
 	int find_add;				// is <> -1 iff the user wants to add something to the playlist

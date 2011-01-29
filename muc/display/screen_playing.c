@@ -131,8 +131,8 @@ playing_screen_init(Screen *this_screen) {
 	// state windows lies between time window and progress bar
 	cur_start_row +=  5;				// 89
 
-	/* The state window, on the same line as the time progress */
-	win_init(&state_win, cur_start_row, 1, 16, 18, 0, win_txt[4]);
+	/* The state window, a bit higher than the time progress */
+	win_init(&state_win, cur_start_row - 2, 1, 16, 18, 0, win_txt[4]);
 
 	state_win.font = BIGFONT;
 	win_new_text(&state_win, "\xB3"); 	// play icon == b3
@@ -204,10 +204,15 @@ view_time_changed(int te, int tt){
 	
 	sec2hms(newstr, te);
 	strlcat(newstr, " / ", sizeof(newstr));	
-	sec2hms(newstr+8, tt);
+	
+	if (0 == tt)				// shoutcast ! 
+		strlcat(newstr+8, "--:--", sizeof(newstr)-8);
+	else
+		sec2hms(newstr+8, tt);
+	
 	win_new_text(&time_win, newstr);
 		
-	if ( (te < 0) || (tt < 0) )
+	if ( (te < 0) || (tt < 0) || (0 == tt ) )	// elapsed == UNKNOWN or total == UNKNOWN or Shoutcast
 		newval = 0;
 	else
 		newval = (te * 100) / tt;

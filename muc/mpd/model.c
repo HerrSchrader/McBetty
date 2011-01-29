@@ -41,12 +41,15 @@ static struct MODEL mpd_model;
 /* The world of MPD as the user wants it to be */
 static struct MODEL user_model;
 
+// Forward declarations
 static void mpd_set_state(enum PLAYSTATE newstate);
 static void mpd_set_title(char *s);
 static void mpd_set_artist(char *s);
 static void mpd_set_pos(int newpos);
 static void user_song_unknown();
 static char *mpd_result_string(int pos);
+static int need_status();
+static int need_cursong();
 
 /* ===================== Info about changes ====================================== */
 
@@ -84,53 +87,6 @@ static STR_CACHE tracklist;
 static STR_CACHE resultlist;
 
 
-
-
-/* Returns TRUE iff there are one or more variables in mpd_model that are unknown and which we can get
-	be issuing a status command.
-	We also issue a STATUS command after some time, just to make sure everything is as we expect it
-	
-	TODO
-	We should get more information from status command.
-	Not only is the information valuable that we get, but also when certain information is missing.
-	For example when there is no current song, we do not get song:, songid:, time:, bitrate: and audio: info.
-	Even if we assume that there might be communication problems and some lines are missing (occurs rarely),
-	we can deduce that there is no current song if all of that info is missing but other infos are present.
-	
-*/
-static int
-need_status(){
-
-	/* If the following variables are unknown, we must definitely issue a STATUS command */
-	if ( (mpd_model.playlistlength == -1) || (mpd_model.volume == -1) || (mpd_model.state == UNKNOWN) ) 
-		return 1;
-	
-	/* We use status when we want to know the current song number */	
-	if ( mpd_model.pos == SONG_UNKNOWN) { 
-		/* Makes only sense if we have a current playlist with some songs in it */
-		if (mpd_model.playlistlength > 0) 
-			/* TODO We will not always get the pos when mpd has stopped 
-				If there is a current song, we will get it.
-				But if the playlist has finished, there is no current song and we do not get that information
-			*/
-			if (mpd_model.state != STOP) 
-				return 1;
-	};
-
-	if ((mpd_model.random == -1) || (mpd_model.repeat == -1) )
-		return 1;
-
-	/* The remaining values are not given to us, when there is no current song */
-	if (mpd_model.pos == NO_SONG) return 0;
-		
-	/* MPD gives us no time information, if the state is stopped. Stupid, but true. */
-	if (mpd_model.state == STOP) return 0;
-	
-
-	return ( (mpd_model.time_elapsed == -1)
-			|| (mpd_model.time_total == -1)
-		  );		
-};
 
 
 /* Here we determine if user_model and mpd_model agree and if we need any information from mpd or need to send some command to mpd
@@ -235,9 +191,8 @@ model_needs_action(UserReq *req){
 	if (need_status())
 		return STATUS_CMD;
 
-	if  ( (mpd_model.playlistlength > 0) && ((mpd_model.artist == NULL) || (mpd_model.title == NULL)) ){
+	if  (need_cursong())
 		return CUR_SONG_CMD;
-	};
 	
 	// Seeking only makes sense if we have a current song
 	if ( (user_model.time_elapsed > mpd_model.time_elapsed ) && (mpd_model.pos >= 0) ) {
@@ -715,7 +670,9 @@ mpd_set_time(int elapsed, int total){
 	// It can happen that elapsed time is greater than total time.
 	// This is clearly wrong.
 	// We temporarily adjust the total time and ask again in a few seconds
-	if ((mpd_model.time_total >= 0) && (mpd_model.time_elapsed > mpd_model.time_total))
+	// We do no adjustment when total time is unknown (time_total <0) 
+	// and when we have a shoutcast (time_total == 0)
+	if ((mpd_model.time_total > 0) && (mpd_model.time_elapsed > mpd_model.time_total))
 		mpd_model.time_total = mpd_model.time_elapsed + 3;
 
 	/* Here we check if MPD is close to the specific time wanted by the user.
@@ -750,8 +707,10 @@ mpd_inc_time(){
 	if (mpd_model.state == PLAY){
 		if (mpd_model.time_elapsed >= 0){		// We have a time that we can increment 
 
-			/* If time is up, we set the mpd values to -1 to tell controller that we need info */
-			if (mpd_model.time_elapsed >= mpd_model.time_total){
+			/* If time is up, we set the mpd values to -1 to tell controller that we need info 
+				Do not do this for shoutcasts, the total time there is always 0
+			*/
+			if ( (0 != mpd_model.time_total) && (mpd_model.time_elapsed >= mpd_model.time_total)) {
 				/* We assume the current song has ended playing.
 					We then don't know very much, because playlist might have ended. */
 				mpd_set_pos(SONG_UNKNOWN);
@@ -1106,6 +1065,16 @@ mpd_set_artist(char *s){
 	}; 
 };
 
+static int
+need_cursong(){
+	if  ( (mpd_model.playlistlength > 0) && ((mpd_model.artist == NULL) || (mpd_model.title == NULL)) )
+		return 1;
+	// If we have a shoutcast, we request the current song information every 5 seconds
+	if ( (mpd_model.name != NULL) && ( (system_time() - mpd_model.last_cursong) > 5 * TICKS_PER_SEC ) )
+			return 1;
+	return 0;
+};
+
 /* We got an "OK" for "current song" command */
 void
 mpd_currentsong_ok(struct MODEL *a){
@@ -1144,7 +1113,10 @@ mpd_currentsong_ok(struct MODEL *a){
 	} else {
 		strlcpy(mpd_model.name_buf, a->name, sizeof(mpd_model.name_buf));
 		mpd_model.name = mpd_model.name_buf;
-	};	
+	};
+	
+	/*	Remember the time so we can wait with out next currentsong command.*/	
+	mpd_model.last_cursong = system_time();	
 }
 
 
@@ -1245,6 +1217,53 @@ model_check_mpd_dead(){
 
 /* -------------------------------------- Status -------------------------------------------------- */
 
+/* Returns TRUE iff there are one or more variables in mpd_model that are unknown and which we can get
+	be issuing a status command.
+	We also issue a STATUS command after some time, just to make sure everything is as we expect it
+	
+	TODO
+	We should get more information from status command.
+	Not only is the information valuable that we get, but also when certain information is missing.
+	For example when there is no current song, we do not get song:, songid:, time:, bitrate: and audio: info.
+	Even if we assume that there might be communication problems and some lines are missing (occurs rarely),
+	we can deduce that there is no current song if all of that info is missing but other infos are present.
+	
+*/
+static int
+need_status(){
+
+	/* If the following variables are unknown, we must definitely issue a STATUS command */
+	if ( (mpd_model.playlistlength == -1) || (mpd_model.volume == -1) || (mpd_model.state == UNKNOWN) ) 
+		return 1;
+	
+	/* We use status when we want to know the current song number */	
+	if ( mpd_model.pos == SONG_UNKNOWN) { 
+		/* Makes only sense if we have a current playlist with some songs in it */
+		if (mpd_model.playlistlength > 0) 
+			/* TODO We will not always get the pos when mpd has stopped 
+				If there is a current song, we will get it.
+				But if the playlist has finished, there is no current song and we do not get that information
+			*/
+			if (mpd_model.state != STOP) 
+				return 1;
+	};
+
+	if ((mpd_model.random == -1) || (mpd_model.repeat == -1) )
+		return 1;
+
+	/* The remaining values are not given to us, when there is no current song */
+	if (mpd_model.pos == NO_SONG) return 0;
+		
+	/* MPD gives us no time information, if the state is stopped. Stupid, but true. */
+	if (mpd_model.state == STOP) return 0;
+	
+
+	return ( (mpd_model.time_elapsed == -1)
+			|| (mpd_model.time_total == -1)
+		  );		
+};
+
+
 /* We got a valid response to a "status" command. */
 void
 mpd_status_ok(struct MODEL *a){
@@ -1289,6 +1308,7 @@ model_reset(struct MODEL *m){
 	m->time_total = -1;
 	m->last_response = 0;
 	m->last_status = 0;
+	m->last_cursong = 0;
 	m->pos = SONG_UNKNOWN;
 	m->songid = -1;
 	m->title = NULL;
