@@ -204,6 +204,13 @@ ans_currentsong_line(char *s, struct MODEL *a){
 		return;
 	};
 	
+	/* Compare with "Name: " */
+	if (strstart(response, "Name: ")){
+		strlcpy(a->name_buf, response+6, sizeof(a->name_buf) );
+		a->name = a->name_buf;
+		return;
+	};
+	
 	/* Compare with "Pos: " */
 	if (strstart(response, "Pos: ")){
 		a->pos = atoi (response+5);

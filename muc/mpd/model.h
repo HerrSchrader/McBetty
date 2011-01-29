@@ -76,8 +76,10 @@ struct MODEL {
 	int songid;					// MPD's internal id of the current song
 	char artist_buf[TITLE_SIZE];	// If cur_artist points here, this is the artist tag, else irrelevant 
 	char title_buf[TITLE_SIZE];	// If cur_title points here, this is the title tag, else irrelevant 
+	char name_buf[TITLE_SIZE];	// If cur_title points here, this is the title tag, else irrelevant 
 	char *artist;				// NULL if not known, else points to info in artist_buf;
 	char *title;				// NULL if not known, else points to info in title_buf;
+	char *name;					// NULL if no name (i.e. no shoutcast), else points to name_buf. 
 	int time_elapsed;			// in seconds
 	int time_total;				// in seconds
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)

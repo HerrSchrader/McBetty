@@ -988,9 +988,16 @@ mpd_set_pos(int newpos){
 			user_model.state = STOP;				// not possible, change his wish
 		};
 	} else { 
-		mpd_set_artist(NULL);						// We do not yet know which artist and title we have
 		mpd_set_title(NULL);
 		mpd_model.songid = UNKNOWN;				// NOTE songid is currently not used
+		
+		if (NULL != mpd_model.name){					// This is a shoutcast 
+												// return here, we do not set POS_CHANGED to avoid updating the
+												// display and we do not reset the artist (it is the radio name)
+			return;	
+		};
+		
+		mpd_set_artist(NULL);						// We do not yet know which artist and title we have		
 		mpd_set_time(0, -1);						// The 0 is just a guess. But we have to get total time anyway
 	};
 	model_changed(POS_CHANGED);	
@@ -1050,6 +1057,11 @@ mpd_set_title(char *s){
 	int length;
 	
 	if (s == NULL){
+		if (mpd_model.name != NULL){
+			mpd_model.title = NULL;
+			return;							// this is a shoutcast. No display update
+		};
+		
 		if (mpd_model.title != NULL){
 			mpd_model.title = NULL;
 			model_changed(TITLE_CHANGED);
@@ -1084,10 +1096,12 @@ mpd_set_artist(char *s){
 			model_changed(ARTIST_CHANGED);
 		};
 	} else {
-		if (strn_cpy_cmp(mpd_model.artist_buf, s, TITLE_LEN, &length) == 0)	
+		if (strn_cpy_cmp(mpd_model.artist_buf, s, TITLE_LEN, &length) == 0)
 			model_changed(ARTIST_CHANGED);
-		if (mpd_model.artist == NULL)
+		if (NULL == mpd_model.artist){
 			model_changed(ARTIST_CHANGED);
+			dbg("Artist changed");
+		};
 		mpd_model.artist = mpd_model.artist_buf;
 	}; 
 };
@@ -1115,10 +1129,22 @@ mpd_currentsong_ok(struct MODEL *a){
 	else
 		mpd_set_title(a->title);
 	
-	if (a->artist == NULL)
-		mpd_set_artist("?");
-	else
+	if (a->artist == NULL){
+		if (NULL == a->name)		// not a shoutcast 
+			mpd_set_artist("?");
+		else 
+			mpd_set_artist(a->name);	// shoutcast
+	} else
 		mpd_set_artist(a->artist);
+	
+	// Shoutcast ? Set name
+	if (NULL == a->name){
+		mpd_model.name_buf[0]='\0';
+		mpd_model.name = NULL;
+	} else {
+		strlcpy(mpd_model.name_buf, a->name, sizeof(mpd_model.name_buf));
+		mpd_model.name = mpd_model.name_buf;
+	};	
 }
 
 
@@ -1267,8 +1293,10 @@ model_reset(struct MODEL *m){
 	m->songid = -1;
 	m->title = NULL;
 	m->artist = NULL;
+	m->name = NULL;
 	m->artist_buf[0] = '\0';
 	m->title_buf[0] = '\0';
+	m->name_buf[0] = '\0';
 	m->random = -1;
 	m->repeat = -1;
 	m->single = -1;
