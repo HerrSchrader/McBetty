@@ -177,6 +177,7 @@ void user_toggle_single();
 
 /* ------------------------------------------ Current song information ------------------------------- */
 int mpd_get_pos();
+int is_stream();
 void mpd_select_ok(struct MODEL *a);
 void mpd_select_ack(struct MODEL *a);
 void mpd_newpos_ok(struct MODEL *a);

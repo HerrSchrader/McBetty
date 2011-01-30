@@ -663,6 +663,14 @@ static void
 mpd_set_time(int elapsed, int total){
 	if ( (mpd_model.time_elapsed != elapsed) || (mpd_model.time_total != total) )
 		model_changed(TIME_CHANGED);
+	
+	/* A change in time_total can also mean that we have a different type of track here
+		We have to inform the view about it
+	*/
+	if ( ( (1 == is_stream()) && (total != 0)) || 
+		( (0 == is_stream()) && (0 == total)) ) 
+		model_changed(POS_CHANGED);
+	
 	mpd_model.time_elapsed = elapsed;
 	mpd_model.time_total = total;
 	
@@ -927,6 +935,29 @@ mpd_get_pos(){
 	return mpd_model.pos;
 };
 
+/*
+	It is not yet clear how MPD tells us that we have a shoutcast.
+	I suppose we can detect that when total_time == 0
+	Sometime we get a "Name: " tag, but only some time after the
+	station is tuned to.
+	So we use the total_time here.
+
+	Returns -1 if unknown
+	1 if the currently seletected "track" is a http stream
+	0 if it is a normal song
+*/
+int
+is_stream(){
+	if (mpd_model.time_total < 0)
+		return -1;
+	
+	if (0 == mpd_model.time_total)
+		return 1;
+	
+	return 0;
+};
+
+
 /* We have got (maybe new) information about the current song pos */ 
 static void
 mpd_set_pos(int newpos){
@@ -949,12 +980,6 @@ mpd_set_pos(int newpos){
 	} else { 
 		mpd_set_title(NULL);
 		mpd_model.songid = UNKNOWN;				// NOTE songid is currently not used
-		
-		if (NULL != mpd_model.name){					// This is a shoutcast 
-												// return here, we do not set POS_CHANGED to avoid updating the
-												// display and we do not reset the artist (it is the radio name)
-			return;	
-		};
 		
 		mpd_set_artist(NULL);						// We do not yet know which artist and title we have		
 		mpd_set_time(0, -1);						// The 0 is just a guess. But we have to get total time anyway
@@ -1015,12 +1040,7 @@ static void
 mpd_set_title(char *s){
 	int length;
 	
-	if (s == NULL){
-		if (mpd_model.name != NULL){
-			mpd_model.title = NULL;
-			return;							// this is a shoutcast. No display update
-		};
-		
+	if (s == NULL){		
 		if (mpd_model.title != NULL){
 			mpd_model.title = NULL;
 			model_changed(TITLE_CHANGED);
@@ -1059,7 +1079,6 @@ mpd_set_artist(char *s){
 			model_changed(ARTIST_CHANGED);
 		if (NULL == mpd_model.artist){
 			model_changed(ARTIST_CHANGED);
-			dbg("Artist changed");
 		};
 		mpd_model.artist = mpd_model.artist_buf;
 	}; 
@@ -1070,7 +1089,7 @@ need_cursong(){
 	if  ( (mpd_model.playlistlength > 0) && ((mpd_model.artist == NULL) || (mpd_model.title == NULL)) )
 		return 1;
 	// If we have a shoutcast, we request the current song information every 5 seconds
-	if ( (mpd_model.name != NULL) && ( (system_time() - mpd_model.last_cursong) > 5 * TICKS_PER_SEC ) )
+	if ( (1 == is_stream()) && ( (system_time() - mpd_model.last_cursong) > 5 * TICKS_PER_SEC ) )
 			return 1;
 	return 0;
 };
@@ -1094,15 +1113,15 @@ mpd_currentsong_ok(struct MODEL *a){
 	mpd_set_id(a->songid);
 	
 	if (a->title == NULL)
-		mpd_set_title("?");		// should not occur
+		mpd_set_title("?");		// should not occur, we always get a title due to mpdtool
 	else
 		mpd_set_title(a->title);
 	
-	if (a->artist == NULL){
-		if (NULL == a->name)		// not a shoutcast 
-			mpd_set_artist("?");
+	if (NULL == a->artist){
+		if (a->name != NULL)		// a stream with a name 
+			mpd_set_artist(a->name);
 		else 
-			mpd_set_artist(a->name);	// shoutcast
+			mpd_set_artist("?");
 	} else
 		mpd_set_artist(a->artist);
 	

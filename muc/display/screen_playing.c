@@ -245,8 +245,12 @@ view_pos_changed(){
 		return;
 	};
 
-	strlcpy(newstr, "Song ", sizeof(newstr));
-	numstr = get_digits(cur_song, number, 0); 
+	if (is_stream() == 1)
+		strlcpy(newstr, "Station ", sizeof(newstr));
+	else
+		strlcpy(newstr, "Song ", sizeof(newstr));
+	
+	numstr = get_digits(cur_song + 1, number, 0); 			// user readable song pos starts with 1, not 0
 	strlcat(newstr, numstr, sizeof(newstr));
 	
 	pl_length = mpd_get_pl_length();

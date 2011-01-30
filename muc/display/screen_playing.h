@@ -14,6 +14,7 @@ void playing_screen_enter();
 enum USER_CMD playing_user_request();
 void playing_screen_exit();
 int playing_arg(void);
+void view_pos_changed();
 void view_state_changed(enum PLAYSTATE state);
 void view_single_changed(int sgl);
 void view_repeat_changed(int rpt);
