@@ -727,6 +727,7 @@ open_mpd_socket(){
 }
 
 // the same as write_all(), but computes length of string itself
+// Return 0 iff not successful
 int
 write_mpd(char * s){
 	return (write_all(mpd_socket, s, strlen(s) ) );	
@@ -965,6 +966,7 @@ char mpd_emu_title[64];
 
 /* Send a command to MPD and prepare for the answers.
 	Starts response_tmr and resets (clears) mpd_response_line
+	Returns 0 iff not successful
 */ 
 int
 mpd_start_cmd(char *cmd_str){
@@ -974,8 +976,6 @@ mpd_start_cmd(char *cmd_str){
 	reset_mpd_buf();
 	
 	init_timer(&response_tmr);	
-//	fprintf(stderr,"start_cmd: %s", cmd_str);
-//	prt_mpd_buf();
 	return write_mpd(cmd_str);	
 };
 
@@ -1519,7 +1519,7 @@ translate_to_serial(){
 
 int main(int argc, char *argv[])
 {
-	int res;
+	int i, res;
 	char *serial_device;
 	struct termios oldtio;
 	int time_out_lim = 1, time_out_cnt = 0;
@@ -1550,12 +1550,14 @@ int main(int argc, char *argv[])
 	init_serial(serial_fd, B38400, 50);
 	
 	/* Check that the scart adapter is connected and responding */
-	if (!scart_alive()){
-		fprintf(stderr,"Error. Scart adapter not responding.\n");
-		fprintf(stderr,"Is scart adapter connected to %s ?\n", serial_device );
-		fprintf(stderr,"Maybe powercycling the scart adapter could help.\n");
-		exit(20);
-	};	
+	for (i=0; !scart_alive(); i++){ 
+		if (i >= 10){
+			fprintf(stderr,"Error. Scart adapter not responding.\n");
+			fprintf(stderr,"Is scart adapter connected to %s ?\n", serial_device );
+			fprintf(stderr,"Maybe powercycling the scart adapter could help.\n");
+			exit(20);
+		};	
+	};
 	
 	init_mpd(argv[2], atoi(argv[3]));
 
@@ -1634,7 +1636,9 @@ int main(int argc, char *argv[])
 		// send it to MPD, start response_tmr
 		// resets mpd_resp_buf to allow fresh input
 		res = mpd_start_cmd (mpd_input_buf);
-
+		if (0 == res)
+			fprintf(stderr,"Sending cmd to MPD failed\n");
+		
 		// reset the serial output buffer
 		// All previous bytes are not a response to this command
 		reset_ser_out();
