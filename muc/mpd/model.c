@@ -301,22 +301,28 @@ track_info(int track_pos){
 
 /* 
 	Given title, artist and track number, store this info in our tracklist cache (if it fits) 
+	Sometimes we get a name as well. This means we have a radio stream.
+	We then use that name as the tracklist name
 */
 static void
-model_store_track(char *title, char *artist, int track_pos){
+model_store_track(char *title, char *artist, char *name, int track_pos){
 	char tmp[64];
 	
-	strlcpy(tmp, title, sizeof(tmp)); 
-	strlcat(tmp, " \xB7 ", sizeof(tmp));	// dot icon == b7
-	strlcat(tmp, artist, sizeof(tmp));
-	cache_store(&tracklist, track_pos, tmp);
+	if (name != NULL){
+		cache_store(&tracklist, track_pos, name);
+	} else {
+		strlcpy(tmp, title, sizeof(tmp)); 
+		strlcat(tmp, " \xB7 ", sizeof(tmp));	// dot icon == b7
+		strlcat(tmp, artist, sizeof(tmp));
+		cache_store(&tracklist, track_pos, tmp);
+	};
 	model_changed(TRACKLIST_CHANGED);
 };
 
 void
 mpd_playlistinfo_ok(struct MODEL *a){
 	if (a->pos == a->request.arg)
-		model_store_track(a->title_buf, a->artist_buf, a->pos);
+		model_store_track(a->title_buf, a->artist_buf, a->name, a->pos);
 }
 
 /*
@@ -327,8 +333,26 @@ mpd_playlistinfo_ok(struct MODEL *a){
 void
 mpd_playlistinfo_ack(struct MODEL *a){
 	if (a->pos == a->request.arg)
-		model_store_track( "- not", "found -", a->pos);
+		model_store_track( "- not", "found -", NULL, a->pos);
 }
+
+/* When playing internet streams, we sometimes get the "name" tag later on
+	with the "currentsong" command.
+	Here we store that information and give it to the tracklist cache
+*/
+static void
+mpd_set_name(char *name){
+	if (NULL == name){
+		mpd_model.name_buf[0]='\0';
+		mpd_model.name = NULL;
+	} else {
+		strlcpy(mpd_model.name_buf, name, sizeof(mpd_model.name_buf));
+		mpd_model.name = mpd_model.name_buf;
+		cache_store(&tracklist, mpd_model.pos, name);
+		model_changed(TRACKLIST_CHANGED);
+	};
+};
+	
 
 /* 
 	Returns pos of the last track in the current playlist
@@ -1125,15 +1149,9 @@ mpd_currentsong_ok(struct MODEL *a){
 	} else
 		mpd_set_artist(a->artist);
 	
-	// Shoutcast ? Set name
-	if (NULL == a->name){
-		mpd_model.name_buf[0]='\0';
-		mpd_model.name = NULL;
-	} else {
-		strlcpy(mpd_model.name_buf, a->name, sizeof(mpd_model.name_buf));
-		mpd_model.name = mpd_model.name_buf;
-	};
-	
+	// Set name if there is one
+	mpd_set_name(a->name);
+
 	/*	Remember the time so we can wait with out next currentsong command.*/	
 	mpd_model.last_cursong = system_time();	
 }

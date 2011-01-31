@@ -1350,7 +1350,15 @@ translate_to_serial(){
 
 	if (mpd_emu & PLAYLISTINFO_CMD){
 		if (0 == strncmp(mpd_resp_buf,"file: ", 6)){
-			// copy the filename to our fake title buffer. 
+			// copy the filename to our fake title buffer.
+			// First we check if it starts with "http://", then it is a stream
+			if (0 == strncmp(mpd_resp_buf+6, "http://", 7)){
+				int len = strlcpy(mpd_emu_title, mpd_resp_buf+6, sizeof(mpd_emu_title));
+				if (len < sizeof(mpd_emu_title))
+					// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
+					mpd_emu_title[len - 1] = '\0';
+				return;	
+			};
 			int len = strlcpy(mpd_emu_title, basename(mpd_resp_buf+6), sizeof(mpd_emu_title));
 			if (len < sizeof(mpd_emu_title))
 				// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
@@ -1358,10 +1366,11 @@ translate_to_serial(){
 			return;
 		};
 		
-		// If the PLAYLISTINFO emulation is on, we let only 5 types of output lines go through		
+		// If the PLAYLISTINFO emulation is on, we let only 6 types of output lines go through		
 		if (! (
 			(0 == strncmp(mpd_resp_buf, "Title: ", 7)) ||
 			(0 == strncmp(mpd_resp_buf, "Artist: ", 8)) ||
+			(0 == strncmp(mpd_resp_buf, "Name: ", 6)) ||
 			(0 == strncmp(mpd_resp_buf, "Pos: ", 5)) ||
 			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
 			(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )

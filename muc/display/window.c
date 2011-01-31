@@ -276,7 +276,7 @@ win_unscroll(struct Window *win){
 	};
 };
 
-#define SCROLL_PERIOD (8 * (TICKS_PER_TENTH_SEC))
+#define SCROLL_PERIOD (7 * (TICKS_PER_TENTH_SEC))
 
 /* ### Scroll Task ###  */
 PT_THREAD (win_scroll_all(struct pt *pt)){

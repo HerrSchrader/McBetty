@@ -26,7 +26,7 @@ enum PLAYSTATE {UNKNOWN, STOP, PAUSE, PLAY};
 #define MPD_DEAD			(1<<15)
 #define PLAYLIST_EMPTY		(1<<16)
 
-// Length of artist and title strings each, some songs and some albums really have long titles
+// Length of artist and title and name strings each, some songs and some albums really have long titles
 #define TITLE_LEN 149
 // Size of the character array needed to store artist and title strings each
 #define TITLE_SIZE	(TITLE_LEN + 1)
@@ -76,10 +76,10 @@ struct MODEL {
 	int songid;					// MPD's internal id of the current song
 	char artist_buf[TITLE_SIZE];	// If cur_artist points here, this is the artist tag, else irrelevant 
 	char title_buf[TITLE_SIZE];	// If cur_title points here, this is the title tag, else irrelevant 
-	char name_buf[TITLE_SIZE];	// If cur_title points here, this is the title tag, else irrelevant 
+	char name_buf[TITLE_SIZE];	// If name points here, this is the name tag, else irrelevant 
 	char *artist;				// NULL if not known, else points to info in artist_buf;
 	char *title;				// NULL if not known, else points to info in title_buf;
-	char *name;					// NULL if no name (i.e. no shoutcast), else points to name_buf. 
+	char *name;					// NULL if no name, else points to name_buf (name is shown in tracklist) 
 	int time_elapsed;			// in seconds
 	int time_total;				// in seconds
 	unsigned int last_response;	// system time when we last saw a response line from mpd (for error detection)
