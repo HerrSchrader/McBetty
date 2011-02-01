@@ -33,7 +33,7 @@
 /* The following variables are set according to font information in include files. */
 uint8 font_height;
 static const unsigned char *font_bits, *font_info; 
-static const u_int16_t *char_pos;
+static const uint16_t *char_pos;
 static int bytes_per_col, max_char;
 
 static int ic_space;			// inter character space (depends on font)

@@ -547,9 +547,9 @@ struct cmd_proc_info {
 static const struct cmd_proc_info cmd_info[] = {
 	{"", NULL, NULL, NULL},										// NO_CMD,
 	{"play %d\n", NULL, mpd_select_ok, mpd_select_ack},			// SEL_SONG,
-	{"", NULL, NULL, NULL},										// VOLUME_UP,
-	{"", NULL, NULL, NULL},										// VOLUME_DOWN,
-	{"", NULL, NULL, NULL},										// MUTE_CMD,
+	{"", NULL, NULL, NULL},										// VOLUME_UP, done by setvol
+	{"", NULL, NULL, NULL},										// VOLUME_DOWN, done by setvol
+	{"", NULL, NULL, NULL},										// MUTE_CMD, done by setvol
 	{"setvol %d\n", NULL, mpd_volume_ok, NULL},					// VOLUME_NEW,
 	{"currentsong\n", ans_currentsong_line, mpd_currentsong_ok, NULL},		// CUR_SONG_CMD,
 	{"previous\n", NULL, mpd_newpos_ok, NULL}, 				// PREV_CMD,

@@ -924,45 +924,37 @@ open_mpd_connection(int serial_fd){
 
 
 /* 
-	These commands are important and can be emulated if not present
+	These commands are important but not available in all versions of MPD
+	They can be emulated if not present
 	or they are simply ignored (and an appropriate answer returned to Betty)
-	Some commands are always present, but we need to change their answers 
-	for Betty to be useful.
-	We have a bit for those commands too.
+	We set a bit in mpd_cmd_avail if that command is available
 */
 #define LISTPLAYLISTS_CMD	(1 << 0)
-#define PLAYLISTNAME_CMD (1 << 1)
-#define PLAYLISTCOUNT_CMD (1 << 2)
-#define SCRIPT_CMD (1<<3)
-#define SEARCH_CMD (1<<4)
-#define RESULT_CMD (1<<5)
-#define FINDADD_CMD (1<<6)
-#define PLAYLISTINFO_CMD (1<<7)
-#define CURSONG_CMD (1<<8)
+#define FINDADD_CMD (1<<1)
 
 /* A bit set to 1 means this command is available.
 	No need to emulate it.
 */
 int mpd_cmd_avail;
 
-/* 
-	Here we set a bit if a response has to be modified before it is sent to Betty.
-	The bits are the same as in mpd_cmds.
-*/
-int mpd_emu;
-
-/* Some emulated cmds need to remember an argument.
+/* Some filter functions need to remember an argument.
 	Store it here.
 */
 int mpd_emu_arg;
 
-/* Some emulated cmds need to count the results.
+/* Some filter functions need to count the results.
 	Use this.
 */
 int mpd_emu_cnt;
 
-/* Some emulated commands need to store a fake title. */
-char mpd_emu_title[64];
+
+/* 
+	This timer counts the answer time of MPD.
+	It is used to send fake responses, if MPD takes too long.
+	Currently used by "search" command.
+*/
+double mpd_ans_tmr;
+
 
 /* Send a command to MPD and prepare for the answers.
 	Starts response_tmr and resets (clears) mpd_response_line
@@ -1103,6 +1095,7 @@ check_mpd(){
 		return;
 	};
 	
+	/* Count the number of playlists */
 	mpd_emu_cnt = 0;
 	if ( mpd_cmd_avail & LISTPLAYLISTS_CMD )
 		mpd_cmd("listplaylists\n", cnt_playlists);
@@ -1111,7 +1104,6 @@ check_mpd(){
 	
 	fprintf(stderr,"MPD: Available Playlists = %d\n\n", mpd_emu_cnt);
 	
-	mpd_emu = 0;
 };
 
 /* Copy the command in ser_in_buf() to local buf() to free ser_in_buf */	
@@ -1156,21 +1148,13 @@ cmp_and_store(char *s){
 	return 1;
 };
 
-/* 
-	This timer counts the answer time of MPD.
-	It is used to send fake responses, if MPD takes too long.
-	Currently used by "search" command.
+/* Sometimes we want to get the status of MPD immediately after we have sent a command,
+	for instance the "LOAD" command does not give us the new playlist length, which is vital to Betty.
+	So we create a command list with the original command and an appended status command.
+	
+	Another advantage: If we do it here, Betty can send a much smaller command, which is faster
+	over radio.
 */
-double mpd_ans_tmr;
-
-
-	/* Sometimes we want to get the status of MPD immediately after we have sent a command,
-		for instance the "LOAD" command does not give us the new playlist length, which is vital to Betty.
-		So we create a command list with the original command and an appended status command.
-		
-		Another advantage: If we do it here, Betty can send a much smaller command, which is faster
-		over radio.
-	*/
 void
 append_status(char *buf){	
 	char bufold[BUFFER_SIZE];
@@ -1178,6 +1162,211 @@ append_status(char *buf){
 	strcpy(bufold, buf);
 	sprintf(buf, "command_list_begin\n%sstatus\ncommand_list_end\n", bufold);
 };
+
+
+// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
+// because in older versions of MPD "lsinfo" is used which gives a lot of output sometimes
+static void
+filter_listplaylists(){
+	if (! (
+		(0 == strncmp(mpd_resp_buf, "playlist:", 9)) ||
+		(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
+		(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )
+	return;
+	serial_output(mpd_resp_buf);	
+};
+
+// If the PLAYLISTNAME emulation is on, we send one specific playlist name to Betty
+// as well as "OK" or "ACK"	
+//	NOTE mpd_emu_cnt must be set to 0 before getting responses from MPD
+static void
+filter_playlistname(){
+	if ( (0 == strncmp(mpd_resp_buf, "playlist:", 9)) ){
+		if (mpd_emu_cnt++ != mpd_emu_arg)
+			return;
+	};
+	filter_listplaylists();		
+};
+
+// If the PLAYLISTCOUNT emulation is on, we count playlist: entries and return the total number
+//	NOTE mpd_emu_cnt must be set to 0 before getting responses from MPD
+static void
+filter_playlistcount(){
+	if  (0 == strncmp(mpd_resp_buf, "playlist:", 9)) {
+		mpd_emu_cnt++;
+		return;
+	};
+
+	if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+		sprintf(mpd_resp_buf, "playlistcount: %d\n",mpd_emu_cnt);
+		serial_output(mpd_resp_buf);
+			
+		strcpy(mpd_resp_buf, "OK\n");
+	};
+	filter_listplaylists();	
+};
+
+//	NOTE mpd_emu_cnt must be set to 0 before getting responses from MPD
+static void
+filter_playlistinfo(){
+	int len;
+	/* Fake title */
+	static char fake_title[64];
+
+	if (0 == strncmp(mpd_resp_buf,"file: ", 6)){
+		
+		// copy the filename to our fake title buffer.
+		// Check if it is a stream or a regular file
+		if (0 == strncmp(mpd_resp_buf+6, "http://", 7))
+			len = strlcpy(fake_title, mpd_resp_buf+6, sizeof(fake_title));
+		 else 
+			len = strlcpy(fake_title, basename(mpd_resp_buf+6), sizeof(fake_title));
+
+		if (len < sizeof(fake_title))
+			// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
+			fake_title[len - 1] = '\0';
+		return;
+	};	
+	
+	// We let only 6 types of output lines go through		
+	if (! (
+		(0 == strncmp(mpd_resp_buf, "Title: ", 7)) ||
+		(0 == strncmp(mpd_resp_buf, "Artist: ", 8)) ||
+		(0 == strncmp(mpd_resp_buf, "Name: ", 6)) ||
+		(0 == strncmp(mpd_resp_buf, "Pos: ", 5)) ||
+		(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
+		(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )
+	return;
+
+	if (0 == strncmp(mpd_resp_buf, "Title: ", 7))
+		mpd_emu_cnt++;				// remember that we have a real title
+		
+	if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+		// before we send the "OK" message, we check if there has been a title.
+		if (0 == mpd_emu_cnt) {							// no title
+			sprintf(mpd_resp_buf, "Title: %s\n", fake_title);
+			serial_output(mpd_resp_buf);
+			strcpy(mpd_resp_buf, "OK\n");
+		};
+	};
+	serial_output(mpd_resp_buf);	
+};
+
+/* 
+	MPD responds to a search command.
+	mpd_emu_arg tells us which type of search is done (Artist, Title, Album)
+	We return the number of results to Betty.
+	We store the first MAX_NUM_RESULTS different results in our cache so we do not have to search again 
+	when Betty wants a specific result.
+	NOTE this filter can close the mpd_socket !
+	NOTE num_results must be set to 0 before getting responses from MPD
+	NOTE mpd_emu_arg must be set before getting responses from MPD
+*/ 
+static void
+filter_search(void){
+	if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+		sprintf(mpd_resp_buf, "results: %d\n", num_results);
+		serial_output(mpd_resp_buf);
+
+		strcpy(mpd_resp_buf, "OK\n");
+		serial_output(mpd_resp_buf);
+		return;
+	};
+				
+	if (0 == strncmp(mpd_resp_buf, "ACK", 3)) {
+		serial_output(mpd_resp_buf);
+		return;
+	}; 
+	
+	if (  ( (mpd_emu_arg == 0) && (0 == strncmp(mpd_resp_buf, "Artist: ", 8)) )
+		||( (mpd_emu_arg == 1) && (0 == strncmp(mpd_resp_buf, "Title: ", 7)) )  
+		||( (mpd_emu_arg == 2) && (0 == strncmp(mpd_resp_buf, "Album: ", 7)) )  ){
+			
+		int txt_offset;
+		if (mpd_emu_arg == 0) txt_offset = 8;
+		else txt_offset = 7;
+			
+		if (num_results < MAX_NUM_RESULTS)
+			cmp_and_store(mpd_resp_buf + txt_offset);
+				
+		/* MPD sends every single matching file, which can take very long.
+			So after MAX_NUM_RESULTS or after our timer reaches 2 seconds we cancel the connection to stop mpd.
+			We must fake the OK answer.
+		*/				
+		if ( (num_results == MAX_NUM_RESULTS) || (timer_diff(mpd_ans_tmr) > 2.0) ){
+			if (num_results == MAX_NUM_RESULTS)
+				sprintf(mpd_resp_buf, "results: 99\n");
+			else 
+				sprintf(mpd_resp_buf, "results: %d\n", num_results);
+			
+			serial_output(mpd_resp_buf);
+			close_mpd_socket();	
+			sprintf(mpd_resp_buf, "OK\n");
+			serial_output(mpd_resp_buf);
+		};	
+	};
+	return;
+};
+
+/* We sent a ping to MPD, so the only answer can be "OK" */
+//	NOTE mpd_emu_arg must be set before getting responses from MPD
+static void
+filter_result(void){
+	// check if argument is within bounds
+	if (mpd_emu_arg < num_results){
+		sprintf(mpd_resp_buf, "name: %s\n", results[mpd_emu_arg].name);
+		serial_output(mpd_resp_buf);
+		strcpy(mpd_resp_buf, "OK\n");
+		serial_output(mpd_resp_buf);
+	} else {
+		sprintf(mpd_resp_buf, "ACK: wrong result index %d\n", mpd_emu_arg);
+		serial_output(mpd_resp_buf);
+	};
+	return;	
+};
+
+// We send a fake title only if no other title was given. 
+//	NOTE mpd_emu_cnt must be set to 0 before getting responses from MPD
+static void
+filter_cursong(void){
+	int len;
+	/* Fake title */
+	static char fake_title[64];
+
+	if (0 == strncmp(mpd_resp_buf,"file: ", 6)){
+		// copy the filename to our fake title buffer. 
+		len = strlcpy(fake_title, basename(mpd_resp_buf+6), sizeof(fake_title));
+		if (len < sizeof(fake_title))
+			// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
+			fake_title[len - 1] = '\0';
+		return;
+	};
+	
+	// Remember when we got a real title
+	if (0 == strncmp(mpd_resp_buf, "Title: ", 7))
+		mpd_emu_cnt++;
+		
+	if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
+		// before we send the "OK" message, we check if there has been a title.
+		if (0 == mpd_emu_cnt) {							// no title
+			sprintf(mpd_resp_buf, "Title: %s\n", fake_title);
+			serial_output(mpd_resp_buf);
+			strcpy(mpd_resp_buf, "OK\n");
+		};
+	};
+	serial_output(mpd_resp_buf);
+};
+
+static void
+filter_none(void){
+	serial_output(mpd_resp_buf);
+};
+
+
+/* This variable holds a pointer to the filter function
+	used to process the responses from MPD
+*/
+static void (*filter_hook)(void) = filter_none;
 
 
 /* Copy the serial input buffer to the given mpd_input_buffer buf.
@@ -1188,6 +1377,8 @@ void
 translate_to_mpd(char *buf){
 
 	init_timer(&mpd_ans_tmr);
+	mpd_emu_cnt = 0;				// needed by a lot of filters
+	filter_hook = filter_none;
 	
 	/* NOTE the order of the ifs is important */
 	
@@ -1222,78 +1413,63 @@ translate_to_mpd(char *buf){
 	/* We have the command "result n" which will return the nth result of our search result cache. */
 	if (0 == strncmp(buf, "result ", strlen("result ")) ){
 		mpd_emu_arg = atoi(buf+7);
-		mpd_emu |= RESULT_CMD;
+		filter_hook = filter_result;
 		strcpy(buf, "ping\n");
-	} else
-		mpd_emu &= ~RESULT_CMD;
+	};
 		
 	/* The command "playlistinfo" returns too much information.
 		We filter only the necessary lines.
 	*/
-	if (0 == strncmp(buf, "playlistinfo ", strlen("playlistinfo ")) ){
-		mpd_emu |= PLAYLISTINFO_CMD;
-		mpd_emu_cnt = 0;
-	} else 
-		mpd_emu &= ~PLAYLISTINFO_CMD;
+	if (0 == strncmp(buf, "playlistinfo ", strlen("playlistinfo ")) )
+		filter_hook = filter_playlistinfo;
 
 	/* The command "playlistname x" is our own invention.
 		It returns the name of playlist number x (x starts with 0).
 		We emulate it by sending "listplaylists" and counting the responses. 
 	*/
 	if (0 == strncmp(buf, "playlistname ", strlen("playlistname ")) ){
-		mpd_emu |= PLAYLISTNAME_CMD;
 		mpd_emu_arg = atoi(buf + strlen("playlistname "));
-		mpd_emu_cnt = 0;
+		filter_hook = filter_playlistname;
 		strcpy(buf, "listplaylists\n");
-	} else 
-		mpd_emu &= ~PLAYLISTNAME_CMD;
+	};
 		
 	/* The command "playlistcount" is our own invention.
 		It returns the number of playlists known to MPD.
 		We emulate it by sending "listplaylists" and counting the responses. 
 	*/
 	if (0 == strncmp(buf, "playlistcount\n", strlen("playlistcount\n")) ){
+		filter_hook = filter_playlistcount;
 		strcpy(buf, "listplaylists\n");
-		mpd_emu |= PLAYLISTCOUNT_CMD;
-		mpd_emu_cnt = 0;
-	} else 
-		mpd_emu &= ~PLAYLISTCOUNT_CMD;
+	};
 
 	/* The listplaylists command is not available in older versions of mpd 
 		We substitute "lsinfo" for it
 	*/
 	if ( (0 == (mpd_cmd_avail & LISTPLAYLISTS_CMD)) && (0 == strncmp(buf, "listplaylists\n", 14)) ){
 		strcpy(buf, "lsinfo\n");
-		mpd_emu |= LISTPLAYLISTS_CMD;
-	} else 
-		mpd_emu &= ~LISTPLAYLISTS_CMD;
-		
+		// NOTE "listplaylists" is not sent by Betty, no need to set extra filter function
+	};
+	
 	/* We will filter the answers to the search command because we may get too many */
 	if ( 0 == strncmp(buf, "search", 6)) {
-		mpd_emu |= SEARCH_CMD; //| SEND_SEARCH_OK;
-		mpd_emu_cnt = 0;
 		num_results = 0;
 		if (0 == strncmp(buf, "search artist", 13))
 			mpd_emu_arg = 0;
 		if (0 == strncmp(buf, "search title", 12))
 			mpd_emu_arg = 1;
 		if (0 == strncmp(buf, "search album", 12))
-			mpd_emu_arg = 2;	
-	} else {
-		mpd_emu &= ~SEARCH_CMD;
+			mpd_emu_arg = 2;
+		filter_hook = filter_search;
 	};
 	
 	/* We want to substitute basename(filename) for missing title tag */
-	if (0 == strncmp(buf, "currentsong\n", 12)) {
-		mpd_emu |= CURSONG_CMD;		
-		mpd_emu_cnt = 0;				// counts how often we have seen "Title: "
-	} else 
-		mpd_emu &= ~CURSONG_CMD;
-	
+	if (0 == strncmp(buf, "currentsong\n", 12)) 
+		filter_hook = filter_cursong;		
+
 	/* The findadd command is not available in older versions of mpd */
 	if ( 0 == strncmp(buf, "findadd ", 8) ){
 		if (! (mpd_cmd_avail & FINDADD_CMD)){
-			/* We already do the main work of the emulation here.
+			/* We do the main work of the emulation here.
 				Later on we only send status to mpd.
 				Betty may have to wait quite long for this answer !
 			*/
@@ -1301,10 +1477,9 @@ translate_to_mpd(char *buf){
 			int i;
 		
 			newbuf[399] = 0;
-			iso8859_15_to_utf8(newbuf, buf+8, 399);
-			mpd_emu |= FINDADD_CMD;
-			sprintf(buf, "find %s", newbuf);
+			iso8859_15_to_utf8( (unsigned char *) newbuf, (unsigned char *) buf+8, 399);
 
+			sprintf(buf, "find %s", newbuf);
 			fname_cnt = 0;
 			mpd_cmd(buf, save_file);		// sets fname_cnt and stores the filenames
 		
@@ -1313,196 +1488,43 @@ translate_to_mpd(char *buf){
 				if (!mpd_cmd(newbuf, NULL))
 					break;;
 			};
-			mpd_emu &= ~FINDADD_CMD;
 			strcpy(buf, "status\n");
 		} else {
 			append_status(buf);
-			mpd_emu &= ~FINDADD_CMD;
 		}
 	}
 };
 
-/* We have an answer from mpd in mpd_resp_buf.
-	Convert it to the character set understood by Betty
-	and do any necessary emulation and/or filtering
-	normally just sends the translated string to serial_output()
-	
-	NOTE the main loop depends on an "OK" or "ACK" answer to detect the end of the MPD response.
-		So we have to return that when we leave this routine
-		When we send a fake "OK"/"ACK" to Betty we must make sure it is not at the start
-		of mpd_resp_buf when we leave the routine
+
+
+/* 
+	We have a complete response line from MPD in mpd_resp_buf
+	1. We translate that from UTF8 to ISO9959-15 which Betty understands.
+	2. We also send the translated string to serial line.
+	3. If MPd has sent us an "OK" or "ACK" to indicate end of communication,
+	we return 1.
+	Else we return 0.
+	We modify step 2 here, because sometimes we want to modify the responses
+	that mpd sends us before sending them to Betty, for example filtering not needed lines
+	or faking some "Title: " tags that MPD does not know about but we can guess.
+	So instead of directly sending anything to serial line, we call emulate(),
+	which can decide what to send.
+	 
 */
-void
+int
 translate_to_serial(){
+	int finished = mpd_eot(mpd_resp_buf);
 	
 	// Convert line to iso8859-15			
 	utf8_to_iso8859_15( (unsigned char *) mpd_resp_buf);
+ 
+//	Do any necessary emulation and/or filtering on mpd_resp_buf
+//	normally just sends the translated string to serial_output()
 	
-	// If the LISTPLAYLISTS emulation is on, we let only 3 types of output lines go through
-	if (mpd_emu & LISTPLAYLISTS_CMD){
-		if (! (
-			(0 == strncmp(mpd_resp_buf, "playlist:", 9)) ||
-			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
-			(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )
-		return;
-	}
+	(*filter_hook)();
 	
-
-	if (mpd_emu & PLAYLISTINFO_CMD){
-		if (0 == strncmp(mpd_resp_buf,"file: ", 6)){
-			// copy the filename to our fake title buffer.
-			// First we check if it starts with "http://", then it is a stream
-			if (0 == strncmp(mpd_resp_buf+6, "http://", 7)){
-				int len = strlcpy(mpd_emu_title, mpd_resp_buf+6, sizeof(mpd_emu_title));
-				if (len < sizeof(mpd_emu_title))
-					// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
-					mpd_emu_title[len - 1] = '\0';
-				return;	
-			};
-			int len = strlcpy(mpd_emu_title, basename(mpd_resp_buf+6), sizeof(mpd_emu_title));
-			if (len < sizeof(mpd_emu_title))
-				// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
-				mpd_emu_title[len - 1] = '\0';
-			return;
-		};
-		
-		// If the PLAYLISTINFO emulation is on, we let only 6 types of output lines go through		
-		if (! (
-			(0 == strncmp(mpd_resp_buf, "Title: ", 7)) ||
-			(0 == strncmp(mpd_resp_buf, "Artist: ", 8)) ||
-			(0 == strncmp(mpd_resp_buf, "Name: ", 6)) ||
-			(0 == strncmp(mpd_resp_buf, "Pos: ", 5)) ||
-			(0 == strncmp(mpd_resp_buf, "OK", 2)) || 
-			(0 == strncmp(mpd_resp_buf, "ACK", 3)) ) )
-		return;
-
-		if (0 == strncmp(mpd_resp_buf, "Title: ", 7))
-			mpd_emu_cnt++;
-		
-		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
-			// before we send the "OK" message, we check if there has been a title.
-			if (0 == mpd_emu_cnt) {							// no title
-				sprintf(mpd_resp_buf, "Title: %s\n", mpd_emu_title);
-				serial_output(mpd_resp_buf);
-				strcpy(mpd_resp_buf, "OK\n");
-			};
-		};
-	}
-
-	// If the PLAYLISTNAME emulation is on, we want one specific playlist name to go through
-	// as well as "OK" or "ACK"	
-	if (mpd_emu & PLAYLISTNAME_CMD){
-		if ( (0 == strncmp(mpd_resp_buf, "playlist:", 9)) ){
-			if (mpd_emu_cnt++ != mpd_emu_arg)
-				return;
-		};
-	}
-
-	// If the PLAYLISTCOUNT emulation is on, we count playlist: entries and return the total number
-	if (mpd_emu & PLAYLISTCOUNT_CMD){
-		if  (0 == strncmp(mpd_resp_buf, "playlist:", 9)) {
-			mpd_emu_cnt++;
-			return;
-		};
-
-		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
-			sprintf(mpd_resp_buf, "playlistcount: %d\n",mpd_emu_cnt);
-			serial_output(mpd_resp_buf);
-			
-			strcpy(mpd_resp_buf, "OK\n");
-			serial_output(mpd_resp_buf);
-			return;
-		};
-	};
-
-	if (mpd_emu & SEARCH_CMD){
-		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
-			sprintf(mpd_resp_buf, "results: %d\n", num_results);
-			serial_output(mpd_resp_buf);
-
-			strcpy(mpd_resp_buf, "OK\n");
-			serial_output(mpd_resp_buf);
-			return;
-		};
-				
-		if (0 == strncmp(mpd_resp_buf, "ACK", 3)) {
-			serial_output(mpd_resp_buf);
-			return;
-		}; 
-		
-		mpd_emu_cnt++;
-	
-		if (  ( (mpd_emu_arg == 0) && (0 == strncmp(mpd_resp_buf, "Artist: ", 8)) )
-			||( (mpd_emu_arg == 1) && (0 == strncmp(mpd_resp_buf, "Title: ", 7)) )  
-			||( (mpd_emu_arg == 2) && (0 == strncmp(mpd_resp_buf, "Album: ", 7)) )  ){
-			
-			int txt_offset;
-			if (mpd_emu_arg == 0) txt_offset = 8;
-			else txt_offset = 7;
-			
-			if (num_results < MAX_NUM_RESULTS)
-				cmp_and_store(mpd_resp_buf + txt_offset);
-				
-			/* MPD sends every single matching file, which can take very long.
-				So after MAX_NUM_RESULTS or after our timer reaches 2 seconds we cancel the connection to stop mpd.
-				We must fake the OK answer.
-			*/				
-			if ( (num_results == MAX_NUM_RESULTS) || (timer_diff(mpd_ans_tmr) > 2.0) ){
-				if (num_results == MAX_NUM_RESULTS)
-					sprintf(mpd_resp_buf, "results: 99\n");
-				else 
-					sprintf(mpd_resp_buf, "results: %d\n", num_results);
-
-				serial_output(mpd_resp_buf);
-				close_mpd_socket();	
-				sprintf(mpd_resp_buf, "OK\n");
-				serial_output(mpd_resp_buf);
-			};	
-		};
-		return;
-	};
-
-	if (mpd_emu & RESULT_CMD) {
-		// check if argument is within bounds
-		if (mpd_emu_arg < num_results){
-			sprintf(mpd_resp_buf, "name: %s\n", results[mpd_emu_arg].name);
-			serial_output(mpd_resp_buf);
-			strcpy(mpd_resp_buf, "OK\n");
-			serial_output(mpd_resp_buf);
-		} else {
-			sprintf(mpd_resp_buf, "ACK: wrong result index %d\n", mpd_emu_arg);
-			serial_output(mpd_resp_buf);
-		};
-		return;
-	};
-	
-	// Now done right. We send our fake title only if no other title was given. 
-	if (mpd_emu & CURSONG_CMD) {
-		if (0 == strncmp(mpd_resp_buf,"file: ", 6)){
-			// copy the filename to our fake title buffer. 
-			int len = strlcpy(mpd_emu_title, basename(mpd_resp_buf+6), sizeof(mpd_emu_title));
-			if (len < sizeof(mpd_emu_title))
-				// fake title fits completely into buffer. It includes a trailing '\n'. We remove that.
-				mpd_emu_title[len - 1] = '\0';
-			return;
-		};
-					
-		if (0 == strncmp(mpd_resp_buf, "Title: ", 7))
-			mpd_emu_cnt++;
-		
-		if (0 == strncmp(mpd_resp_buf, "OK", 2)) {
-			// before we send the "OK" message, we check if there has been a title.
-			if (0 == mpd_emu_cnt) {							// no title
-				sprintf(mpd_resp_buf, "Title: %s\n", mpd_emu_title);
-				serial_output(mpd_resp_buf);
-				strcpy(mpd_resp_buf, "OK\n");
-			};
-		};
-	};
-		
-
-	// put the line in serial output buffer	
-	serial_output(mpd_resp_buf);	
+	/* If the filter closed the mpd_socket, this response is finished! */
+	return (finished || (mpd_socket == -1));
 };
 
 
@@ -1675,12 +1697,9 @@ int main(int argc, char *argv[])
 			
 			if (response_line_complete){
 				fprintf(stderr, "  MPD: %s", mpd_resp_buf);
-				translate_to_serial();
-//				fprintf(stderr, "  Mpd: %s", mpd_resp_buf);
 
-				// check for "OK" or "ACK"
-				if ( mpd_eot(mpd_resp_buf) ) {
-					response_finished = 1;
+				// check for "OK" or "ACK" and send response to Betty
+				if ( (response_finished = translate_to_serial()) ) {
 					// Send EOT to serial out !
 					ser_out_char(EOT);
 					fprintf(stderr,"\n");

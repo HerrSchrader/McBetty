@@ -388,7 +388,7 @@ int main(int argc,char **argv) {
 	
 	fprintf(stderr, "Max Width = %d\n", max_width);
 	
-	printf("const u_int16_t %s_cpos[]={\n", FONT_NAME);
+	printf("const uint16_t %s_cpos[]={\n", FONT_NAME);
 	for (glyph = 0; glyph <= MAX_CHAR; glyph++){
 		int sum = 0;
 		int i;
