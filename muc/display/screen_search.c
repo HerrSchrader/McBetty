@@ -83,7 +83,10 @@ PT_THREAD (auto_search(struct pt *pt)){
 		if (1 == strn_cpy_cmp(search_string, input_win.txt, WIN_TXT_SIZE -1, &len) ){
 			// input string has not changed
 			if (is_new) {
+// If this flag is set, the host is slow and we do no automatic search
+#ifndef SLOW_HOST
 				user_set_search_string(input_win.txt);
+#endif
 			};
 			is_new = 0;
 		} else {
@@ -299,6 +302,7 @@ keypress(Screen *this_screen, int cur_key){
 				"Red = Artist\n"
 				"Green = Title\n"
 				"Yellow = Album\n"
+				"Blue = Search"
 				"AV = Clr Input\n"
 				"OK = Load", 
 				  0, keypress_info_popup);
@@ -338,6 +342,11 @@ keypress(Screen *this_screen, int cur_key){
 			}
 			break;	
 				
+		/* Search now */
+		case KEY_Blue:
+			user_set_search_string(input_win.txt);
+			break;
+			
 		case KEY_Left:	
 			win_cursor_input(CURSOR_LEFT);
 			break;

@@ -10,6 +10,13 @@
 #####
 ###############################################################
 
+###########################################################
+#### Defines for conditional compiling
+###########################################################
+# Uncomment the next line if you have a slow host
+# Betty will then avoid automatic searches
+#EXTRAFLAGS = -D SLOW_HOST 
+
 ###############################################################
 #####
 ##### PATHS (default installation)
@@ -51,7 +58,7 @@ LDFLAGS = -Tlpc2220_rom.ld -Map boop.map
 LIBS = -lgcc
 THUMBFLAGS = -mthumb
 
-COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(INC)
+COMPILE = $(CC) $(CPUFLAGS) $(CFLAGS) $(EXTRAFLAGS) $(INC)
 
 -include Makefile.local
 
